@@ -12,8 +12,8 @@ import {
 
 
 @Controller('generic')
-export class GenericController<T, F> {
-  constructor(private readonly service: any) {}
+export class GenericController<T, F, S> {
+  constructor(private readonly service: any) { }
 
   @Post()
   create(@Body() createDto: T) {
@@ -21,12 +21,12 @@ export class GenericController<T, F> {
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: F) {
+  findAll(@Query(ValidationPipe) filterDto: F): Promise<S[]> {
     return this.service.findAll(filterDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<S[]> {
     return this.service.findOne(id);
   }
 

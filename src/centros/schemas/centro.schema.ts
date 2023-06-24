@@ -1,12 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-// import { HydratedDocument } from 'mongoose';
-import { Document } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 
-// export type CentroDocument = HydratedDocument<Centro>;
+import { Regional } from 'src/regionais/schemas/regionais.schema';
+
+export type CentroDocument = HydratedDocument<Centro>;
+
+import { FuncionamentoDto } from '../dto/create-centro.dto';
+
+
 
 @Schema()
 export class Centro {
-  // FUNCIONAMENTO: any;
+  @Prop({ type: FuncionamentoDto })
+  FUNCIONAMENTO: FuncionamentoDto;
   @Prop()
   NOME_CENTRO: string;
   @Prop()
@@ -15,8 +21,8 @@ export class Centro {
   CNPJ_CENTRO: string;
   @Prop()
   DATA_FUNDACAO: string;
-  @Prop()
-  REGIONAL: string;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Regional' })
+  REGIONAL: Regional;
   @Prop()
   ENDERECO: string;
   @Prop()
@@ -30,7 +36,5 @@ export class Centro {
   @Prop()
   PAIS: string;
 }
-
-export type CentroDocument = Centro & Document;
 
 export const CentroSchema = SchemaFactory.createForClass(Centro);
