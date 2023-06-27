@@ -1,23 +1,23 @@
 # Imagem base para o contêiner
 FROM node:18-alpine
 
-# Diretório de trabalho dentro do contêiner
+# Defina o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copiar o package.json e o package-lock.json para o diretório de trabalho
+# Copie os arquivos do projeto para o contêiner
 COPY package*.json ./
 
-# Instalar as dependências do projeto
-RUN npm ci --only=production
+# Instale as dependências
+RUN npm install
 
-# Copiar o código-fonte para o diretório de trabalho
+# Instale o Nest.js globalmente
+RUN npm install -g @nestjs/cli
+
+# Copie o restante dos arquivos do projeto para o contêiner
 COPY . .
 
-# Build do projeto
+# Execute o comando de build do Nest.js
 RUN npm run build
 
-# Porta em que o servidor do Nest.js irá escutar
-EXPOSE 3000
-
-# Comando para iniciar o servidor do Nest.js
-CMD ["npm", "run", "start"]
+# Especifique o comando de inicialização do contêiner
+CMD [ "npm", "run", "start:prod" ]
