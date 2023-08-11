@@ -1,13 +1,29 @@
 version: '3'
 services:
-  app:
+
+  dev:
     container_name: aee_digital_api
+    image: aee_digital_api:1.0.0
+    env_file: .env
     build:
-      context: .
-      dockerfile: Dockerfile
+        context: .
+        target: development
+        dockerfile: ./Dockerfile
+    command: npm run start:debug
     ports:
-      - 3000:3000
+        - ${PORT}:${PORT}
+        - 9229:9229
+    networks:
+        - aee_digital_backend
     volumes:
-      - ./src:/app/src
-    environment:
-      - NODE_ENV=production
+        - .:/usr/src/app
+        - /usr/src/app/node_modules
+    restart: unless-stopped
+networks:
+  aee_digital_backend:
+    name: aee_digital_backend
+    driver: bridge
+
+
+
+    
