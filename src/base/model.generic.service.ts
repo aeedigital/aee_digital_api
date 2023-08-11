@@ -1,7 +1,6 @@
 import { Model, Document } from 'mongoose';
 import { CacheService } from '../services/cache.service';
 import { Inject } from '@nestjs/common';
-import { ObjectId } from 'mongodb';
 
 export class MongoGenericService<T extends Document> {
   constructor(
@@ -21,7 +20,7 @@ export class MongoGenericService<T extends Document> {
     return paramsParsed;
   }
 
-  async getCached(key, saveMethod): Promise<any> {
+  private async getCached(key, saveMethod): Promise<any> {
     let item = await this.cacheService.get(key);
 
     if (!item) {
@@ -31,41 +30,22 @@ export class MongoGenericService<T extends Document> {
     return item;
   }
 
-  convertfilterParams(filterParams) {
-    const keys = Object.keys(filterParams);
-    const convertedValues = {};
-
-    for (const key of keys) {
-      const value = filterParams[key];
-      if (typeof value === 'string' && ObjectId.isValid(value)) {
-        // convertedValues[key] = ObjectId(${value})
-        convertedValues[key] = { $regex: value };
-      } else {
-        convertedValues[key] = value;
-      }
-    }
-    return convertedValues;
-  }
-
   async findAll(filter?: any): Promise<T[]> {
     const { fields, ...filterParams } = filter;
 
-    const filterParamsConverted = filterParams;//this.convertfilterParams(filterParams);
-
-    const instance = this;
-    const method = await function () {
-      let query = instance.model.find(filterParamsConverted);
+    const method = async () => {
+      let query = this.model.find(filterParams);
       if (fields) {
-        const selectedFields = instance.formatFieldParams(fields);
+        const selectedFields = this.formatFieldParams(fields);
         query = query.select(selectedFields);
       }
       return query.exec();
     };
 
-    let paramsString = ' ';
+    let paramsString = '';
 
-    if (filterParams) {
-      const keys = Object.keys(filterParams);
+    const keys = Object.keys(filterParams);
+    if (keys.length > 0) {
       const values = Object.values(filterParams);
 
       paramsString = `${keys.toString()}:${values.toString()}`;
@@ -81,7 +61,11 @@ export class MongoGenericService<T extends Document> {
 
   async findOne(id: string): Promise<T> {
     const key = `${this.model.modelName}:${id}`;
-    const item = await this.getCached(key, this.model.findById(id).exec());
+    
+    const method = async () => {
+      return this.model.findById(id).exec();
+    };
+    const item = await this.getCached(key, method);
 
     return item;
   }

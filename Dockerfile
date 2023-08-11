@@ -1,23 +1,31 @@
-# Imagem base para o contêiner
-FROM node:18-alpine
+# # Imagem base para o contêiner
+FROM node:18-alpine AS development
 
-# Defina o diretório de trabalho dentro do contêiner
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copie os arquivos do projeto para o contêiner
 COPY package*.json ./
 
-# Instale as dependências
-RUN npm install
+RUN npm install glob rimraf
 
-# Instale o Nest.js globalmente
-RUN npm install -g @nestjs/cli
+RUN npm install --only=development
 
-# Copie o restante dos arquivos do projeto para o contêiner
 COPY . .
 
-# Execute o comando de build do Nest.js
 RUN npm run build
 
-# Especifique o comando de inicialização do contêiner
-CMD [ "npm", "run", "start:prod" ]
+FROM node:18-alpine as production
+
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+COPY . .
+
+COPY --from=development /usr/src/app/dist ./dist
+
+CMD ["node", "dist/main"]

@@ -12,13 +12,6 @@ export class FuncionamentoDto {
 
 
 export class CreateCentroDto {
-  // @IsNotEmpty()
-  // @IsString()
-  // NOME_CENTRO: string;
-
-  // @IsNotEmpty()
-  // @IsString()
-  // NOME_CURTO: string;
   FUNCIONAMENTO: FuncionamentoDto;
   NOME_CENTRO: string;
   NOME_CURTO: string;
