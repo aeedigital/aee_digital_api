@@ -4,7 +4,6 @@ services:
   aee_digital_api:
     container_name: aee_digital_api
     image: aee_digital_api:1.0.0
-    env_file: .env
     build:
         context: .
     command: npm run start:debug
