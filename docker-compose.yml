@@ -1,14 +1,12 @@
-version: '3'
+version: '3.5'
 services:
 
-  dev:
+  aee_digital_api:
     container_name: aee_digital_api
     image: aee_digital_api:1.0.0
     env_file: .env
     build:
         context: .
-        target: development
-        dockerfile: ./Dockerfile
     command: npm run start:debug
     ports:
         - ${PORT}:${PORT}
