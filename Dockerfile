@@ -1,31 +1,20 @@
 # # Imagem base para o contêiner
-FROM node:18-alpine AS development
+FROM node:18-alpine
 
-WORKDIR /usr/src/app
+# Diretório de trabalho dentro do container
+WORKDIR /app
 
+# Copie o arquivo package.json e package-lock.json para o diretório de trabalho
 COPY package*.json ./
 
-RUN npm install glob rimraf
+# Instale as dependências
+RUN npm install
 
-RUN npm install --only=development
-
+# Copie o restante dos arquivos da aplicação para o diretório de trabalho
 COPY . .
 
-RUN npm run build
+# Porta que a aplicação NestJS irá expor
+EXPOSE 5000
 
-FROM node:18-alpine as production
-
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-
-RUN npm install --only=production
-
-COPY . .
-
-COPY --from=development /usr/src/app/dist ./dist
-
-CMD ["node", "dist/main"]
+# Comando para iniciar a aplicação
+CMD ["npm", "run", "start:prod"]

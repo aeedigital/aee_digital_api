@@ -1,26 +1,18 @@
-version: '3.5'
+version: '3'
 services:
-
-  aee_digital_api:
-    container_name: aee_digital_api
-    image: aee_digital_api:1.0.0
+  nestjs-app:
     build:
-        context: .
-    command: npm run start:debug
+      context: .
+      dockerfile: Dockerfile
+    image: nestjs-app
+    container_name: aee_digital_api
     ports:
-        - ${PORT}:${PORT}
-        - 9229:9229
+      - '5000:5000'
     networks:
-        - aee_digital_backend
+            - aee_digital_backend
     volumes:
-        - .:/usr/src/app
-        - /usr/src/app/node_modules
-    restart: unless-stopped
+      - .:/app
 networks:
   aee_digital_backend:
     name: aee_digital_backend
     driver: bridge
-
-
-
-    
