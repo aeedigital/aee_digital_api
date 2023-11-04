@@ -1,7 +1,7 @@
 import { CacheModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CentrosService } from './centros.service';
-import { CacheService } from '../services/cache.service'
+import { CacheService } from '../services/cache.service';
 
 import { CentrosController } from './centros.controller';
 

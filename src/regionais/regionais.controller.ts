@@ -11,7 +11,7 @@ export class RegionalController extends GenericController<
   FilterDto,
   Regional
 > {
-  constructor(private readonly centrosService: RegionalService) {
-    super(centrosService);
+  constructor(private readonly regionalsService: RegionalService) {
+    super(regionalsService);
   }
 }

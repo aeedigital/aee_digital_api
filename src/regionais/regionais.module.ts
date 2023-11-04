@@ -1,7 +1,7 @@
 import { CacheModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RegionalService } from './regionais.service';
-import { CacheService } from '../services/cache.service'
+import { CacheService } from '../services/cache.service';
 
 import { RegionalController } from './regionais.controller';
 

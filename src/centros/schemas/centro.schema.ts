@@ -7,8 +7,6 @@ export type CentroDocument = HydratedDocument<Centro>;
 
 import { FuncionamentoDto } from '../dto/create-centro.dto';
 
-
-
 @Schema()
 export class Centro {
   @Prop({ type: FuncionamentoDto })

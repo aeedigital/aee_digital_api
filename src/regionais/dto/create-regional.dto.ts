@@ -6,5 +6,3 @@ export class CreateRegionalDto {
   PAIS: string;
   COORDENADOR_ID: string;
 }
-
-

@@ -7,8 +7,7 @@ import { CentroDocument } from '../centros/schemas/centro.schema';
 
 // Mock do Model do Mongoose
 class ModelMock<T> {
-  constructor(private data: T[]) {
-  }
+  constructor(private data: T[]) {}
 
   // Implemente os métodos necessários para o seu teste
   findById(id: any): any {

@@ -9,7 +9,7 @@ describe('CacheService', () => {
       get: jest.fn(),
       set: jest.fn(),
       del: jest.fn(),
-      reset: jest.fn()
+      reset: jest.fn(),
     };
     cacheService = new CacheService(cacheManagerMock);
   });
@@ -32,7 +32,11 @@ describe('CacheService', () => {
 
       await cacheService.set(key, value, options);
 
-      expect(cacheManagerMock.set).toHaveBeenCalledWith(key, value, options.ttl);
+      expect(cacheManagerMock.set).toHaveBeenCalledWith(
+        key,
+        value,
+        options.ttl,
+      );
     });
 
     it('should call cacheManager.set with the provided key and value without options', async () => {

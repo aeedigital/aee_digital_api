@@ -10,10 +10,9 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
-
 @Controller('generic')
 export class GenericController<T, F, S> {
-  constructor(private readonly service: any) { }
+  constructor(private readonly service: any) {}
 
   @Post()
   create(@Body() createDto: T) {

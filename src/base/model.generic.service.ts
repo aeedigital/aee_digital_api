@@ -61,7 +61,7 @@ export class MongoGenericService<T extends Document> {
 
   async findOne(id: string): Promise<T> {
     const key = `${this.model.modelName}:${id}`;
-    
+
     const method = async () => {
       return this.model.findById(id).exec();
     };

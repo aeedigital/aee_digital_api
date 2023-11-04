@@ -10,7 +10,6 @@ export class FuncionamentoDto {
   domingo: string[];
 }
 
-
 export class CreateCentroDto {
   FUNCIONAMENTO: FuncionamentoDto;
   NOME_CENTRO: string;
