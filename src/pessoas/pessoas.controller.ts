@@ -11,7 +11,7 @@ export class PessoasController extends GenericController<
   FilterDto,
   Pessoas
 > {
-  constructor(private readonly pessoasService: PessoasService) {
+  constructor(protected readonly pessoasService: PessoasService) {
     super(pessoasService);
   }
 }

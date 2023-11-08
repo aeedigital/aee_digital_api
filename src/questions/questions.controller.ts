@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GenericController } from '../base/generic.controller';
 import { QuestionsService } from './questions.service';
-import { Questions } from './schemas/questions.schema';
+import { Question } from './schemas/questions.schema';
 import { FilterDto } from './dto/filter-questions.dto';
 import { CreateQuestionsDto } from './dto/create-questions.dto';
 
@@ -9,7 +9,7 @@ import { CreateQuestionsDto } from './dto/create-questions.dto';
 export class QuestionsController extends GenericController<
   CreateQuestionsDto,
   FilterDto,
-  Questions
+  Question
 > {
   constructor(private readonly questionsService: QuestionsService) {
     super(questionsService);

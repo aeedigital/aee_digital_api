@@ -1,9 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import * as mongoose from 'mongoose';
-
-
-import { Question } from '../../questions/schemas/question.schema';
+import { Question } from '../../questions/schemas/questions.schema';
 
 export type FormDocument = HydratedDocument<Form>;
 
@@ -30,11 +27,9 @@ export class Form {
           CATEGORY: string;
           QUESTIONS: [
             {
-              @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }] })
-  GROUP: Question[]
-  // GROUP: [Question];
-  IS_MULTIPLE: boolean;
-},
+              GROUP: Question[];
+              IS_MULTIPLE: boolean;
+            },
           ];
         },
       ];

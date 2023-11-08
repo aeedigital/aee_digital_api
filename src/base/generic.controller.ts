@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 
@@ -15,7 +16,9 @@ export class GenericController<T, F, S> {
   constructor(private readonly service: any) {}
 
   @Post()
+  @UsePipes(new ValidationPipe())
   create(@Body() createDto: T) {
+    console.log(typeof createDto);
     return this.service.create(createDto);
   }
 

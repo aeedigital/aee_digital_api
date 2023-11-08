@@ -61,10 +61,8 @@
             CATEGORY: "RESPONSÁVEL PELO CADASTRO"
           },
           {
-            _id: "61df432fdf23b90014a944b7",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944aa",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944a9",
@@ -101,7 +99,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944ac",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944ab",
@@ -118,7 +115,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944ae",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944ad",
@@ -135,7 +131,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944b2",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944af",
@@ -172,7 +167,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944b6",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944b3",
@@ -212,10 +206,8 @@
             CATEGORY: "CENTRO ESPÍRITA"
           },
           {
-            _id: "61df432fdf23b90014a944c2",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944b9",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944b8",
@@ -232,7 +224,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944bd",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944ba",
@@ -290,7 +281,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944c1",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944be",
@@ -330,10 +320,8 @@
             CATEGORY: "LOCALIZAÇÃO"
           },
           {
-            _id: "61df432fdf23b90014a944c9",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944c5",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944c3",
@@ -360,7 +348,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944c8",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944c6",
@@ -396,10 +383,8 @@
       {
         QUIZES: [
           {
-            _id: "61df432fdf23b90014a944cc",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944cb",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944ca",
@@ -419,10 +404,8 @@
             CATEGORY: "Geral"
           },
           {
-            _id: "61df432fdf23b90014a944da",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944cf",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944cd",
@@ -458,7 +441,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944d4",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944d0",
@@ -506,7 +488,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944d6",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944d5",
@@ -523,7 +504,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944d9",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944d7",
@@ -553,10 +533,8 @@
             CATEGORY: "Assistência Espiritual"
           },
           {
-            _id: "61df432fdf23b90014a944e8",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944dd",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944db",
@@ -595,10 +573,8 @@
             CATEGORY: "Curso Básico do Espiritismo"
           },
           {
-            _id: "61df432fdf23b90014a944f7",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944eb",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944e9",
@@ -634,7 +610,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944f0",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944ec",
@@ -682,7 +657,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944f2",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944f1",
@@ -699,7 +673,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944f6",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944f3",
@@ -739,10 +712,8 @@
             CATEGORY: "Escola de Aprendizes do Evangelho"
           },
           {
-            _id: "61df432fdf23b90014a94505",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a944fa",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944f8",
@@ -778,7 +749,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a944ff",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a944fb",
@@ -826,7 +796,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94501",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94500",
@@ -843,7 +812,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94504",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94502",
@@ -873,10 +841,8 @@
             CATEGORY: "Curso de Médiuns"
           },
           {
-            _id: "61df432fdf23b90014a94518",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94508",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94506",
@@ -912,7 +878,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a9450d",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94509",
@@ -960,7 +925,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94510",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9450e",
@@ -987,7 +951,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94512",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94511",
@@ -1004,7 +967,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94514",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94513",
@@ -1021,7 +983,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94517",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94515",
@@ -1051,10 +1012,8 @@
             CATEGORY: "Evangelização Infantil"
           },
           {
-            _id: "61df432fdf23b90014a94528",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a9451b",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94519",
@@ -1090,7 +1049,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94520",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9451c",
@@ -1138,7 +1096,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94522",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94521",
@@ -1157,7 +1114,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94524",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94523",
@@ -1174,7 +1130,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94527",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94525",
@@ -1204,10 +1159,8 @@
             CATEGORY: "Pré-Mocidade"
           },
           {
-            _id: "61df432fdf23b90014a94536",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a9452b",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94529",
@@ -1243,7 +1196,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94530",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9452c",
@@ -1291,7 +1243,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94532",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94531",
@@ -1308,7 +1259,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94535",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94533",
@@ -1344,10 +1294,8 @@
       {
         QUIZES: [
           {
-            _id: "61df432fdf23b90014a9453f",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94539",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94537",
@@ -1383,7 +1331,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a9453e",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9453a",
@@ -1434,10 +1381,8 @@
             CATEGORY: "Escola de Aprendizes à Distância"
           },
           {
-            _id: "61df432fdf23b90014a94548",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94542",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94540",
@@ -1473,7 +1418,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94547",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94543",
@@ -1523,10 +1467,8 @@
             CATEGORY: "Escola de Aprendizes à Distância em Grupo"
           },
           {
-            _id: "61df432fdf23b90014a94553",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a9454d",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94549",
@@ -1573,7 +1515,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94550",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9454e",
@@ -1600,7 +1541,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94552",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94551",
@@ -1626,10 +1566,8 @@
       {
         QUIZES: [
           {
-            _id: "61df432fdf23b90014a94558",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94557",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94554",
@@ -1670,10 +1608,8 @@
             CATEGORY: "Fraternidade dos Discípulos de Jesus"
           },
           {
-            _id: "61df432fdf23b90014a9455e",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a9455b",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94559",
@@ -1709,7 +1645,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a9455d",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9455c",
@@ -1729,10 +1664,8 @@
             CATEGORY: "Falando ao Coração"
           },
           {
-            _id: "61df432fdf23b90014a94564",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94561",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9455f",
@@ -1768,7 +1701,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94563",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94562",
@@ -1788,10 +1720,8 @@
             CATEGORY: "Projeto André Luiz"
           },
           {
-            _id: "61df432fdf23b90014a9456a",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94567",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94565",
@@ -1827,7 +1757,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94569",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94568",
@@ -1853,10 +1782,8 @@
       {
         QUIZES: [
           {
-            _id: "61df432fdf23b90014a94577",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a9456c",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9456b",
@@ -1873,7 +1800,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a9456e",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9456d",
@@ -1894,7 +1820,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94572",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9456f",
@@ -1932,7 +1857,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a94576",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94573",
@@ -1972,10 +1896,8 @@
             CATEGORY: "Regionais"
           },
           {
-            _id: "61df432fdf23b90014a9457e",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94579",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94578",
@@ -1992,7 +1914,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a9457b",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9457a",
@@ -2009,7 +1930,6 @@
 
               },
               {
-                _id: "61df432fdf23b90014a9457d",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9457c",
@@ -2029,10 +1949,8 @@
             CATEGORY: "Comentários Gerais"
           },
           {
-            _id: "61df432fdf23b90014a94581",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94580",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a9457f",
@@ -2063,10 +1981,8 @@
       {
         QUIZES: [
           {
-            _id: "61df432fdf23b90014a94584",
             QUESTIONS: [
               {
-                _id: "61df432fdf23b90014a94583",
                 GROUP: [
                   {
                     _id: "61df432fdf23b90014a94582",

@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { CentrosModule } from './centros/centros.module';
 import { RegionaisModule } from './regionais/regionais.module';
 import { FormsModule } from './forms/forms.module';
-import { QuestionsModule } from './questions/question.module';
+import { QuestionsModule } from './questions/questions.module';
 import { PassesModule } from './passes/passes.module';
 import { PessoasModule } from './pessoas/pessoas.module';
 

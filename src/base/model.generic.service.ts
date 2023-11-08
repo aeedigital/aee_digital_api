@@ -1,4 +1,5 @@
 import { Model, Document } from 'mongoose';
+import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
 import { Inject } from '@nestjs/common';
 
@@ -62,11 +63,19 @@ export class MongoGenericService<T extends Document> {
   async findOne(id: string): Promise<T> {
     const key = `${this.model.modelName}:${id}`;
 
-    const method = async () => {
+    const methodById = async () => {
       return this.model.findById(id).exec();
     };
-    const item = await this.getCached(key, method);
 
+    const methodByString = async () => {
+      const itemId = new mongoose.Types.ObjectId(id);
+      return this.model.findById(itemId).exec();
+    };
+    let item = await this.getCached(key, methodById);
+
+    if (!item) {
+      item = await this.getCached(key, methodByString);
+    }
     return item;
   }
 

@@ -1,6 +1,6 @@
 import { IsString, IsOptional } from 'class-validator';
 
-import { CreateQuestionDto } from '../../questions/dto/create-question.dto';
+import { CreateQuestionsDto } from '../../questions/dto/create-questions.dto';
 
 export class CreateFormDto {
   NAME: string;
@@ -15,7 +15,7 @@ export class CreateFormDto {
           CATEGORY: string;
           QUESTIONS: [
             {
-              GROUP: [CreateQuestionDto];
+              GROUP: [CreateQuestionsDto];
               IS_MULTIPLE: boolean;
             },
           ];
