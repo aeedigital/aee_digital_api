@@ -5,7 +5,6 @@ import { CreateQuestionsDto } from '../../questions/dto/create-questions.dto';
 export class CreateFormDto {
   NAME: string;
   VERSION: number;
-  CREATEDAT: Date;
   CREATEDBY: string;
   PAGES: [
     {

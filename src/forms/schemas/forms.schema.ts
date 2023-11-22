@@ -1,40 +1,48 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { Question } from '../../questions/schemas/questions.schema';
+import mongoose, { HydratedDocument } from 'mongoose';
 
 export type FormDocument = HydratedDocument<Form>;
 
 @Schema()
-export class Form {
-  @Prop({ required: true })
+export class Pages {
+  @Prop()
   NAME: string;
 
-  @Prop({ type: Number, default: 1 })
-  VERSION: number;
+  @Prop()
+  QUIZES: Quizes[];
+}
+// @Schema({ timestamps: true })
+@Schema()
+export class Form {
+  @Prop()
+  NAME: string;
 
-  @Prop({ type: Date, default: Date.now })
-  CREATEDAT: Date;
+  @Prop()
+  version: number;
 
-  @Prop({ type: String })
-  CREATEDBY: string;
+  @Prop()
+  createdBy: string;
 
-  @Prop({ required: true })
-  PAGES: [
-    {
-      NAME: string;
-      QUIZES: [
-        {
-          CATEGORY: string;
-          QUESTIONS: [
-            {
-              GROUP: Question[];
-              IS_MULTIPLE: boolean;
-            },
-          ];
-        },
-      ];
-    },
-  ];
+  @Prop()
+  PAGES: Pages[];
+}
+
+@Schema()
+export class Quizes {
+  @Prop()
+  CATEGORY: string;
+
+  @Prop()
+  QUESTIONS: Questions[];
+}
+
+@Schema()
+export class Questions {
+  @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: 'Questions' }])
+  GROUP: Question[];
+  @Prop()
+  IS_MULTIPLE: boolean;
 }
 
 export const FormSchema = SchemaFactory.createForClass(Form);

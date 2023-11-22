@@ -9,7 +9,8 @@ export class MongoGenericService<T extends Document> {
     @Inject(CacheService) private readonly cacheService: CacheService,
   ) {}
 
-  private formatFieldParams(fieldParams: string) {
+  protected formatFieldParams(fieldParams: string) {
+    if (!fieldParams) return;
     const params = fieldParams.split(',');
     let paramsParsed = '';
 
@@ -31,16 +32,20 @@ export class MongoGenericService<T extends Document> {
     return item;
   }
 
+  protected async findAllMethod(fields, filterParams): Promise<any> {
+    let query = this.model.find(filterParams);
+    if (fields) {
+      const selectedFields = this.formatFieldParams(fields);
+      query = query.select(selectedFields);
+    }
+    return query.exec();
+  }
+
   async findAll(filter?: any): Promise<T[]> {
     const { fields, ...filterParams } = filter;
 
     const method = async () => {
-      let query = this.model.find(filterParams);
-      if (fields) {
-        const selectedFields = this.formatFieldParams(fields);
-        query = query.select(selectedFields);
-      }
-      return query.exec();
+      return await this.findAllMethod(fields, filterParams);
     };
 
     let paramsString = '';

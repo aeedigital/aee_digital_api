@@ -9,7 +9,7 @@ import { FormSchema } from './schemas/forms.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Form', schema: FormSchema }]),
+    MongooseModule.forFeature([{ name: 'Forms', schema: FormSchema }]),
     CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],
 
