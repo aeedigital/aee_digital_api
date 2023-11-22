@@ -1,0 +1,885 @@
+[
+   {
+      "NAME": "Cadastro de Informações Anual",
+      "version": 1,
+      "createdBy": "Bruno Duarte",
+      "PAGES": [
+         {
+            "QUIZES": [
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944a2"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944a3"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944a5"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944a6"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "RESPONSÁVEL PELO CADASTRO"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944a9"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944ab"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944ad"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944af"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944b0"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944b1"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944b3"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944b4"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944b5"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "CENTRO ESPÍRITA"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944b8"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944ba"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944bb"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944bc"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944be"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944bf"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944c0"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "LOCALIZAÇÃO"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944c3"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944c4"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944c6"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944c7"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "DIRETORIA/PRESIDÊNCIA"
+               }
+            ],
+            "PAGE_NAME": "Centro Espírita"
+         },
+         {
+            "QUIZES": [
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944ca"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Geral"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944cd"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944ce"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944d0"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944d1"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944d2"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944d3"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944d5"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944d7"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944d8"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Assistência Espiritual"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944db"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944dc"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     }
+                  ],
+                  "CATEGORY": "Curso Básico do Espiritismo"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944e9"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944ea"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944ec"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944ed"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944ee"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944ef"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944f1"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944f3"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944f4"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944f5"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Escola de Aprendizes do Evangelho"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944f8"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944f9"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a944fb"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944fc"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944fd"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a944fe"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94500"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94502"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94503"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Curso de Médiuns"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94506"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94507"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94509"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9450a"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9450b"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9450c"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9450e"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9450f"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94511"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94513"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94515"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94516"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Evangelização Infantil"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94519"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9451a"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9451c"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9451d"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9451e"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9451f"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94521"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94523"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94525"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94526"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Pré-Mocidade"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94529"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9452a"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9452c"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9452d"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9452e"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9452f"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94531"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94533"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94534"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Mocidade"
+               }
+            ],
+            "PAGE_NAME": "Trabalhos de Evangelização"
+         },
+         {
+            "QUIZES": [
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94537"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94538"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9453a"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9453b"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9453c"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9453d"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas para cada um dos campos abaixo"
+                     }
+                  ],
+                  "CATEGORY": "Escola de Aprendizes à Distância"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94540"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94541"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94543"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94544"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94545"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94546"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Escola de Aprendizes à Distância em Grupo"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94549"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9454a"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9454b"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9454c"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9454e"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9454f"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94551"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Outros Trabalhos"
+               }
+            ],
+            "PAGE_NAME": "Outros Trabalhos"
+         },
+         {
+            "QUIZES": [
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94554"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94555"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94556"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Em relação à FDJ, indique a quantidade de pessoas para cada um dos campos abaixo"
+                     }
+                  ],
+                  "CATEGORY": "Fraternidade dos Discípulos de Jesus"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94559"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a9455a"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9455c"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Falando ao Coração"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9455f"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94560"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94562"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Projeto André Luiz"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94565"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94566"
+                           }
+                        ],
+                        "IS_MULTIPLE": true,
+                        "GROUP_NAME": "Indique os dias em que este trabalho é realizado"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94568"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Paulo de Tarso"
+               }
+            ],
+            "PAGE_NAME": "Plataforma FDJ"
+         },
+         {
+            "QUIZES": [
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9456b"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9456d"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9456f"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94570"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94571"
+                           }
+                        ],
+                        "IS_MULTIPLE": false,
+                        "GROUP_NAME": "Indique a quantidade de pessoas que fizeram cada um dos cursos abaixo"
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94573"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94574"
+                           },
+                           {
+                              "$oid": "61df432fdf23b90014a94575"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Regionais"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94578"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9457a"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     },
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9457c"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Comentários Gerais"
+               },
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a9457f"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Avaliação do Cadastro"
+               }
+            ],
+            "PAGE_NAME": "Regional e AEE"
+         },
+         {
+            "QUIZES": [
+               {
+                  "QUESTIONS": [
+                     {
+                        "GROUP": [
+                           {
+                              "$oid": "61df432fdf23b90014a94582"
+                           }
+                        ],
+                        "IS_MULTIPLE": false
+                     }
+                  ],
+                  "CATEGORY": "Auto Avaliação"
+               }
+            ],
+            "PAGE_NAME": "Auto Avaliação"
+         }
+      ]
+   }
+]

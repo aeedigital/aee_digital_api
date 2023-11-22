@@ -9,16 +9,19 @@ import {
   Query,
   UsePipes,
   ValidationPipe,
+  Logger
 } from '@nestjs/common';
 
 @Controller('generic')
 export class GenericController<T, F, S> {
+  private readonly logger = new Logger('aee_digital_api');
+
   constructor(private readonly service: any) {}
 
   @Post()
   @UsePipes(new ValidationPipe())
   create(@Body() createDto: T) {
-    console.log(typeof createDto);
+    this.logger.log(typeof createDto);
     return this.service.create(createDto);
   }
 
