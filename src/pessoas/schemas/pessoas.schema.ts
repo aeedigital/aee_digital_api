@@ -14,8 +14,6 @@ export class Pessoas {
   @Prop({ type: String })
   CELULAR: string;
 
-  @Prop({ type: String })
-  _id: string;
 }
 
 export const PessoasSchema = SchemaFactory.createForClass(Pessoas);
