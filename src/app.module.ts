@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CentrosModule } from './centros/centros.module';
@@ -7,6 +7,8 @@ import { FormsModule } from './forms/forms.module';
 import { QuestionsModule } from './questions/questions.module';
 import { PassesModule } from './passes/passes.module';
 import { PessoasModule } from './pessoas/pessoas.module';
+
+import { ReqnameMiddleware } from './base/reqname.middleware';
 
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -25,4 +27,8 @@ import { MongooseModule } from '@nestjs/mongoose';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ReqnameMiddleware).forRoutes('*');
+  }
+}
