@@ -17,7 +17,6 @@ export class CacheService {
 
   async delete(key: string): Promise<void> {
     await this.clearCache(key);
-    // await this.cacheManager.del(key);
   }
 
   async clearCache(startsWithWord) {
