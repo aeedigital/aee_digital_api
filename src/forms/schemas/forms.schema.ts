@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Question } from '../../questions/schemas/questions.schema';
 import mongoose, { HydratedDocument } from 'mongoose';
 
-export type FormDocument = HydratedDocument<Form>;
+export type FormDocument = HydratedDocument<Forms>;
 
 @Schema()
 export class Pages {
@@ -12,17 +12,16 @@ export class Pages {
   @Prop()
   QUIZES: Quizes[];
 }
-// @Schema({ timestamps: true })
-@Schema()
-export class Form {
+@Schema({ timestamps: true })
+export class Forms {
   @Prop()
   NAME: string;
 
   @Prop()
-  version: number;
+  VERSION: number;
 
   @Prop()
-  createdBy: string;
+  CREATEDBY: string;
 
   @Prop()
   PAGES: Pages[];
@@ -45,4 +44,4 @@ export class Questions {
   IS_MULTIPLE: boolean;
 }
 
-export const FormSchema = SchemaFactory.createForClass(Form);
+export const FormSchema = SchemaFactory.createForClass(Forms);

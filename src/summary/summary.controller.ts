@@ -1,7 +1,11 @@
-import { QuestionsService as Service } from './questions.service';
-import { Question as Schema } from './schemas/questions.schema';
-import { FilterDto } from './dto/filter-questions.dto';
-import { CreateQuestionsDto as CreateDto } from './dto/create-questions.dto';
+/*
+https://docs.nestjs.com/controllers#controllers
+*/
+
+import { Summaries as Schema } from './schemas/summaries.schema';
+import { FilterDto } from './dto/filter-summaries.dto';
+import { CreateSummariesDto as CreateDto } from './dto/create-summaries.dto';
+import { SummaryService as Service } from './summary.service';
 
 import {
   Controller,
@@ -16,9 +20,8 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 
-
-@Controller('api/v1/questions')
-export class QuestionsController {
+@Controller('api/v1/summaries')
+export class SummariesController {
   constructor(private readonly service: Service) {}
 
   @Post()
@@ -28,12 +31,12 @@ export class QuestionsController {
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
     return this.service.findAll(filterDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Schema> {
+  findOne(@Param('id') id: string): Promise<any> {
     return this.service.findOne(id);
   }
 

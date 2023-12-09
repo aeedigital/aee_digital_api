@@ -5,11 +5,11 @@ import { CacheService } from '../services/cache.service';
 
 import { PessoasController } from './pessoas.controller';
 
-import { PessoasSchema } from './schemas/pessoas.schema';
+import { Pessoas, PessoasSchema } from './schemas/pessoas.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Pessoas', schema: PessoasSchema }]),
+    MongooseModule.forFeature([{ name: Pessoas.name, schema: PessoasSchema }]),
     CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],
 

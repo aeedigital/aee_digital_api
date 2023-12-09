@@ -143,7 +143,7 @@ describe('GenericModelService', () => {
       ],
     }).compile();
 
-    service = module.get<MongoGenericService<any>>(MongoGenericService);
+    service = module.get<MongoGenericService<any,any>>(MongoGenericService);
   });
 
   it('should validate findOne', async () => {

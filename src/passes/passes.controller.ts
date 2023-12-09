@@ -1,17 +1,48 @@
-import { Controller } from '@nestjs/common';
-import { GenericController } from '../base/generic.controller';
-import { PassesService } from './passes.service';
-import { Passes } from './schemas/passes.schema';
+import { PassesService as Service } from './passes.service';
+import { Passes as Schema } from './schemas/passes.schema';
 import { FilterDto } from './dto/filter-passes.dto';
-import { CreatePassesDto } from './dto/create-passes.dto';
+import { CreatePassesDto as CreateDto } from './dto/create-passes.dto';
+
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ValidationPipe,
+} from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('api/v1/passes')
-export class PassesController extends GenericController<
-  CreatePassesDto,
-  FilterDto,
-  Passes
-> {
-  constructor(private readonly passesService: PassesService) {
-    super(passesService);
+export class PassesController {
+  constructor(private readonly service: Service) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new resource' })
+  create(@Body() createDto: CreateDto) {
+    return this.service.create(createDto);
+  }
+
+  @Get()
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
+    return this.service.findAll(filterDto);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Schema> {
+    return this.service.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+    return this.service.update(id, updateDto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.service.delete(id);
   }
 }

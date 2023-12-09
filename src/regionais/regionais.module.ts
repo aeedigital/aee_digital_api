@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RegionalService } from './regionais.service';
 import { CacheService } from '../services/cache.service';
 
-import { RegionalController } from './regionais.controller';
+import { RegionaisController } from './regionais.controller';
 
 import { RegionalSchema } from './schemas/regionais.schema';
 
@@ -13,7 +13,7 @@ import { RegionalSchema } from './schemas/regionais.schema';
     CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],
 
-  controllers: [RegionalController],
+  controllers: [RegionaisController],
   providers: [RegionalService, CacheService],
 })
 export class RegionaisModule {}

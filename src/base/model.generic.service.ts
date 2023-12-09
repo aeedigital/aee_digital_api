@@ -1,11 +1,11 @@
-import { Model, Document } from 'mongoose';
+import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
 import { Inject } from '@nestjs/common';
 
-export class MongoGenericService<T extends Document> {
+export class MongoGenericService<S, D> {
   constructor(
-    protected readonly model: Model<T>,
+    protected readonly model: Model<S>,
     @Inject(CacheService) private readonly cacheService: CacheService,
   ) {}
 
@@ -32,49 +32,43 @@ export class MongoGenericService<T extends Document> {
     return item;
   }
 
+  private async deleteCache() {
+    const key = `${this.model.modelName}:`;
+    await this.cacheService.delete(key);
+  }
+
   protected async findAllMethod(fields, filterParams): Promise<any> {
     let query = this.model.find(filterParams);
     if (fields) {
       const selectedFields = this.formatFieldParams(fields);
       query = query.select(selectedFields);
     }
-    return query.exec();
+    return query.lean();
   }
 
-  async findAll(filter?: any): Promise<T[]> {
+  async findAll(filter?: any): Promise<D[]> {
+    const key = `${this.model.modelName}:${JSON.stringify(filter)}`;
+
     const { fields, ...filterParams } = filter;
 
     const method = async () => {
       return await this.findAllMethod(fields, filterParams);
     };
-
-    let paramsString = '';
-
-    const keys = Object.keys(filterParams);
-    if (keys.length > 0) {
-      const values = Object.values(filterParams);
-
-      paramsString = `${keys.toString()}:${values.toString()}`;
-    }
-
-    const key = `${this.model.modelName}:all:${
-      fields?.toString() || ''
-    }:${paramsString}`;
     const item = await this.getCached(key, method);
 
     return item;
   }
 
-  async findOne(id: string): Promise<T> {
-    const key = `${this.model.modelName}:${id}`;
+  async findOne(id: string): Promise<D> {
+    const key = `${this.model.modelName}:${JSON.stringify({ id })}`;
 
     const methodById = async () => {
-      return this.model.findById(id).exec();
+      return this.model.findById(id).lean();
     };
 
     const methodByString = async () => {
       const itemId = new mongoose.Types.ObjectId(id);
-      return this.model.findById(itemId).exec();
+      return this.model.findById(itemId).lean();
     };
     let item = await this.getCached(key, methodById);
 
@@ -84,12 +78,15 @@ export class MongoGenericService<T extends Document> {
     return item;
   }
 
-  async create(data: T): Promise<T> {
+  async create(data: D): Promise<D> {
     const newDocument = new this.model(data);
-    return newDocument.save();
+    const savedDocument = await newDocument.save();
+
+    await this.deleteCache();
+    return savedDocument.toObject();
   }
 
-  async update(id: string, data: T): Promise<T> {
+  async update(id: string, data: D): Promise<D> {
     const existingDocument = await this.model.findById(id).exec();
 
     if (!existingDocument) {
@@ -97,10 +94,14 @@ export class MongoGenericService<T extends Document> {
     }
 
     Object.assign(existingDocument, data);
-    return existingDocument.save();
+    const updatedDocument = await existingDocument.save();
+
+    await this.deleteCache();
+    return updatedDocument.toObject();
   }
 
-  async delete(id: string): Promise<T> {
-    return this.model.findByIdAndRemove(id).exec();
+  async delete(id: string): Promise<D> {
+    await this.deleteCache();
+    return this.model.deleteOne({ _id: id }).lean();
   }
 }

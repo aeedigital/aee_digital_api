@@ -4,11 +4,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CacheService } from '../services/cache.service';
 
 import { PassesDocument } from './schemas/passes.schema';
+import { CreatePassesDto } from './dto/create-passes.dto';
 
 import { MongoGenericService } from '../base/model.generic.service';
 
 @Injectable()
-export class PassesService extends MongoGenericService<PassesDocument> {
+export class PassesService extends MongoGenericService<
+  PassesDocument,
+  CreatePassesDto
+> {
   constructor(
     @InjectModel('Passes')
     protected readonly PassesModel: Model<PassesDocument>,
