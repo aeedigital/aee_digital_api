@@ -1,13 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 
-import { Regional } from 'src/regionais/schemas/regionais.schema';
+import { Regional } from '../../regionais/schemas/regionais.schema';
 
 export type CentroDocument = HydratedDocument<Centro>;
 
 import { FuncionamentoDto } from '../dto/create-centro.dto';
-
-
 
 @Schema()
 export class Centro {

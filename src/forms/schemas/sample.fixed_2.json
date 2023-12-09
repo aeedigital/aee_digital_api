@@ -1,0 +1,31 @@
+[
+    {
+        "NAME": "Cadastro de Informações Anual 2",
+        "version": 1,
+        "createdBy": "Bruno Duarte",
+        "PAGES": [
+            {
+                "QUIZES": [
+                    {
+                        "QUESTIONS": [
+                            {
+                                "GROUP":
+                                    [{
+                                        "$oid": "61df432fdf23b90014a944a2"
+                                    },
+                                    {
+                                        "$oid": "61df432fdf23b90014a944a2"
+                                    }],
+                                "IS_MULTIPLE": false
+                            }
+                           
+                        ],
+                        "CATEGORY": "RESPONSÁVEL PELO CADASTRO"
+                    }
+                  
+                ],
+                "PAGE_NAME": "Centro Espírita"
+            }
+        ]
+    }
+]

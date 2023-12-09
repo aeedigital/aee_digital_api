@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
 
-export class CreateRegionalDto {
+export class CreatePassesDto {
   @ApiProperty()
-  NOME_REGIONAL: string;
+  user: string;
   @ApiProperty()
-  ESTADO: string;
+  pass: string;
   @ApiProperty()
-  PAIS: string;
+  scope_id: string;
   @ApiProperty()
-  COORDENADOR_ID: string;
+  groups: string[];
 }

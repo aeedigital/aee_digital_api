@@ -1,13 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
 
-export class CreateRegionalDto {
+export class CreateQuestionsDto {
   @ApiProperty()
-  NOME_REGIONAL: string;
+  QUESTION: string;
   @ApiProperty()
-  ESTADO: string;
+  ANSWER_TYPE: string;
   @ApiProperty()
-  PAIS: string;
+  IS_REQUIRED: boolean;
   @ApiProperty()
-  COORDENADOR_ID: string;
+  IS_MULTIPLE: string;
+  @ApiProperty()
+  PRESET_VALUES: string[];
 }

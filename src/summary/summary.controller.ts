@@ -1,7 +1,11 @@
-import { RegionalService as Service } from './regionais.service';
-import { Regional as Schema } from './schemas/regionais.schema';
-import { FilterDto } from './dto/filter-regional.dto';
-import { CreateRegionalDto as CreateDto } from './dto/create-regional.dto';
+/*
+https://docs.nestjs.com/controllers#controllers
+*/
+
+import { Summaries as Schema } from './schemas/summaries.schema';
+import { FilterDto } from './dto/filter-summaries.dto';
+import { CreateSummariesDto as CreateDto } from './dto/create-summaries.dto';
+import { SummaryService as Service } from './summary.service';
 
 import {
   Controller,
@@ -16,8 +20,8 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 
-@Controller('api/v1/regionais')
-export class RegionaisController {
+@Controller('api/v1/summaries')
+export class SummariesController {
   constructor(private readonly service: Service) {}
 
   @Post()
@@ -27,12 +31,12 @@ export class RegionaisController {
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
     return this.service.findAll(filterDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Schema> {
+  findOne(@Param('id') id: string): Promise<any> {
     return this.service.findOne(id);
   }
 

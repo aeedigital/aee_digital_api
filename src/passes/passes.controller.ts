@@ -1,7 +1,7 @@
-import { RegionalService as Service } from './regionais.service';
-import { Regional as Schema } from './schemas/regionais.schema';
-import { FilterDto } from './dto/filter-regional.dto';
-import { CreateRegionalDto as CreateDto } from './dto/create-regional.dto';
+import { PassesService as Service } from './passes.service';
+import { Passes as Schema } from './schemas/passes.schema';
+import { FilterDto } from './dto/filter-passes.dto';
+import { CreatePassesDto as CreateDto } from './dto/create-passes.dto';
 
 import {
   Controller,
@@ -16,8 +16,8 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 
-@Controller('api/v1/regionais')
-export class RegionaisController {
+@Controller('api/v1/passes')
+export class PassesController {
   constructor(private readonly service: Service) {}
 
   @Post()

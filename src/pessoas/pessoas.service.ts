@@ -3,21 +3,21 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CacheService } from '../services/cache.service';
 
-import { CentroDocument } from './schemas/centro.schema';
-import { CreateCentroDto } from './dto/create-centro.dto';
+import { PessoasDocument } from './schemas/pessoas.schema';
+import { CreatePessoasDto } from './dto/create-pessoas.dto';
 
 import { MongoGenericService } from '../base/model.generic.service';
 
 @Injectable()
-export class CentrosService extends MongoGenericService<
-  CentroDocument,
-  CreateCentroDto
+export class PessoasService extends MongoGenericService<
+  PessoasDocument,
+  CreatePessoasDto
 > {
   constructor(
-    @InjectModel('Centro')
-    protected readonly centroModel: Model<CentroDocument>,
+    @InjectModel('Pessoas')
+    protected readonly PessoasModel: Model<PessoasDocument>,
     @Inject(CacheService) cacheService: CacheService,
   ) {
-    super(centroModel, cacheService);
+    super(PessoasModel, cacheService);
   }
 }

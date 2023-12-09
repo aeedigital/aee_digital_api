@@ -1,17 +1,48 @@
-import { Controller } from '@nestjs/common';
-import { GenericController } from '../base/generic.controller';
-import { CentrosService } from './centros.service';
-import { Centro } from './schemas/centro.schema';
-import { CreateCentroDto } from './dto/create-centro.dto';
+import { CentrosService as Service } from './centros.service';
+import { Centro as Schema } from './schemas/centro.schema';
+import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
 import { FilterDto } from './dto/filter-centro.dto';
 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ValidationPipe,
+} from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
+
 @Controller('api/v1/centros')
-export class CentrosController extends GenericController<
-  CreateCentroDto,
-  FilterDto,
-  Centro
-> {
-  constructor(private readonly centrosService: CentrosService) {
-    super(centrosService);
+export class CentrosController {
+  constructor(private readonly service: Service) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new resource' })
+  create(@Body() createDto: CreateDto) {
+    return this.service.create(createDto);
+  }
+
+  @Get()
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(filterDto);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+    return this.service.update(id, updateDto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.service.delete(id);
   }
 }
