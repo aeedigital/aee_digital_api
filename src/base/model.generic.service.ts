@@ -46,7 +46,7 @@ export class MongoGenericService<S, D> {
     return query.lean();
   }
 
-  async findAll(filter?: any): Promise<D[]> {
+  async findAll(filter?: any): Promise<S[]> {
     const key = `${this.model.modelName}:${JSON.stringify(filter)}`;
 
     const { fields, ...filterParams } = filter;
@@ -59,7 +59,7 @@ export class MongoGenericService<S, D> {
     return item;
   }
 
-  async findOne(id: string): Promise<D> {
+  async findOne(id: string): Promise<S> {
     const key = `${this.model.modelName}:${JSON.stringify({ id })}`;
 
     const methodById = async () => {
@@ -78,7 +78,7 @@ export class MongoGenericService<S, D> {
     return item;
   }
 
-  async create(data: D): Promise<D> {
+  async create(data: D): Promise<S> {
     const newDocument = new this.model(data);
     const savedDocument = await newDocument.save();
 
@@ -86,7 +86,7 @@ export class MongoGenericService<S, D> {
     return savedDocument.toObject();
   }
 
-  async update(id: string, data: D): Promise<D> {
+  async update(id: string, data: D): Promise<S> {
     const existingDocument = await this.model.findById(id).exec();
 
     if (!existingDocument) {

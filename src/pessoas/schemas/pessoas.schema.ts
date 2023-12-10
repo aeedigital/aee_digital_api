@@ -13,7 +13,6 @@ export class Pessoas {
 
   @Prop({ type: String })
   CELULAR: string;
-
 }
 
 export const PessoasSchema = SchemaFactory.createForClass(Pessoas);
