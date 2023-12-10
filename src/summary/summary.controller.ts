@@ -20,7 +20,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 
-@Controller('api/v1/summaries')
+@Controller('summaries')
 export class SummariesController {
   constructor(private readonly service: Service) {}
 
