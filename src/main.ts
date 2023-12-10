@@ -6,7 +6,7 @@ import { WinstonLogger } from './services/logger.service';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule,{
+  const app = await NestFactory.create(AppModule, {
     logger: new WinstonLogger(),
   });
 
@@ -17,7 +17,7 @@ async function bootstrap() {
     .setDescription(packageInfo.description)
     .setVersion(packageInfo.version)
     .build();
-    
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   const port = process.env.PORT || 5000;

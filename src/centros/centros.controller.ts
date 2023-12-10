@@ -27,12 +27,12 @@ export class CentrosController {
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
     return this.service.findAll(filterDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<any> {
+  findOne(@Param('id') id: string): Promise<Schema> {
     return this.service.findOne(id);
   }
 

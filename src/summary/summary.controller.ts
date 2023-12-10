@@ -1,7 +1,3 @@
-/*
-https://docs.nestjs.com/controllers#controllers
-*/
-
 import { Summaries as Schema } from './schemas/summaries.schema';
 import { FilterDto } from './dto/filter-summaries.dto';
 import { CreateSummariesDto as CreateDto } from './dto/create-summaries.dto';
@@ -31,12 +27,12 @@ export class SummariesController {
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
     return this.service.findAll(filterDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<any> {
+  findOne(@Param('id') id: string): Promise<Schema> {
     return this.service.findOne(id);
   }
 

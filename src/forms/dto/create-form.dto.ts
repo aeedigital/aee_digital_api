@@ -26,6 +26,7 @@ class PagesDto {
 
 export class CreateFormDto {
   @ApiProperty()
+  @IsString()
   NAME: string;
   @ApiProperty()
   VERSION: number;
