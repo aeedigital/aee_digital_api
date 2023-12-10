@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 
-@Controller('api/v1/pessoas')
+@Controller('pessoas')
 export class PessoasController {
   constructor(private readonly service: Service) {}
 
