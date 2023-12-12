@@ -16,5 +16,4 @@ export class CreatePessoasDto {
   @IsNotEmpty()
   @IsString()
   CELULAR: string;
-  _id: string;
 }
