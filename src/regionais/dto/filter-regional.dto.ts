@@ -3,11 +3,19 @@ import { IsString, IsOptional } from 'class-validator';
 export class FilterDto {
   @IsString()
   @IsOptional()
-  NOME_CENTRO?: string;
+  NOME_REGIONAL?: string;
 
   @IsString()
   @IsOptional()
-  NOME_CURTO?: string;
+  ESTADO?: string;
+
+  @IsString()
+  @IsOptional()
+  PAIS?: string;
+
+  @IsString()
+  @IsOptional()
+  COORDENADOR_ID: string;
 
   @IsString()
   @IsOptional()

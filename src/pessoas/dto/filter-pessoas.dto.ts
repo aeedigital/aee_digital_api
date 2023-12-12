@@ -1,13 +1,17 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsEmail } from 'class-validator';
 
 export class FilterDto {
   @IsString()
   @IsOptional()
-  NOME_CENTRO?: string;
+  NOME?: string;
 
-  @IsString()
+  @IsEmail()
   @IsOptional()
-  NOME_CURTO?: string;
+  'E-MAIL'?: string;
+
+  @IsEmail()
+  @IsOptional()
+  CELULAR?: string;
 
   @IsString()
   @IsOptional()
