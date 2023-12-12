@@ -9,7 +9,7 @@ import { Request, Response } from 'express';
 export class ReqnameMiddleware implements NestMiddleware {
   private readonly logger = new Logger();
 
-  use(req: Request, res: Response, next: Function) {
+  use(req: Request, res: Response, next) {
     const toLog = {
       req: req.baseUrl,
       body: req.body,

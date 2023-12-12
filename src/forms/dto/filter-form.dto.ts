@@ -3,15 +3,17 @@ import { IsString, IsOptional } from 'class-validator';
 export class FilterDto {
   @IsString()
   @IsOptional()
-  NOME_CENTRO?: string;
+  user?: string;
 
   @IsString()
   @IsOptional()
-  NOME_CURTO?: string;
+  pass?: string;
+
+  @IsString()
+  @IsOptional()
+  scope_id?: string;
 
   @IsString()
   @IsOptional()
   fields?: string;
-
-  // Adicione outros campos de filtro, se necessário
 }

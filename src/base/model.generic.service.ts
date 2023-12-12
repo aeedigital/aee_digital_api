@@ -21,6 +21,13 @@ export class MongoGenericService<S, D> {
 
     return paramsParsed;
   }
+  // protected formatFieldParams(fields) {
+  //   const fieldParams = {};
+  //   fields.split(',').forEach((field) => {
+  //     fieldParams[field.trim()] = 1; // Adiciona os campos à seleção
+  //   });
+  //   return fieldParams;
+  // }
 
   private async getCached(key, saveMethod): Promise<any> {
     let item = await this.cacheService.get(key);
@@ -50,6 +57,11 @@ export class MongoGenericService<S, D> {
     const key = `${this.model.modelName}:${JSON.stringify(filter)}`;
 
     const { fields, ...filterParams } = filter;
+
+    // Aplicar regex aos filtros
+    Object.keys(filterParams).forEach((key) => {
+      filterParams[key] = new RegExp(filterParams[key], 'i'); // 'i' para busca insensível a maiúsculas e minúsculas
+    });
 
     const method = async () => {
       return await this.findAllMethod(fields, filterParams);
