@@ -22,7 +22,7 @@ export class FormService extends MongoGenericService<
     super(FormModel, cacheService);
   }
 
-  protected async findAllMethod(fields: any, filterParams: any): Promise<any> {
+  protected async findAllMethod(fields: any): Promise<any> {
     const selectedFields = this.formatFieldParams(fields);
 
     const query = this.model.find();

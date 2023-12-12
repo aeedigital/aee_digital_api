@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString } from 'class-validator';
 
 // import { CreateQuestionsDto } from '../../questions/dto/create-questions.dto';
 import { ApiProperty } from '@nestjs/swagger';
