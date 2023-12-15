@@ -21,13 +21,6 @@ export class MongoGenericService<S, D> {
 
     return paramsParsed;
   }
-  // protected formatFieldParams(fields) {
-  //   const fieldParams = {};
-  //   fields.split(',').forEach((field) => {
-  //     fieldParams[field.trim()] = 1; // Adiciona os campos à seleção
-  //   });
-  //   return fieldParams;
-  // }
 
   private async getCached(key, saveMethod): Promise<any> {
     let item = await this.cacheService.get(key);
