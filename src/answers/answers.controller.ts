@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { UpdateDto } from './dto/update-answer.dto';
 
 @Controller('answers')
 export class AnswersController {
@@ -37,7 +38,7 @@ export class AnswersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
     return this.service.update(id, updateDto);
   }
 

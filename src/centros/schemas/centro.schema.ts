@@ -19,8 +19,8 @@ export class Centro {
   CNPJ_CENTRO: string;
   @Prop()
   DATA_FUNDACAO: string;
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Regional' })
-  REGIONAL: Regional;
+  @Prop()
+  REGIONAL: string;
   @Prop()
   ENDERECO: string;
   @Prop()

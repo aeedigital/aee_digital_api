@@ -1,17 +1,17 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNumberString } from 'class-validator';
 
 export class FilterDto {
   @IsString()
   @IsOptional()
-  user?: string;
+  NAME: string;
 
+  @IsNumberString()
+  @IsOptional()
+  VERSION: number;
+  
   @IsString()
   @IsOptional()
-  pass?: string;
-
-  @IsString()
-  @IsOptional()
-  scope_id?: string;
+  CREATEDBY: string;
 
   @IsString()
   @IsOptional()

@@ -19,6 +19,9 @@ export class Question {
 
   @Prop({ type: [String] })
   PRESET_VALUES: string[];
+
+  @Prop({ type: String })
+  ROLE: string;
 }
 
 export const QuestionsSchema = SchemaFactory.createForClass(Question);

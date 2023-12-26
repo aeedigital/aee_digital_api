@@ -9,6 +9,9 @@ export class Pages {
   @Prop()
   NAME: string;
 
+  @Prop({ type: String })
+  ROLE: string;
+
   @Prop()
   QUIZES: Quizes[];
 }
