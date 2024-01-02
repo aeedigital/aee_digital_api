@@ -6,9 +6,6 @@ export class UpdateDto {
   QUESTION_ID: string;
   @IsOptional()
   @IsString()
-  QUIZ_ID: string;
-  @IsOptional()
-  @IsString()
   CENTRO_ID: boolean;
   @IsOptional()
   @IsString()

@@ -7,9 +7,6 @@ export class CreateAnswersDto {
   QUESTION_ID: string;
   @ApiProperty()
   @IsString()
-  QUIZ_ID: string;
-  @ApiProperty()
-  @IsString()
   CENTRO_ID: boolean;
   @ApiProperty()
   @IsString()

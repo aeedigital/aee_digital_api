@@ -9,10 +9,7 @@ export class Answer {
   CENTRO_ID: string;
 
   @Prop({ type: String })
-  QUID_ID: string;
-
-  @Prop({ type: Boolean })
-  Answer_ID: boolean;
+  QUESTION_ID: string;
 
   @Prop({ type: String })
   ANSWER: string;
