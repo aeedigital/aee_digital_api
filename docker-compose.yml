@@ -10,6 +10,8 @@ services:
             - aee_digital_backend
     volumes:
       - .:/app
+      - /app/node_modules
+
 networks:
   aee_digital_backend:
     name: aee_digital_backend

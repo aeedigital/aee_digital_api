@@ -5,6 +5,7 @@ import { CentrosModule } from './centros/centros.module';
 import { RegionaisModule } from './regionais/regionais.module';
 import { FormsModule } from './forms/forms.module';
 import { QuestionsModule } from './questions/questions.module';
+import { AnswersModule } from './answers/answers.module';
 import { PassesModule } from './passes/passes.module';
 import { PessoasModule } from './pessoas/pessoas.module';
 import { SummaryModule } from './summary/summary.module';
@@ -25,6 +26,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     RegionaisModule,
     FormsModule,
     QuestionsModule,
+    AnswersModule,
     PassesModule,
     PessoasModule,
     SummaryModule,

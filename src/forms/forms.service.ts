@@ -22,10 +22,14 @@ export class FormService extends MongoGenericService<
     super(FormModel, cacheService);
   }
 
-  protected async findAllMethod(fields: any): Promise<any> {
+  protected async findAllMethod(
+    fields: any,
+    filterParams: any,
+    sortBy: string,
+  ): Promise<any> {
     const selectedFields = this.formatFieldParams(fields);
 
-    const query = this.model.find();
+    const query = this.model.find(filterParams);
 
     if (fields) {
       const fieldsToSelect = fields.split(' ').reduce((acc, field) => {
@@ -35,7 +39,7 @@ export class FormService extends MongoGenericService<
       query.select(fieldsToSelect);
     }
 
-    query.find().select(selectedFields);
+    query.select(selectedFields);
 
     if (!fields || (fields && selectedFields.includes('PAGES'))) {
       query.populate({
@@ -43,6 +47,20 @@ export class FormService extends MongoGenericService<
         model: 'Questions', // O nome do modelo referenciado,
       });
     }
-    return query.exec();
+
+    if (sortBy) {
+      const sortByParams = sortBy.split(',');
+      const sortParams = {};
+      sortByParams.forEach((sortByItem) => {
+        const sortParamProperties = sortByItem.split(':');
+        const sortParam = sortParamProperties[0];
+        const sortOrder = sortParamProperties[1];
+
+        sortParams[sortParam] = sortOrder === 'asc' ? 1 : -1;
+      });
+      query.sort(sortParams);
+    }
+
+    return query.lean();
   }
 }

@@ -7,7 +7,25 @@ export class MongoGenericService<S, D> {
   constructor(
     protected readonly model: Model<S>,
     @Inject(CacheService) private readonly cacheService: CacheService,
-  ) {}
+  ) {
+    this.listenToChanges();
+  }
+
+  async listenToChanges() {
+    const changeStream = this.model.watch();
+
+    changeStream.on('change', (change) => {
+      console.log('Mudança detectada:', change);
+      // Aqui você pode implementar a lógica para lidar com as mudanças.
+      // Por exemplo, enviar uma notificação ou executar alguma ação específica.
+      const modelName = change?.ns?.coll;
+      this.deleteCache(modelName);
+    });
+
+    changeStream.on('error', (error) => {
+      console.error('Erro no Change Stream:', error);
+    });
+  }
 
   protected formatFieldParams(fieldParams: string) {
     if (!fieldParams) return;
@@ -21,13 +39,6 @@ export class MongoGenericService<S, D> {
 
     return paramsParsed;
   }
-  // protected formatFieldParams(fields) {
-  //   const fieldParams = {};
-  //   fields.split(',').forEach((field) => {
-  //     fieldParams[field.trim()] = 1; // Adiciona os campos à seleção
-  //   });
-  //   return fieldParams;
-  // }
 
   private async getCached(key, saveMethod): Promise<any> {
     let item = await this.cacheService.get(key);
@@ -39,12 +50,17 @@ export class MongoGenericService<S, D> {
     return item;
   }
 
-  private async deleteCache() {
-    const key = `${this.model.modelName}:`;
+  private async deleteCache(modelName?: string) {
+    const key = modelName ? `${modelName}:` : `${this.model.modelName}:`;
+
     await this.cacheService.delete(key);
   }
 
-  protected async findAllMethod(fields, filterParams): Promise<any> {
+  protected async findAllMethod(
+    fields,
+    filterParams,
+    sortBy: string,
+  ): Promise<any> {
     let query = this.model.find(filterParams);
     if (fields) {
       const selectedFields = this.formatFieldParams(fields);
@@ -56,16 +72,32 @@ export class MongoGenericService<S, D> {
   async findAll(filter?: any): Promise<S[]> {
     const key = `${this.model.modelName}:${JSON.stringify(filter)}`;
 
-    const { fields, ...filterParams } = filter;
+    const { fields, dateFrom, dateTo, sortBy, ...filterParams } = filter;
 
-    // Aplicar regex aos filtros
-    Object.keys(filterParams).forEach((key) => {
-      filterParams[key] = new RegExp(filterParams[key], 'i'); // 'i' para busca insensível a maiúsculas e minúsculas
-    });
+    // Aplicar regex aos filtros apropriados
+    // Object.keys(filterParams).forEach((key) => {
+    //   if (typeof filterParams[key] === 'string') {
+    //     filterParams[key] = new RegExp(filterParams[key], 'i'); // 'i' para busca insensível a maiúsculas e minúsculas
+    //   }
+    // });
+
+    // Adicionar filtro de data, se necessário
+    if (dateFrom || dateTo) {
+      filterParams['createdAt'] = {};
+      if (dateFrom) {
+        filterParams['createdAt']['$gte'] = new Date(dateFrom);
+      }
+      if (dateTo) {
+        filterParams['createdAt']['$lte'] = new Date(dateTo);
+      }
+    }
 
     const method = async () => {
-      return await this.findAllMethod(fields, filterParams);
+      const findResult = await this.findAllMethod(fields, filterParams, sortBy);
+
+      return findResult;
     };
+
     const item = await this.getCached(key, method);
 
     return item;

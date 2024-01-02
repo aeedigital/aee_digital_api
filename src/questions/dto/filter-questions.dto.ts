@@ -1,4 +1,6 @@
+import { Transform } from 'class-transformer';
 import { IsString, IsOptional } from 'class-validator';
+import { IsStringOrBoolean } from '../../common/stringorboolean.validator';
 
 export class FilterDto {
   @IsString()
@@ -9,13 +11,23 @@ export class FilterDto {
   @IsOptional()
   ANSWER_TYPE?: string;
 
+  @IsStringOrBoolean()
   @IsOptional()
-  @IsString()
-  IS_REQUIRED: boolean;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toLowerCase() === 'true' : value,
+  )
+  IS_REQUIRED: boolean | string; 
+  
+  @IsStringOrBoolean()
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toLowerCase() === 'true' : value,
+  )
+  IS_MULTIPLE: boolean | string;
 
   @IsOptional()
   @IsString()
-  IS_MULTIPLE: string;
+  ROLE: string;
 
   @IsString()
   @IsOptional()

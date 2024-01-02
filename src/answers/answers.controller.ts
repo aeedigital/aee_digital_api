@@ -1,7 +1,7 @@
-import { RegionalService as Service } from './regionais.service';
-import { Regional as Schema } from './schemas/regionais.schema';
-import { FilterDto } from './dto/filter-regional.dto';
-import { CreateRegionalDto as CreateDto } from './dto/create-regional.dto';
+import { AnswersService as Service } from './answers.service';
+import { Answer as Schema } from './schemas/answers.schema';
+import { FilterDto } from './dto/filter-answers.dto';
+import { CreateAnswersDto as CreateDto } from './dto/create-answers.dto';
 
 import {
   Controller,
@@ -15,9 +15,10 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { UpdateDto } from './dto/update-answer.dto';
 
-@Controller('regionais')
-export class RegionaisController {
+@Controller('answers')
+export class AnswersController {
   constructor(private readonly service: Service) {}
 
   @Post()
@@ -37,7 +38,7 @@ export class RegionaisController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
     return this.service.update(id, updateDto);
   }
 

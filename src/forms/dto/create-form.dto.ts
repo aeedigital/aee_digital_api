@@ -20,6 +20,8 @@ class QuizDto {
 class PagesDto {
   @ApiProperty()
   NAME: string;
+  @ApiProperty({ type: String })
+  ROLE: string;
   @ApiProperty({ type: () => [QuizDto] })
   QUIZES: [QuizDto];
 }
