@@ -13,6 +13,7 @@ import {
   Delete,
   Query,
   ValidationPipe,
+  Put,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdateDto } from './dto/update-answer.dto';
@@ -40,6 +41,16 @@ export class AnswersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
     return this.service.update(id, updateDto);
+  }
+
+  @Put()
+  updateOrCreate(
+    @Body() updateDto: UpdateDto,
+    @Query('centroId') CENTRO_ID?: string,
+    @Query('questionId') QUESTION_ID?: string,
+  ) {
+    const filter = { CENTRO_ID, QUESTION_ID };
+    return this.service.updateOrCreate(filter, updateDto);
   }
 
   @Delete(':id')
