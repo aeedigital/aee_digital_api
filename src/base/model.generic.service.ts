@@ -144,6 +144,12 @@ export class MongoGenericService<S, D> {
     return updatedDocument.toObject();
   }
 
+  async updateOrCreate(filter: any, data: D): Promise<S> {
+    await this.deleteCache();
+    const opcoes = { upsert: true, new: true };
+    return this.model.findOneAndUpdate(filter, data, opcoes).exec();
+  }
+
   async delete(id: string): Promise<D> {
     await this.deleteCache();
     return this.model.deleteOne({ _id: id }).lean();

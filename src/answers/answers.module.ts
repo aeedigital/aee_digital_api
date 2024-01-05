@@ -1,4 +1,5 @@
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AnswersService } from './answers.service';
 import { CacheService } from '../services/cache.service';
