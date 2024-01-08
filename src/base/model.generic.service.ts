@@ -51,7 +51,9 @@ export class MongoGenericService<S, D> {
   }
 
   private async deleteCache(modelName?: string) {
-    const key = modelName ? `${modelName}:` : `${this.model.modelName}:`;
+    const key = modelName
+      ? `${modelName.toLowerCase()}:`
+      : `${this.model.modelName}:`;
 
     await this.cacheService.delete(key);
   }
@@ -70,7 +72,9 @@ export class MongoGenericService<S, D> {
   }
 
   async findAll(filter?: any): Promise<S[]> {
-    const key = `${this.model.modelName}:${JSON.stringify(filter)}`;
+    const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify(
+      filter,
+    )}`;
 
     const { fields, dateFrom, dateTo, sortBy, ...filterParams } = filter;
 
@@ -104,7 +108,7 @@ export class MongoGenericService<S, D> {
   }
 
   async findOne(id: string): Promise<S> {
-    const key = `${this.model.modelName}:${JSON.stringify({ id })}`;
+    const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify({ id })}`;
 
     const methodById = async () => {
       return this.model.findById(id).lean();

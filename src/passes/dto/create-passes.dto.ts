@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 
 export class CreatePassesDto {
   @ApiProperty()
@@ -12,6 +12,7 @@ export class CreatePassesDto {
   @IsString()
   scope_id: string;
   @ApiProperty()
-  @IsString()
+  @IsArray() // Valida que o campo é um array
+  @IsString({ each: true }) // Valida que cada elemento do array é uma string
   groups: string[];
 }
