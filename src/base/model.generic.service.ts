@@ -53,7 +53,7 @@ export class MongoGenericService<S, D> {
   private async deleteCache(modelName?: string) {
     const key = modelName
       ? `${modelName.toLowerCase()}:`
-      : `${this.model.modelName}:`;
+      : `${this.model.modelName.toLowerCase()}:`;
 
     await this.cacheService.delete(key);
   }
