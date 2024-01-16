@@ -48,8 +48,9 @@ export class AnswersController {
     @Body() updateDto: UpdateDto,
     @Query('centroId') CENTRO_ID?: string,
     @Query('questionId') QUESTION_ID?: string,
+    @Query('answerId') _id?: string,
   ) {
-    const filter = { CENTRO_ID, QUESTION_ID };
+    const filter = { CENTRO_ID, QUESTION_ID, _id };
     return this.service.updateOrCreate(filter, updateDto);
   }
 
