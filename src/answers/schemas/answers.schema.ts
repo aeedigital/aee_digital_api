@@ -13,6 +13,9 @@ export class Answer {
 
   @Prop({ type: String })
   ANSWER: string;
+
+  @Prop({ type: String })
+  QUIZ_ID: string;
 }
 
 export const AnswersSchema = SchemaFactory.createForClass(Answer);
