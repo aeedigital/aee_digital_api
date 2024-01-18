@@ -10,4 +10,7 @@ export class UpdateDto {
   @IsOptional()
   @IsString()
   ANSWER: string;
+  @IsOptional()
+  @IsString()
+  QUIZ_ID: string;
 }

@@ -2,7 +2,7 @@ import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
 import { Inject } from '@nestjs/common';
-
+import { ObjectId } from 'mongodb';
 export class MongoGenericService<S, D> {
   constructor(
     protected readonly model: Model<S>,
@@ -40,6 +40,16 @@ export class MongoGenericService<S, D> {
     return paramsParsed;
   }
 
+  formatSelectedFields(selectedFields) {
+    if (!selectedFields) return {};
+
+    const fields = selectedFields.split(',');
+    return fields.reduce((acc, field) => {
+      acc[field.trim()] = 1; // Inclui os campos; use 0 para excluir
+      return acc;
+    }, {});
+  }
+
   private async getCached(key, saveMethod): Promise<any> {
     let item = await this.cacheService.get(key);
 
@@ -50,7 +60,7 @@ export class MongoGenericService<S, D> {
     return item;
   }
 
-  private async deleteCache(modelName?: string) {
+  protected async deleteCache(modelName?: string) {
     const key = modelName
       ? `${modelName.toLowerCase()}:`
       : `${this.model.modelName.toLowerCase()}:`;
@@ -63,12 +73,56 @@ export class MongoGenericService<S, D> {
     filterParams,
     sortBy: string,
   ): Promise<any> {
-    let query = this.model.find(filterParams);
-    if (fields) {
-      const selectedFields = this.formatFieldParams(fields);
-      query = query.select(selectedFields);
+    try {
+      let query: any = [];
+
+      if (filterParams && Object.keys(filterParams).length > 0) {
+        query = [{ $match: filterParams }];
+        if (fields) {
+          const selectedFields = this.formatSelectedFields(fields);
+          query.push({ $project: selectedFields });
+        }
+        return this.model.aggregate(query).exec();
+      } else {
+        query = this.model.find(filterParams);
+        if (fields) {
+          const selectedFields = this.formatFieldParams(fields);
+          query = query.select(selectedFields);
+        }
+        return query.lean();
+      }
+    } catch (error) {
+      throw error;
     }
-    return query.lean();
+  }
+
+  private isObjectId(value) {
+    return ObjectId.isValid(value) && new ObjectId(value).toString() === value;
+  }
+
+  patchParams(filterParams) {
+    const andConditions = [];
+
+    if (Object.keys(filterParams).length > 0) {
+      for (const key in filterParams) {
+        if (filterParams.hasOwnProperty(key)) {
+          const value = filterParams[key];
+          if (value == undefined) {
+            continue;
+          }
+          if (this.isObjectId(value)) {
+            andConditions.push({
+              $or: [{ [key]: value }, { [key]: new ObjectId(value) }],
+            });
+          } else {
+            andConditions.push({ [key]: value });
+          }
+        }
+      }
+      return { $and: andConditions };
+    } else {
+      return {};
+    }
   }
 
   async findAll(filter?: any): Promise<S[]> {
@@ -77,13 +131,6 @@ export class MongoGenericService<S, D> {
     )}`;
 
     const { fields, dateFrom, dateTo, sortBy, ...filterParams } = filter;
-
-    // Aplicar regex aos filtros apropriados
-    // Object.keys(filterParams).forEach((key) => {
-    //   if (typeof filterParams[key] === 'string') {
-    //     filterParams[key] = new RegExp(filterParams[key], 'i'); // 'i' para busca insensível a maiúsculas e minúsculas
-    //   }
-    // });
 
     // Adicionar filtro de data, se necessário
     if (dateFrom || dateTo) {
@@ -96,8 +143,14 @@ export class MongoGenericService<S, D> {
       }
     }
 
+    const modifiedFilter = this.patchParams(filterParams);
+
     const method = async () => {
-      const findResult = await this.findAllMethod(fields, filterParams, sortBy);
+      const findResult = await this.findAllMethod(
+        fields,
+        modifiedFilter,
+        sortBy,
+      );
 
       return findResult;
     };
@@ -108,7 +161,9 @@ export class MongoGenericService<S, D> {
   }
 
   async findOne(id: string): Promise<S> {
-    const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify({ id })}`;
+    const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify({
+      id,
+    })}`;
 
     const methodById = async () => {
       return this.model.findById(id).lean();
@@ -150,8 +205,11 @@ export class MongoGenericService<S, D> {
 
   async updateOrCreate(filter: any, data: D): Promise<S> {
     await this.deleteCache();
+
+    const modifiedFilter = this.patchParams(filter);
+
     const opcoes = { upsert: true, new: true };
-    return this.model.findOneAndUpdate(filter, data, opcoes).exec();
+    return this.model.findOneAndUpdate(modifiedFilter, data, opcoes).exec();
   }
 
   async delete(id: string): Promise<D> {
