@@ -1,3 +1,4 @@
+import { ManagementModule } from './management/management.module';
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +19,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
+    ManagementModule,
     CacheModule.register(),
     MongooseModule.forRoot(
       'mongodb+srv://aliancadigital:aliancadigital@aee.pvgzm2s.mongodb.net/',
