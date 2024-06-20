@@ -9,6 +9,7 @@ import { HttpExceptionFilter } from './common/HttpExceptionFilter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new WinstonLogger(),
+    cors: true
   });
 
   app.useGlobalPipes(new ValidationPipe());
