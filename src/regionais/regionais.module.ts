@@ -6,9 +6,13 @@ import { CacheService } from '../services/cache.service';
 import { RegionaisController } from './regionais.controller';
 
 import { RegionalSchema } from './schemas/regionais.schema';
+import { CentrosModule } from '../centros/centros.module';
+import { SummaryModule } from '../summary/summary.module';
 
 @Module({
   imports: [
+    CentrosModule,
+    SummaryModule,
     MongooseModule.forFeature([{ name: 'Regional', schema: RegionalSchema }]),
     CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],

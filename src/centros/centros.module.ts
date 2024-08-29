@@ -6,14 +6,21 @@ import { CacheService } from '../services/cache.service';
 import { CentrosController } from './centros.controller';
 
 import { Centro, CentroSchema } from './schemas/centro.schema';
+import { SummaryService } from '../summary/summary.service';
+import { SummaryModule } from '../summary/summary.module';
 
 @Module({
   imports: [
+    SummaryModule,
     MongooseModule.forFeature([{ name: Centro.name, schema: CentroSchema }]),
     CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],
 
   controllers: [CentrosController],
-  providers: [CentrosService, CacheService],
+  providers: [
+    CentrosService, 
+    CacheService
+  ],
+  exports:[CentrosService]
 })
 export class CentrosModule {}

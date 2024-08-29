@@ -3,6 +3,12 @@ import { Regional as Schema } from './schemas/regionais.schema';
 import { FilterDto } from './dto/filter-regional.dto';
 import { CreateRegionalDto as CreateDto } from './dto/create-regional.dto';
 
+import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
+import { FilterDto as CentroFilterDto } from '../centros/dto/filter-centro.dto';
+
+import { Summaries as SummariesSchema } from '../summary/schemas/summaries.schema';
+import { Centro as CentrosSchema } from '../centros/schemas/centro.schema';
+
 import {
   Controller,
   Get,
@@ -34,6 +40,16 @@ export class RegionaisController {
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Schema> {
     return this.service.findOne(id);
+  }
+
+  @Get(':id/summaries')
+  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<SummariesSchema[]> {
+    return await this.service.findSummaries(id, filterDto);
+  }
+
+  @Get(':id/centros')
+  async findCentros(@Param('id') id: string, @Query(ValidationPipe) filterDto: CentroFilterDto): Promise<CentrosSchema[]> {
+    return await this.service.findCentros(id, filterDto);
   }
 
   @Patch(':id')

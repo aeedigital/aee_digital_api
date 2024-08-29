@@ -1,7 +1,11 @@
 import { CentrosService as Service } from './centros.service';
 import { Centro as Schema } from './schemas/centro.schema';
+
+import { Summaries as SummariesSchema } from '../summary/schemas/summaries.schema';
 import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
 import { FilterDto } from './dto/filter-centro.dto';
+
+import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
 
 import {
   Controller,
@@ -18,7 +22,10 @@ import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('centros')
 export class CentrosController {
-  constructor(private readonly service: Service) {}
+  constructor(
+    private readonly service: Service
+  
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
@@ -34,6 +41,11 @@ export class CentrosController {
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Schema> {
     return this.service.findOne(id);
+  }
+
+  @Get(':id/summaries')
+  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<SummariesSchema[]> {
+    return await this.service.findSummaries(id, filterDto);
   }
 
   @Patch(':id')
