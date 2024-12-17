@@ -74,23 +74,17 @@ export class MongoGenericService<S, D> {
     sortBy: string,
   ): Promise<any> {
     try {
-      let query: any = [];
-
-      if (filterParams && Object.keys(filterParams).length > 0) {
-        query = [{ $match: filterParams }];
-        if (fields) {
-          const selectedFields = this.formatSelectedFields(fields);
-          query.push({ $project: selectedFields });
-        }
-        return this.model.aggregate(query).exec();
-      } else {
-        query = this.model.find(filterParams);
-        if (fields) {
-          const selectedFields = this.formatFieldParams(fields);
-          query = query.select(selectedFields);
-        }
-        return query.lean();
+      let query = this.model.find(filterParams);
+      if (fields) {
+        const selectedFields = this.formatFieldParams(fields);
+        query = query.select(selectedFields);
       }
+  
+      if (sortBy) {
+        query = query.sort(sortBy);
+      }
+  
+      return query.lean();
     } catch (error) {
       throw error;
     }
@@ -102,7 +96,7 @@ export class MongoGenericService<S, D> {
 
   patchParams(filterParams) {
     const andConditions = [];
-
+  
     if (Object.keys(filterParams).length > 0) {
       for (const key in filterParams) {
         if (filterParams.hasOwnProperty(key)) {
@@ -114,6 +108,9 @@ export class MongoGenericService<S, D> {
             andConditions.push({
               $or: [{ [key]: value }, { [key]: new ObjectId(value) }],
             });
+          } else if (typeof value === 'object' && !Array.isArray(value)) {
+            // Presume que é um filtro avançado (como $gte, $lte)
+            andConditions.push({ [key]: value });
           } else {
             andConditions.push({ [key]: value });
           }
@@ -124,14 +121,14 @@ export class MongoGenericService<S, D> {
       return {};
     }
   }
-
+  
   async findAll(filter?: any): Promise<S[]> {
     const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify(
       filter,
     )}`;
-
+  
     const { fields, dateFrom, dateTo, sortBy, ...filterParams } = filter;
-
+  
     // Adicionar filtro de data, se necessário
     if (dateFrom || dateTo) {
       filterParams['createdAt'] = {};
@@ -142,21 +139,21 @@ export class MongoGenericService<S, D> {
         filterParams['createdAt']['$lte'] = new Date(dateTo);
       }
     }
-
+  
     const modifiedFilter = this.patchParams(filterParams);
-
+  
     const method = async () => {
       const findResult = await this.findAllMethod(
         fields,
         modifiedFilter,
         sortBy,
       );
-
+  
       return findResult;
     };
-
+  
     const item = await this.getCached(key, method);
-
+  
     return item;
   }
 
