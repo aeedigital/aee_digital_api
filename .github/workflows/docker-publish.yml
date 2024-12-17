@@ -37,18 +37,16 @@ jobs:
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
 
-      - name: Save image details
-        run: echo "IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/${IMAGE_NAME}:${VERSION}" >> $GITHUB_ENV
-
   # Deploy to Hostgator server
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy container to Hostgator
+      - name: Send docker-compose.yml to Hostgator
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -64,10 +62,16 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            echo "Logging into GitHub Container Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
             cd ~/app
             echo "Pulling latest image..."
-            docker-compose pull
-            echo "Restarting containers..."
-            docker-compose down
-            docker-compose up -d
-            echo "Deploy completed successfully."
+            docker-compose pull || echo "Image pull failed!"
+
+            echo "Stopping old containers..."
+            docker-compose down --volumes --remove-orphans
+
+            echo "Starting new containers..."
+            docker-compose up -d --build
+            echo "Deploy completed successfully!"
