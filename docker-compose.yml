@@ -2,7 +2,7 @@ version: '3.8'
 services:
   app:
     build: .
-    image: aee_digital_api
+    image: docker.pkg.github.com/${{ github.repository }}/aee_digital_api:latest
     container_name: aee_digital_api
     ports:
       - '5000:5000'
