@@ -1,16 +1,17 @@
 version: '3.8'
 services:
   app:
-    build: .
-    image: aee_digital_api
+    image: ghcr.io/aeedigital/aee_digital_api:latest
     container_name: aee_digital_api
     ports:
       - '5000:5000'
     networks:
-            - aee_digital_backend
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - aee_digital_backend
+    # Se estiver em produção, normalmente não se monta a pasta local.
+    # Comente ou remova:
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
 
 networks:
   aee_digital_backend:
