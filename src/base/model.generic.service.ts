@@ -1,9 +1,13 @@
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
-import { Inject } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
+import {format} from "./dateFormater.helper"
 export class MongoGenericService<S, D> {
+
+  private readonly logger = new Logger("MongoGenericService");
+  
   constructor(
     protected readonly model: Model<S>,
     @Inject(CacheService) private readonly cacheService: CacheService,
@@ -68,12 +72,14 @@ export class MongoGenericService<S, D> {
     await this.cacheService.delete(key);
   }
 
+
   protected async findAllMethod(
     fields,
     filterParams,
     sortBy: string,
   ): Promise<any> {
     try {
+
       let query = this.model.find(filterParams);
       if (fields) {
         const selectedFields = this.formatFieldParams(fields);
@@ -133,22 +139,22 @@ export class MongoGenericService<S, D> {
     if (dateFrom || dateTo) {
       filterParams['createdAt'] = {};
       if (dateFrom) {
-        filterParams['createdAt']['$gte'] = new Date(dateFrom);
+        filterParams['createdAt']['$gte'] =  format(dateFrom,"dd/mm/yyyy");
       }
       if (dateTo) {
-        filterParams['createdAt']['$lte'] = new Date(dateTo);
+        filterParams['createdAt']['$lte'] = format(dateTo, "dd/mm/yyyy");
       }
     }
   
     const modifiedFilter = this.patchParams(filterParams);
-  
+
     const method = async () => {
       const findResult = await this.findAllMethod(
         fields,
         modifiedFilter,
         sortBy,
       );
-  
+
       return findResult;
     };
   
