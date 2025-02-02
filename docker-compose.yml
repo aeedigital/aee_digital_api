@@ -1,7 +1,8 @@
 version: '3.8'
 services:
   app:
-    image: docker.pkg.github.com/aeedigital/aee_digital_api
+    build: .
+    image: aee_digital_api
     container_name: aee_digital_api
     ports:
       - '5000:5000'
@@ -9,9 +10,9 @@ services:
       - aee_digital_backend
     # Se estiver em produção, normalmente não se monta a pasta local.
     # Comente ou remova:
-    # volumes:
-    #   - .:/app
-    #   - /app/node_modules
+    volumes:
+      - .:/app
+      - /app/node_modules
 
 networks:
   aee_digital_backend:
