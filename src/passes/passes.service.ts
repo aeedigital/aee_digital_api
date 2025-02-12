@@ -7,11 +7,13 @@ import { PassesDocument } from './schemas/passes.schema';
 import { CreatePassesDto } from './dto/create-passes.dto';
 
 import { MongoGenericService } from '../base/model.generic.service';
+import { UpdatePassesDto } from './dto/update-pass.dto';
 
 @Injectable()
 export class PassesService extends MongoGenericService<
   PassesDocument,
-  CreatePassesDto
+  CreatePassesDto,
+  UpdatePassesDto
 > {
   constructor(
     @InjectModel('Passes')
