@@ -4,7 +4,7 @@ import { CacheService } from '../services/cache.service';
 import { Inject, Logger } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
 import {format} from "./dateFormater.helper"
-export class MongoGenericService<S, D> {
+export class MongoGenericService<S, D, U = D> {
 
   private readonly logger = new Logger("MongoGenericService");
   
@@ -192,7 +192,7 @@ export class MongoGenericService<S, D> {
     return savedDocument.toObject();
   }
 
-  async update(id: string, data: D): Promise<S> {
+  async update(id: string, data: U|D): Promise<S> {
     const existingDocument = await this.model.findById(id).exec();
 
     if (!existingDocument) {

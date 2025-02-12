@@ -3,7 +3,8 @@ import { HydratedDocument } from 'mongoose';
 
 export type PassesDocument = HydratedDocument<Passes>;
 
-@Schema()
+
+@Schema({ timestamps: true }) // Automatically manages createdAt and updatedAt
 export class Passes {
   @Prop({ type: String })
   user: string;
@@ -16,6 +17,9 @@ export class Passes {
 
   @Prop({ type: [String] })
   groups: string[];
+
+  @Prop({ default: null })
+  lastLogged: Date;
 }
 
 export const PassesSchema = SchemaFactory.createForClass(Passes);

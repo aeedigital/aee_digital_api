@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { UpdatePassesDto } from './dto/update-pass.dto';
 
 @Controller('passes')
 export class PassesController {
@@ -37,9 +38,21 @@ export class PassesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdatePassesDto) {
     return this.service.update(id, updateDto);
   }
+
+  @Patch(':id/last-logged-in')
+  updateLastLoggedIn(@Param('id') id: string) {
+    const lastLogged = new Date();
+
+    const updatedPass: UpdatePassesDto = {
+      lastLogged,
+    }
+
+    return this.service.update(id, updatedPass);
+  }
+
 
   @Delete(':id')
   delete(@Param('id') id: string) {

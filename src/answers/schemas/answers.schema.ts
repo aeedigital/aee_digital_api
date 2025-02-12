@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type AnswersDocument = HydratedDocument<Answer>;
 
-@Schema()
+@Schema({ timestamps: true }) // Automatically manages createdAt and updatedAt
 export class Answer {
   @Prop({ type: String })
   CENTRO_ID: string;
