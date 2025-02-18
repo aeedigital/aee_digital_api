@@ -8,8 +8,6 @@ export class Regional {
   @Prop()
   NOME_REGIONAL: string;
   @Prop()
-  ESTADO: string;
-  @Prop()
   PAIS: string;
   @Prop()
   COORDENADOR_ID: string;
