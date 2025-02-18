@@ -7,9 +7,6 @@ export class CreateRegionalDto {
   NOME_REGIONAL: string;
   @ApiProperty()
   @IsString()
-  ESTADO: string;
-  @ApiProperty()
-  @IsString()
   PAIS: string;
   @ApiProperty()
   @IsString()

@@ -21,6 +21,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { UpdateRegionalDto } from './dto/update-regional.dto';
 
 @Controller('regionais')
 export class RegionaisController {
@@ -53,7 +54,7 @@ export class RegionaisController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateRegionalDto) {
     return this.service.update(id, updateDto);
   }
 

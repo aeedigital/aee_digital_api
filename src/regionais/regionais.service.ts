@@ -15,12 +15,14 @@ import { FilterDto } from '../summary/dto/filter-summaries.dto';
 
 import { FilterDto as CentroFilterDto } from '../centros/dto/filter-centro.dto';
 import { CentroDocument } from '../centros/schemas/centro.schema';
+import { UpdateRegionalDto } from './dto/update-regional.dto';
 
 
 @Injectable()
 export class RegionalService extends MongoGenericService<
   RegionalDocument,
-  CreateRegionalDto
+  CreateRegionalDto,
+  UpdateRegionalDto
 > {
   constructor(
     @InjectModel('Regional')

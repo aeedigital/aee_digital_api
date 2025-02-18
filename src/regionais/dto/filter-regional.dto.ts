@@ -7,10 +7,6 @@ export class FilterDto {
 
   @IsString()
   @IsOptional()
-  ESTADO?: string;
-
-  @IsString()
-  @IsOptional()
   PAIS?: string;
 
   @IsString()
