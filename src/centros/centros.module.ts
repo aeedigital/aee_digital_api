@@ -1,4 +1,4 @@
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CentrosService } from './centros.service';
 import { CacheService } from '../services/cache.service';
@@ -13,7 +13,6 @@ import { SummaryModule } from '../summary/summary.module';
   imports: [
     SummaryModule,
     MongooseModule.forFeature([{ name: Centro.name, schema: CentroSchema }]),
-    CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],
 
   controllers: [CentrosController],

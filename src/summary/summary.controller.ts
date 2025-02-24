@@ -15,10 +15,11 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { UpdateSummaryDto } from './dto/update-summary.dto';
 
 @Controller('summaries')
 export class SummariesController {
-  constructor(private readonly service: Service) {}
+  constructor(private readonly service: Service) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
@@ -37,8 +38,19 @@ export class SummariesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateSummaryDto) {
     return this.service.update(id, updateDto);
+  }
+
+  @Patch(':id/validated-by-coord')
+  updateValidatedByCoord(@Param('id') id: string) {
+    const validatedByCoordAt = new Date();
+
+    const updatedPass: UpdateSummaryDto = {
+      validatedByCoordAt,
+    }
+
+    return this.service.update(id, updatedPass);
   }
 
   @Delete(':id')

@@ -6,16 +6,18 @@ import { Model } from 'mongoose';
 import { CreateSummariesDto } from './dto/create-summaries.dto';
 import { MongoGenericService } from '../base/model.generic.service';
 import { CacheService } from '../services/cache.service';
+import { UpdateSummaryDto } from './dto/update-summary.dto';
 
 @Injectable()
 export class SummaryService extends MongoGenericService<
   SummariesDocument,
-  CreateSummariesDto
+  CreateSummariesDto,
+  UpdateSummaryDto
 > {
   constructor(
     @InjectModel(Summaries.name)
     protected readonly SummariesModel: Model<SummariesDocument>,
-    @Inject(CacheService) cacheService: CacheService,
+    protected readonly cacheService: CacheService,
   ) {
     super(SummariesModel, cacheService);
   }

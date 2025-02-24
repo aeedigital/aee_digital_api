@@ -27,7 +27,7 @@ export class RegionalService extends MongoGenericService<
   constructor(
     @InjectModel('Regional')
     protected readonly regionalModel: Model<RegionalDocument>,
-    @Inject(CacheService) cacheService: CacheService,
+    protected readonly cacheService: CacheService,
     protected readonly centrosService: CentrosService,
     protected readonly summariesService: SummaryService
   ) {

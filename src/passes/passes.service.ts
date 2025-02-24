@@ -18,7 +18,7 @@ export class PassesService extends MongoGenericService<
   constructor(
     @InjectModel('Passes')
     protected readonly PassesModel: Model<PassesDocument>,
-    @Inject(CacheService) cacheService: CacheService,
+    protected readonly cacheService: CacheService,
   ) {
     super(PassesModel, cacheService);
   }

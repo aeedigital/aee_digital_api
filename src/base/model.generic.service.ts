@@ -1,18 +1,22 @@
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
-import { Inject, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
-import {format} from "./dateFormater.helper"
-export class MongoGenericService<S, D, U = D> {
+import { format } from './dateFormater.helper';
 
-  private readonly logger = new Logger("MongoGenericService");
-  
+@Injectable()
+export class MongoGenericService<S, D, U = D> {
+  private readonly logger = new Logger('MongoGenericService');
+  shouldUseCache: boolean;
+
+
   constructor(
     protected readonly model: Model<S>,
-    @Inject(CacheService) private readonly cacheService: CacheService,
+    protected readonly cacheService: CacheService,
   ) {
     this.listenToChanges();
+    this.shouldUseCache = false;;
   }
 
   async listenToChanges() {
@@ -20,10 +24,8 @@ export class MongoGenericService<S, D, U = D> {
 
     changeStream.on('change', (change) => {
       console.log('Mudança detectada:', change);
-      // Aqui você pode implementar a lógica para lidar com as mudanças.
-      // Por exemplo, enviar uma notificação ou executar alguma ação específica.
       const modelName = change?.ns?.coll;
-      this.deleteCache(modelName);
+      // this.cacheService.invalidateModelCache(modelName); // Agora o CacheService cuida da invalidação
     });
 
     changeStream.on('error', (error) => {
@@ -31,69 +33,32 @@ export class MongoGenericService<S, D, U = D> {
     });
   }
 
-  protected formatFieldParams(fieldParams: string) {
-    if (!fieldParams) return;
-    const params = fieldParams.split(',');
-    let paramsParsed = '';
-
-    for (let index = 0; index < params.length; index++) {
-      const element = params[index];
-      paramsParsed = paramsParsed.concat(element).concat(' ');
-    }
-
-    return paramsParsed;
-  }
-
-  formatSelectedFields(selectedFields) {
-    if (!selectedFields) return {};
-
-    const fields = selectedFields.split(',');
-    return fields.reduce((acc, field) => {
-      acc[field.trim()] = 1; // Inclui os campos; use 0 para excluir
-      return acc;
-    }, {});
-  }
-
   private async getCached(key, saveMethod): Promise<any> {
     let item = await this.cacheService.get(key);
 
     if (!item) {
       item = await saveMethod();
-      this.cacheService.set(key, item);
+      await this.cacheService.set(key, item);
     }
     return item;
   }
 
-  protected async deleteCache(modelName?: string) {
-    const key = modelName
-      ? `${modelName.toLowerCase()}:`
-      : `${this.model.modelName.toLowerCase()}:`;
-
-    await this.cacheService.delete(key);
+  protected formatFieldParams(fieldParams: string) {
+    if (!fieldParams) return;
+    const params = fieldParams.split(',');
+    return params.join(' ');
   }
 
-
-  protected async findAllMethod(
-    fields,
-    filterParams,
-    sortBy: string,
-  ): Promise<any> {
-    try {
-
-      let query = this.model.find(filterParams);
-      if (fields) {
-        const selectedFields = this.formatFieldParams(fields);
-        query = query.select(selectedFields);
-      }
-  
-      if (sortBy) {
-        query = query.sort(sortBy);
-      }
-  
-      return query.lean();
-    } catch (error) {
-      throw error;
+  protected async findAllMethod(fields, filterParams, sortBy: string): Promise<any> {
+    let query = this.model.find(filterParams);
+    if (fields) {
+      const selectedFields = this.formatFieldParams(fields);
+      query = query.select(selectedFields);
     }
+    if (sortBy) {
+      query = query.sort(sortBy);
+    }
+    return query.lean();
   }
 
   private isObjectId(value) {
@@ -102,85 +67,71 @@ export class MongoGenericService<S, D, U = D> {
 
   patchParams(filterParams) {
     const andConditions = [];
-  
-    if (Object.keys(filterParams).length > 0) {
-      for (const key in filterParams) {
-        if (filterParams.hasOwnProperty(key)) {
-          const value = filterParams[key];
-          if (value == undefined) {
-            continue;
-          }
-          if (this.isObjectId(value)) {
-            andConditions.push({
-              $or: [{ [key]: value }, { [key]: new ObjectId(value) }],
-            });
-          } else if (typeof value === 'object' && !Array.isArray(value)) {
-            // Presume que é um filtro avançado (como $gte, $lte)
-            andConditions.push({ [key]: value });
-          } else {
-            andConditions.push({ [key]: value });
-          }
+
+    for (const key in filterParams) {
+      if (filterParams.hasOwnProperty(key)) {
+        const value = filterParams[key];
+        if (this.isObjectId(value)) {
+          andConditions.push({
+            $or: [{ [key]: value }, { [key]: new ObjectId(value) }],
+          });
+        } else if (typeof value === 'object' && !Array.isArray(value)) {
+          andConditions.push({ [key]: value });
+        } else {
+          andConditions.push({ [key]: value });
         }
       }
-      return { $and: andConditions };
-    } else {
-      return {};
     }
+
+    return { $and: andConditions };
   }
-  
+
   async findAll(filter?: any): Promise<S[]> {
-    const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify(
-      filter,
-    )}`;
-  
-    const { fields, dateFrom, dateTo, sortBy, ...filterParams } = filter;
-  
-    // Adicionar filtro de data, se necessário
+    const key = `${this.model.modelName.toLowerCase()}:all:${JSON.stringify(filter)}`;
+
+    const { fields, dateFrom, dateTo, sortBy, ...filterParams } = filter || {};
+
     if (dateFrom || dateTo) {
       filterParams['createdAt'] = {};
       if (dateFrom) {
-        filterParams['createdAt']['$gte'] =  format(dateFrom,"dd/mm/yyyy");
+        filterParams['createdAt']['$gte'] = format(dateFrom, 'dd/mm/yyyy');
       }
       if (dateTo) {
-        filterParams['createdAt']['$lte'] = format(dateTo, "dd/mm/yyyy");
+        filterParams['createdAt']['$lte'] = format(dateTo, 'dd/mm/yyyy');
       }
     }
-  
+
     const modifiedFilter = this.patchParams(filterParams);
 
     const method = async () => {
-      const findResult = await this.findAllMethod(
-        fields,
-        modifiedFilter,
-        sortBy,
-      );
-
+      const findResult = await this.findAllMethod(fields, modifiedFilter, sortBy);
       return findResult;
     };
-  
-    const item = await this.getCached(key, method);
-  
-    return item;
+
+    return this.getCached(key, method);
   }
 
   async findOne(id: string): Promise<S> {
-    const key = `${this.model.modelName.toLowerCase()}:${JSON.stringify({
-      id,
-    })}`;
+    const key = `${this.model.modelName.toLowerCase()}:${id}`;
 
     const methodById = async () => {
       return this.model.findById(id).lean();
     };
 
-    const methodByString = async () => {
-      const itemId = new mongoose.Types.ObjectId(id);
-      return this.model.findById(itemId).lean();
-    };
     let item = await this.getCached(key, methodById);
 
     if (!item) {
-      item = await this.getCached(key, methodByString);
+      // Tenta recuperar do cache da lista
+      const cacheAllKey = `${this.model.modelName.toLowerCase()}:all`;
+      const cachedList = await this.cacheService.get(cacheAllKey);
+      if (cachedList) {
+        item = cachedList.find((doc) => doc['_id'].toString() === id);
+        if (item) {
+          await this.cacheService.set(key, item);
+        }
+      }
     }
+
     return item;
   }
 
@@ -188,13 +139,14 @@ export class MongoGenericService<S, D, U = D> {
     const newDocument = new this.model(data);
     const savedDocument = await newDocument.save();
 
-    await this.deleteCache();
+    // Invalidação automática gerenciada pelo CacheService
+    await this.cacheService.set(`${this.model.modelName.toLowerCase()}:${savedDocument._id}`, savedDocument);
+
     return savedDocument.toObject();
   }
 
-  async update(id: string, data: U|D): Promise<S> {
+  async update(id: string, data: U | D): Promise<S> {
     const existingDocument = await this.model.findById(id).exec();
-
     if (!existingDocument) {
       throw new Error('Documento não encontrado');
     }
@@ -202,21 +154,26 @@ export class MongoGenericService<S, D, U = D> {
     Object.assign(existingDocument, data);
     const updatedDocument = await existingDocument.save();
 
-    await this.deleteCache();
+    // Atualização automática do cache
+    await this.cacheService.set(`${this.model.modelName.toLowerCase()}:${id}`, updatedDocument);
+
     return updatedDocument.toObject();
   }
 
   async updateOrCreate(filter: any, data: D): Promise<S> {
-    await this.deleteCache();
-
     const modifiedFilter = this.patchParams(filter);
+    const options = { upsert: true, new: true };
 
-    const opcoes = { upsert: true, new: true };
-    return this.model.findOneAndUpdate(modifiedFilter, data, opcoes).exec();
+    const document = await this.model.findOneAndUpdate(modifiedFilter, data, options).exec();
+
+    // Atualização automática do cache
+    await this.cacheService.set(`${this.model.modelName.toLowerCase()}:${document._id}`, document);
+
+    return document;
   }
 
-  async delete(id: string): Promise<D> {
-    await this.deleteCache();
-    return this.model.deleteOne({ _id: id }).lean();
+  async delete(id: string): Promise<any> {
+    await this.model.deleteOne({ _id: id }).lean();
+    await this.cacheService.delete(`${this.model.modelName.toLowerCase()}:${id}`);
   }
 }

@@ -13,6 +13,7 @@
     "incremental": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "paths": {
       "src/*": ["src/*"]

@@ -17,7 +17,7 @@ export class FormService extends MongoGenericService<
   constructor(
     @InjectModel('Forms')
     protected readonly FormModel: Model<FormDocument>,
-    @Inject(CacheService) cacheService: CacheService, // Remova esta linha se não estiver usando o CacheService
+    protected readonly cacheService: CacheService, // Remova esta linha se não estiver usando o CacheService
   ) {
     super(FormModel, cacheService);
   }

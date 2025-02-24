@@ -25,4 +25,8 @@ export class CreateSummariesDto {
   @IsNotEmpty()
   @IsArray()
   QUESTIONS: [SummaryQuestion];
+
+  @ApiProperty()
+  validatedByCoordAt?: Date;
+
 }
