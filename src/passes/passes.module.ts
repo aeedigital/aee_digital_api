@@ -1,4 +1,4 @@
-import { CacheModule, Module } from '@nestjs/common';
+import {  Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassesService } from './passes.service';
 import { CacheService } from '../services/cache.service';
@@ -10,7 +10,6 @@ import { PassesSchema } from './schemas/passes.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Passes', schema: PassesSchema }]),
-    CacheModule.register(), // Importe o CacheModule e registre-o aqui
   ],
 
   controllers: [PassesController],

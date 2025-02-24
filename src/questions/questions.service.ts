@@ -16,7 +16,7 @@ export class QuestionsService extends MongoGenericService<
   constructor(
     @InjectModel('Questions')
     protected readonly QuestionsModel: Model<QuestionsDocument>,
-    @Inject(CacheService) cacheService: CacheService,
+    protected readonly cacheService: CacheService,
   ) {
     super(QuestionsModel, cacheService);
   }

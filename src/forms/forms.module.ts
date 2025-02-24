@@ -1,4 +1,4 @@
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { MongooseModule } from '@nestjs/mongoose';
 import { FormService } from './forms.service';
@@ -7,6 +7,7 @@ import { CacheService } from '../services/cache.service';
 import { FormsController } from './forms.controller';
 
 import { Forms, FormSchema } from './schemas/forms.schema';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [

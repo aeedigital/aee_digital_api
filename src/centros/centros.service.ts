@@ -22,7 +22,7 @@ export class CentrosService extends MongoGenericService<
   constructor(
     @InjectModel('Centro')
     protected readonly centroModel: Model<CentroDocument>,
-    @Inject(CacheService) cacheService: CacheService,
+    protected readonly cacheService: CacheService,
     protected readonly summariesService: SummaryService,
   ) {
     super(centroModel, cacheService);

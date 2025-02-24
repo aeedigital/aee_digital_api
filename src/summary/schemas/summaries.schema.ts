@@ -22,6 +22,8 @@ export class Summaries {
   CENTRO_ID: CreateCentroDto;
   @Prop([{ type: SummaryQuestion }])
   QUESTIONS: [SummaryQuestion];
+  @Prop()
+  validatedByCoordAt?: Date;
 }
 
 export const SummariesSchema = SchemaFactory.createForClass(Summaries);
