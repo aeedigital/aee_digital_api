@@ -19,6 +19,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { UpdateCentroDto } from './dto/update-centro.dto';
 
 @Controller('centros')
 export class CentrosController {
@@ -49,7 +50,7 @@ export class CentrosController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateCentroDto) {
     return this.service.update(id, updateDto);
   }
 

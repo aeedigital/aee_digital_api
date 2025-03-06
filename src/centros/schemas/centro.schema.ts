@@ -33,6 +33,8 @@ export class Centro {
   ESTADO: string;
   @Prop()
   PAIS: string;
+  @Prop()
+  STATUS: string;
 }
 
 export const CentroSchema = SchemaFactory.createForClass(Centro);

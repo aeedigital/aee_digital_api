@@ -38,5 +38,9 @@ export class FilterDto {
   @IsOptional()
   fields?: string;
 
+  @IsOptional()
+  @IsString()
+  STATUS?: string;
+
   // Adicione outros campos de filtro, se necessário
 }

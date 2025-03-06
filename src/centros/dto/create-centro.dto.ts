@@ -62,4 +62,7 @@ export class CreateCentroDto {
   @IsNotEmpty()
   @ApiProperty()
   PAIS: string;
+  @IsNotEmpty()
+  @ApiProperty()
+  STATUS: string;
 }
