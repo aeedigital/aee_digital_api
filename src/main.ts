@@ -12,6 +12,26 @@ async function bootstrap() {
     cors: true
   });
 
+  app.enableCors({
+    origin: (origin, cb) => {
+      const allowed = new Set([
+        "http://162.214.123.133:4200", // front antigo pelo IP
+        "http://162.214.123.133:3000", // front antigo pelo IP
+        "https://d2enljusu1yvyv.cloudfront.net", // front novo
+      ]);
+
+      if (!origin || allowed.has(origin)) {
+        return cb(null, true);
+      }
+
+      return cb(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false,
+  });
+
+
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
 
