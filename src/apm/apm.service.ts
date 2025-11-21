@@ -6,6 +6,7 @@ apm.start({
   secretToken: process.env.ELASTIC_APM_SECRET_TOKEN || '',
   serverUrl: process.env.ELASTIC_APM_SERVER_URL || 'http://localhost:8200',
   environment: process.env.NODE_ENV || 'development',
+  apiRequestTime: '60s', // Dá mais tempo para o APM responder
 
   // Outras configurações opcionais:
   // active: true, // para ativar/desativar a coleta

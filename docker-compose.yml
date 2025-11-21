@@ -1,20 +1,26 @@
-version: '3.8'
 services:
   app:
-    build: .
+    hostname: aee_digital_api
+    build: 
+      context: .
+      dockerfile: Dockerfile
     image: aee_digital_api
+    restart: on-failure
     container_name: aee_digital_api
     ports:
-      - '5000:5000'
+      - '5001:5001'
     networks:
       - aee_digital_backend
-    # Se estiver em produção, normalmente não se monta a pasta local.
-    # Comente ou remova:
     volumes:
       - .:/app
       - /app/node_modules
+    environment:
+      - ELASTIC_APM_SERVICE_NAME=aee_digital_api
+      - ELASTIC_APM_SERVER_URL=http://apm-server:8200
+      - NODE_ENV=production
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5044
 
 networks:
   aee_digital_backend:
-    name: aee_digital_backend
-    driver: bridge
+    external: true

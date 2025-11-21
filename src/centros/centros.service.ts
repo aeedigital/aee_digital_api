@@ -13,11 +13,13 @@ import { CreateCentroDto } from './dto/create-centro.dto';
 
 import { MongoGenericService } from '../base/model.generic.service';
 import { SummaryService } from '../summary/summary.service';
+import { UpdateCentroDto } from './dto/update-centro.dto';
 
 @Injectable()
 export class CentrosService extends MongoGenericService<
   CentroDocument,
-  CreateCentroDto
+  CreateCentroDto,
+  UpdateCentroDto
 > {
   constructor(
     @InjectModel('Centro')

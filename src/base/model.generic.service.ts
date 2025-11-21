@@ -69,22 +69,29 @@ export class MongoGenericService<S, D, U = D> {
     const andConditions = [];
 
     for (const key in filterParams) {
-      if (filterParams.hasOwnProperty(key)) {
-        const value = filterParams[key];
-        if (this.isObjectId(value)) {
-          andConditions.push({
-            $or: [{ [key]: value }, { [key]: new ObjectId(value) }],
-          });
-        } else if (typeof value === 'object' && !Array.isArray(value)) {
-          andConditions.push({ [key]: value });
-        } else {
-          andConditions.push({ [key]: value });
+        if (filterParams.hasOwnProperty(key)) {
+            let value = filterParams[key];
+
+            // Se o valor contém vírgula, transforma em array
+            if (typeof value === 'string' && value.includes(',')) {
+                const valuesArray = value.split(',').map(v => v.trim());
+                andConditions.push({
+                    $or: valuesArray.map(v => ({ [key]: v }))
+                });
+            } else if (this.isObjectId(value)) {
+                andConditions.push({
+                    $or: [{ [key]: value }, { [key]: new ObjectId(value) }]
+                });
+            } else if (typeof value === 'object' && !Array.isArray(value)) {
+                andConditions.push({ [key]: value });
+            } else {
+                andConditions.push({ [key]: value });
+            }
         }
-      }
     }
 
     return { $and: andConditions };
-  }
+}
 
   async findAll(filter?: any): Promise<S[]> {
     const key = `${this.model.modelName.toLowerCase()}:all:${JSON.stringify(filter)}`;
