@@ -12,23 +12,29 @@ async function bootstrap() {
     cors: true
   });
 
-  app.enableCors({
-    origin: (origin, cb) => {
-      const allowed = new Set([
-        "http://162.214.123.133:4200", // front antigo pelo IP
-        "http://162.214.123.133:3000", // front antigo pelo IP
-        "https://d2enljusu1yvyv.cloudfront.net", // front novo
-      ]);
+  const allowedOrigins = new Set([
+    "http://162.214.123.133:4200",
+    "http://162.214.123.133:3000",
+    "https://d2enljusu1yyvy.cloudfront.net",  // <– domínio correto
+  ]);
 
-      if (!origin || allowed.has(origin)) {
-        return cb(null, true);
+  app.enableCors({
+    origin: (origin, callback) => {
+      // curl, Postman e chamadas internas não possuem Origin
+      if (!origin) {
+        return callback(null, true);
       }
 
-      return cb(new Error("Not allowed by CORS"));
+      if (allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+
+      // Não lança erro (evita 500) — apenas bloqueia o CORS
+      return callback(null, false);
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: false,
+    credentials: true,
   });
 
 
