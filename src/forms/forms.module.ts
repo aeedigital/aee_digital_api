@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 
 import { MongooseModule } from '@nestjs/mongoose';
-import { FormService } from './forms.service';
 import { CacheService } from '../services/cache.service';
 
 import { FormsController } from './forms.controller';
 
 import { Forms, FormSchema } from './schemas/forms.schema';
 import { CacheModule } from '@nestjs/cache-manager';
+import { FormsMongoRepository } from '../infra/mongo/forms.mongo.repository';
+import { FORM_REPOSITORY } from './forms.tokens';
+import { FormsAppService } from '../application/forms/forms.service';
 
 @Module({
   imports: [
@@ -16,6 +18,13 @@ import { CacheModule } from '@nestjs/cache-manager';
   ],
 
   controllers: [FormsController],
-  providers: [FormService, CacheService],
+  providers: [
+    FormsAppService,
+    CacheService,
+    {
+      provide: FORM_REPOSITORY,
+      useClass: FormsMongoRepository,
+    },
+  ],
 })
 export class FormsModule {}

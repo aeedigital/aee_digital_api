@@ -1,0 +1,1 @@
+export const SUMMARY_REPOSITORY = Symbol('SUMMARY_REPOSITORY');

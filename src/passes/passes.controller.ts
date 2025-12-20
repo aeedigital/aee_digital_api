@@ -1,5 +1,5 @@
-import { PassesService as Service } from './passes.service';
-import { Passes as Schema } from './schemas/passes.schema';
+import { PassesAppService as Service } from '../application/passes/passes.service';
+import { Pass } from '../domain/entities/pass';
 import { FilterDto } from './dto/filter-passes.dto';
 import { CreatePassesDto as CreateDto } from './dto/create-passes.dto';
 
@@ -21,25 +21,44 @@ import { UpdatePassesDto } from './dto/update-pass.dto';
 export class PassesController {
   constructor(private readonly service: Service) {}
 
+  private toFilter(filterDto: FilterDto): Record<string, any> {
+    const filter: Record<string, any> = { ...(filterDto as any) };
+    if ((filter as any).scope_id) {
+      filter.scopeId = (filter as any).scope_id;
+      delete (filter as any).scope_id;
+    }
+    return filter;
+  }
+
+  private toInput(dto: CreateDto) {
+    return {
+      user: dto.user,
+      pass: dto.pass,
+      scopeId: dto.scope_id,
+      groups: dto.groups,
+      lastLogged: dto.lastLogged ?? null,
+    };
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(createDto);
+    return this.service.create(this.toInput(createDto));
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
-    return this.service.findAll(filterDto);
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Pass[]> {
+    return this.service.findAll(this.toFilter(filterDto));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Schema> {
+  findOne(@Param('id') id: string): Promise<Pass> {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdatePassesDto) {
-    return this.service.update(id, updateDto);
+    return this.service.update(id, this.toInput(updateDto as any));
   }
 
   @Patch(':id/last-logged-in')
@@ -50,7 +69,7 @@ export class PassesController {
       lastLogged,
     }
 
-    return this.service.update(id, updatedPass);
+    return this.service.update(id, this.toInput(updatedPass as any));
   }
 
 

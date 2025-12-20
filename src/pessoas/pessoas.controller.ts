@@ -1,5 +1,5 @@
-import { PessoasService as Service } from './pessoas.service';
-import { Pessoas as Schema } from './schemas/pessoas.schema';
+import { PessoasAppService as Service } from '../application/pessoas/pessoas.service';
+import { Person } from '../domain/entities/person';
 import { FilterDto } from './dto/filter-pessoas.dto';
 import { CreatePessoasDto as CreateDto } from './dto/create-pessoas.dto';
 
@@ -20,25 +20,42 @@ import { ApiOperation } from '@nestjs/swagger';
 export class PessoasController {
   constructor(private readonly service: Service) {}
 
+  private toFilter(filterDto: FilterDto) {
+    return {
+      name: filterDto.NOME,
+      email: (filterDto as any)['E-MAIL'],
+      celular: filterDto.CELULAR,
+      fields: filterDto.fields,
+    };
+  }
+
+  private toInput(dto: CreateDto) {
+    return {
+      name: dto.NOME,
+      email: dto['E-MAIL'],
+      celular: dto.CELULAR,
+    };
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(createDto);
+    return this.service.create(this.toInput(createDto));
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
-    return this.service.findAll(filterDto);
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Person[]> {
+    return this.service.findAll(this.toFilter(filterDto));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Schema> {
+  findOne(@Param('id') id: string): Promise<Person> {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, updateDto);
+    return this.service.update(id, this.toInput(updateDto));
   }
 
   @Delete(':id')

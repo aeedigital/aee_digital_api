@@ -1,5 +1,5 @@
-import { FormService as Service } from './forms.service';
-import { Forms as Schema } from './schemas/forms.schema';
+import { FormsAppService as Service } from '../application/forms/forms.service';
+import { Form } from '../domain/entities/form';
 import { FilterDto } from './dto/filter-form.dto';
 import { CreateFormDto as CreateDto } from './dto/create-form.dto';
 
@@ -20,25 +20,53 @@ import { ApiOperation } from '@nestjs/swagger';
 export class FormsController {
   constructor(private readonly service: Service) {}
 
+  private toFilter(filterDto: FilterDto) {
+    return {
+      name: filterDto.NAME,
+      version: filterDto.VERSION as any,
+      createdBy: filterDto.CREATEDBY,
+      fields: filterDto.fields,
+    };
+  }
+
+  private toInput(dto: CreateDto) {
+    return {
+      name: dto.NAME,
+      version: dto.VERSION as any,
+      createdBy: dto.CREATEDBY,
+      pages: dto.PAGES?.map((page) => ({
+        name: page.NAME,
+        role: page.ROLE,
+        quizes: page.QUIZES?.map((quiz) => ({
+          category: quiz.CATEGORY,
+          questions: quiz.QUESTIONS?.map((question) => ({
+            group: question.GROUP,
+            isMultiple: question.IS_MULTIPLE,
+          })),
+        })),
+      })),
+    };
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(createDto);
+    return this.service.create(this.toInput(createDto));
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
-    return this.service.findAll(filterDto);
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Form[]> {
+    return this.service.findAll(this.toFilter(filterDto));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Schema> {
+  findOne(@Param('id') id: string): Promise<Form> {
     return this.service.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, updateDto);
+    return this.service.update(id, this.toInput(updateDto));
   }
 
   @Delete(':id')

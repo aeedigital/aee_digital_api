@@ -1,0 +1,1 @@
+export const CENTRO_REPOSITORY = Symbol('CENTRO_REPOSITORY');

@@ -1,11 +1,11 @@
-import {  Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { PassesService } from './passes.service';
 import { CacheService } from '../services/cache.service';
-
 import { PassesController } from './passes.controller';
-
 import { PassesSchema } from './schemas/passes.schema';
+import { PassesMongoRepository } from '../infra/mongo/passes.mongo.repository';
+import { PASS_REPOSITORY } from './passes.tokens';
+import { PassesAppService } from '../application/passes/passes.service';
 
 @Module({
   imports: [
@@ -13,6 +13,13 @@ import { PassesSchema } from './schemas/passes.schema';
   ],
 
   controllers: [PassesController],
-  providers: [PassesService, CacheService],
+  providers: [
+    PassesAppService,
+    CacheService,
+    {
+      provide: PASS_REPOSITORY,
+      useClass: PassesMongoRepository,
+    },
+  ],
 })
 export class PassesModule {}

@@ -1,0 +1,1 @@
+export const REGIONAL_REPOSITORY = Symbol('REGIONAL_REPOSITORY');

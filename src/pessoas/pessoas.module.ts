@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { PessoasService } from './pessoas.service';
 import { CacheService } from '../services/cache.service';
 
 import { PessoasController } from './pessoas.controller';
 
 import { Pessoas, PessoasSchema } from './schemas/pessoas.schema';
+import { PessoasMongoRepository } from '../infra/mongo/pessoas.mongo.repository';
+import { PERSON_REPOSITORY } from './pessoas.tokens';
+import { PessoasAppService } from '../application/pessoas/pessoas.service';
 
 @Module({
   imports: [
@@ -13,6 +15,13 @@ import { Pessoas, PessoasSchema } from './schemas/pessoas.schema';
   ],
 
   controllers: [PessoasController],
-  providers: [PessoasService, CacheService],
+  providers: [
+    PessoasAppService,
+    CacheService,
+    {
+      provide: PERSON_REPOSITORY,
+      useClass: PessoasMongoRepository,
+    },
+  ],
 })
 export class PessoasModule {}

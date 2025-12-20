@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CentrosService } from './centros.service';
 import { CacheService } from '../services/cache.service';
 
 import { CentrosController } from './centros.controller';
 
 import { Centro, CentroSchema } from './schemas/centro.schema';
-import { SummaryService } from '../summary/summary.service';
 import { SummaryModule } from '../summary/summary.module';
+import { CentrosMongoRepository } from '../infra/mongo/centros.mongo.repository';
+import { CENTRO_REPOSITORY } from './centros.tokens';
+import { CentrosAppService } from '../application/centros/centros.service';
 
 @Module({
   imports: [
@@ -17,9 +18,13 @@ import { SummaryModule } from '../summary/summary.module';
 
   controllers: [CentrosController],
   providers: [
-    CentrosService, 
-    CacheService
+    CentrosAppService,
+    CacheService,
+    {
+      provide: CENTRO_REPOSITORY,
+      useClass: CentrosMongoRepository,
+    },
   ],
-  exports:[CentrosService]
+  exports: [CentrosAppService],
 })
 export class CentrosModule {}

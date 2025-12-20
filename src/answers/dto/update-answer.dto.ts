@@ -6,7 +6,7 @@ export class UpdateDto {
   QUESTION_ID: string;
   @IsOptional()
   @IsString()
-  CENTRO_ID: boolean;
+  CENTRO_ID: string;
   @IsOptional()
   @IsString()
   ANSWER: string;

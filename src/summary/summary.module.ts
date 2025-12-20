@@ -1,13 +1,15 @@
 /*
 https://docs.nestjs.com/modules
 */
-import { SummaryService } from './summary.service';
 import { SummariesController } from './summary.controller';
 
 import { Module } from '@nestjs/common';
 import { CacheService } from '../services/cache.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Summaries, SummariesSchema } from './schemas/summaries.schema';
+import { SummariesMongoRepository } from '../infra/mongo/summaries.mongo.repository';
+import { SUMMARY_REPOSITORY } from './summary.tokens';
+import { SummaryAppService } from '../application/summary/summary.service';
 
 @Module({
   imports: [
@@ -16,7 +18,14 @@ import { Summaries, SummariesSchema } from './schemas/summaries.schema';
     ]),
   ],
   controllers: [SummariesController],
-  providers: [SummaryService, CacheService],
-  exports: [SummaryService]
+  providers: [
+    SummaryAppService,
+    CacheService,
+    {
+      provide: SUMMARY_REPOSITORY,
+      useClass: SummariesMongoRepository,
+    },
+  ],
+  exports: [SummaryAppService],
 })
 export class SummaryModule {}
