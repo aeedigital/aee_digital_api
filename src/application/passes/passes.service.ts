@@ -6,7 +6,7 @@ import {
   UpdatePassInput,
 } from '../../domain/repositories/pass.repository';
 import { Pass } from '../../domain/entities/pass';
-import { PASS_REPOSITORY } from '../../passes/passes.tokens';
+import { PASS_REPOSITORY } from '../../domain/repositories/repository.tokens';
 
 @Injectable()
 export class PassesAppService {

@@ -11,6 +11,8 @@ import { Form } from '../../domain/entities/form';
 import { FormDocument } from '../../forms/schemas/forms.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { extractId } from '../../base/mappers/mongo-id.mapper';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class FormsMongoRepository
@@ -25,20 +27,24 @@ export class FormsMongoRepository
   }
 
   protected toDomain(doc: any): Form {
+    const core: Omit<Form, 'id' | 'createdAt' | 'updatedAt' | 'pages'> = mapProps(
+      doc,
+      {
+        NAME: 'name',
+        VERSION: 'version',
+        CREATEDBY: 'createdBy',
+      },
+    );
     return {
       id: doc._id?.toString(),
-      name: doc.NAME,
-      version: doc.VERSION,
-      createdBy: doc.CREATEDBY,
+      ...core,
       pages: (doc.PAGES || []).map((page: any) => ({
         name: page.NAME,
         role: page.ROLE,
         quizes: (page.QUIZES || []).map((quiz: any) => ({
           category: quiz.CATEGORY,
           questions: (quiz.QUESTIONS || []).map((question: any) => ({
-            group: (question.GROUP || []).map((g: any) =>
-              g?._id?.toString?.() ?? g?.toString?.() ?? g,
-            ),
+            group: (question.GROUP || []).map((g: any) => extractId(g)),
             isMultiple: question.IS_MULTIPLE,
           })),
         })),
@@ -49,20 +55,22 @@ export class FormsMongoRepository
   }
 
   protected buildFilter(filter?: FormFilter): Record<string, any> {
-    const query: Record<string, any> = {};
-    if (!filter) return query;
-    if ((filter as any).name) query['NAME'] = (filter as any).name;
-    if ((filter as any).version !== undefined) query['VERSION'] = (filter as any).version;
-    if ((filter as any).createdBy) query['CREATEDBY'] = (filter as any).createdBy;
-    if ((filter as any).fields) query['fields'] = (filter as any).fields;
-    return query;
+    return mapProps(filter as any, {
+      name: 'NAME',
+      version: 'VERSION',
+      createdBy: 'CREATEDBY',
+      fields: 'fields',
+    });
   }
 
   protected toPersistence(data: CreateFormInput | UpdateFormInput) {
-    const payload: Record<string, any> = {
-      NAME: data.name,
-      VERSION: data.version,
-      CREATEDBY: data.createdBy,
+    const payload = mapProps(data as any, {
+      name: 'NAME',
+      version: 'VERSION',
+      createdBy: 'CREATEDBY',
+    });
+    return omitUndefined({
+      ...payload,
       PAGES: data.pages?.map((page) => ({
         NAME: page.name,
         ROLE: page.role,
@@ -74,11 +82,7 @@ export class FormsMongoRepository
           })),
         })),
       })),
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    });
   }
 
   protected async findAllMethod(

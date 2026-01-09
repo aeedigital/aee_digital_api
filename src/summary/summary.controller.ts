@@ -2,6 +2,10 @@ import { FilterDto } from './dto/filter-summaries.dto';
 import { CreateSummariesDto as CreateDto, SummaryQuestion } from './dto/create-summaries.dto';
 import { SummaryAppService as Service } from '../application/summary/summary.service';
 import { Summary } from '../domain/entities/summary';
+import {
+  CreateSummaryInput,
+  UpdateSummaryInput,
+} from '../domain/repositories/summary.repository';
 
 import {
   Controller,
@@ -16,40 +20,61 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdateSummaryDto } from './dto/update-summary.dto';
+import { mapProps } from '../base/mappers/object.mapper';
+import { extractId } from '../base/mappers/mongo-id.mapper';
 
 @Controller('summaries')
 export class SummariesController {
   constructor(private readonly service: Service) { }
 
   private toFilter(filterDto: FilterDto) {
+    return mapProps(filterDto, {
+      FORM_ID: 'formId',
+      CENTRO_ID: 'centroId',
+      fields: 'fields',
+    });
+  }
+
+  private toCreateInput(dto: CreateDto): CreateSummaryInput {
+    const payload = mapProps<any, CreateSummaryInput>(dto as any, {
+      FORM_ID: 'formId',
+      CENTRO_ID: 'centroId',
+      validatedByCoordAt: 'validatedByCoordAt',
+    });
+    const questions = (dto.QUESTIONS as SummaryQuestion[] | undefined)?.map(
+      (q) => ({
+        answer: q.ANSWER,
+        questionId: extractId((q as any).QUESTION),
+      }),
+    );
     return {
-      formId: filterDto.FORM_ID,
-      centroId: filterDto.CENTRO_ID,
-      fields: filterDto.fields,
+      ...payload,
+      ...(questions ? { questions } : {}),
     };
   }
 
-  private toInput(dto: CreateDto | UpdateSummaryDto) {
+  private toUpdateInput(dto: UpdateSummaryDto): UpdateSummaryInput {
+    const payload = mapProps<any, UpdateSummaryInput>(dto as any, {
+      FORM_ID: 'formId',
+      CENTRO_ID: 'centroId',
+      validatedByCoordAt: 'validatedByCoordAt',
+    });
+    const questions = (dto.QUESTIONS as SummaryQuestion[] | undefined)?.map(
+      (q) => ({
+        answer: q.ANSWER,
+        questionId: extractId((q as any).QUESTION),
+      }),
+    );
     return {
-      formId: dto.FORM_ID,
-      centroId: dto.CENTRO_ID,
-      questions: (dto.QUESTIONS as SummaryQuestion[] | undefined)?.map(
-        (q) => ({
-          answer: q.ANSWER,
-          questionId:
-            (q as any).QUESTION?._id?.toString?.() ??
-            (q as any).QUESTION?.toString?.() ??
-            (q as any).QUESTION,
-        }),
-      ),
-      validatedByCoordAt: dto.validatedByCoordAt,
+      ...payload,
+      ...(questions ? { questions } : {}),
     };
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toInput(createDto));
+    return this.service.create(this.toCreateInput(createDto));
   }
 
   @Get()
@@ -64,7 +89,7 @@ export class SummariesController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateSummaryDto) {
-    return this.service.update(id, this.toInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto));
   }
 
   @Patch(':id/validated-by-coord')
@@ -75,7 +100,7 @@ export class SummariesController {
       validatedByCoordAt,
     }
 
-    return this.service.update(id, this.toInput(updatedPass as any));
+    return this.service.update(id, this.toUpdateInput(updatedPass));
   }
 
   @Delete(':id')

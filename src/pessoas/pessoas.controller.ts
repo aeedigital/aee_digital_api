@@ -2,6 +2,10 @@ import { PessoasAppService as Service } from '../application/pessoas/pessoas.ser
 import { Person } from '../domain/entities/person';
 import { FilterDto } from './dto/filter-pessoas.dto';
 import { CreatePessoasDto as CreateDto } from './dto/create-pessoas.dto';
+import {
+  CreatePersonInput,
+  UpdatePersonInput,
+} from '../domain/repositories/person.repository';
 
 import {
   Controller,
@@ -15,32 +19,41 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { mapProps } from '../base/mappers/object.mapper';
 
 @Controller('pessoas')
 export class PessoasController {
   constructor(private readonly service: Service) {}
 
   private toFilter(filterDto: FilterDto) {
-    return {
-      name: filterDto.NOME,
-      email: (filterDto as any)['E-MAIL'],
-      celular: filterDto.CELULAR,
-      fields: filterDto.fields,
-    };
+    return mapProps(filterDto as any, {
+      NOME: 'name',
+      'E-MAIL': 'email',
+      CELULAR: 'celular',
+      fields: 'fields',
+    });
   }
 
-  private toInput(dto: CreateDto) {
-    return {
-      name: dto.NOME,
-      email: dto['E-MAIL'],
-      celular: dto.CELULAR,
-    };
+  private toCreateInput(dto: CreateDto): CreatePersonInput {
+    return mapProps<any, CreatePersonInput>(dto as any, {
+      NOME: 'name',
+      'E-MAIL': 'email',
+      CELULAR: 'celular',
+    });
+  }
+
+  private toUpdateInput(dto: CreateDto): UpdatePersonInput {
+    return mapProps<any, UpdatePersonInput>(dto as any, {
+      NOME: 'name',
+      'E-MAIL': 'email',
+      CELULAR: 'celular',
+    });
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toInput(createDto));
+    return this.service.create(this.toCreateInput(createDto));
   }
 
   @Get()
@@ -55,7 +68,7 @@ export class PessoasController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto));
   }
 
   @Delete(':id')

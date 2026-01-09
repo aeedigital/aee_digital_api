@@ -6,7 +6,7 @@ import {
   UpdateRegionalInput,
 } from '../../domain/repositories/regional.repository';
 import { Regional } from '../../domain/entities/regional';
-import { REGIONAL_REPOSITORY } from '../../regionais/regionais.tokens';
+import { REGIONAL_REPOSITORY } from '../../domain/repositories/repository.tokens';
 import { CentrosAppService } from '../centros/centros.service';
 import { SummaryAppService } from '../summary/summary.service';
 import { CentroFilter } from '../../domain/repositories/centro.repository';

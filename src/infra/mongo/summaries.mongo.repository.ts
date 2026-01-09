@@ -11,6 +11,8 @@ import { Summary } from '../../domain/entities/summary';
 import { SummariesDocument, Summaries } from '../../summary/schemas/summaries.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { extractId } from '../../base/mappers/mongo-id.mapper';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class SummariesMongoRepository
@@ -33,22 +35,13 @@ export class SummariesMongoRepository
   protected toDomain(doc: any): Summary {
     const mapQuestion = (item: any) => ({
       answer: item.ANSWER,
-      questionId:
-        item.QUESTION?._id?.toString() ??
-        item.QUESTION?.toString?.() ??
-        item.QUESTION,
+      questionId: extractId(item.QUESTION),
     });
 
     return {
       id: doc._id?.toString(),
-      formId:
-        doc.FORM_ID?._id?.toString() ??
-        doc.FORM_ID?.toString?.() ??
-        doc.FORM_ID,
-      centroId:
-        doc.CENTRO_ID?._id?.toString() ??
-        doc.CENTRO_ID?.toString?.() ??
-        doc.CENTRO_ID,
+      formId: extractId(doc.FORM_ID),
+      centroId: extractId(doc.CENTRO_ID),
       questions: (doc.QUESTIONS || []).map(mapQuestion),
       validatedByCoordAt: doc.validatedByCoordAt
         ? new Date(doc.validatedByCoordAt)
@@ -59,30 +52,29 @@ export class SummariesMongoRepository
   }
 
   protected buildFilter(filter?: SummaryFilter): Record<string, any> {
-    const query: Record<string, any> = {};
-    if (!filter) return query;
-    if ((filter as any).formId) query['FORM_ID'] = (filter as any).formId;
-    if ((filter as any).centroId) query['CENTRO_ID'] = (filter as any).centroId;
-    if ((filter as any).fields) query['fields'] = (filter as any).fields;
-    return query;
+    return mapProps(filter as any, {
+      formId: 'FORM_ID',
+      centroId: 'CENTRO_ID',
+      fields: 'fields',
+    });
   }
 
   protected toPersistence(
     data: CreateSummaryInput | UpdateSummaryInput,
   ): Record<string, any> {
-    const payload: Record<string, any> = {
-      FORM_ID: data.formId,
-      CENTRO_ID: data.centroId,
-      QUESTIONS: data.questions?.map((q) => ({
-        ANSWER: q.answer,
-        QUESTION: q.questionId,
-      })),
-      validatedByCoordAt: data.validatedByCoordAt,
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    const payload = mapProps(data as any, {
+      formId: 'FORM_ID',
+      centroId: 'CENTRO_ID',
+      validatedByCoordAt: 'validatedByCoordAt',
+    });
+    const questions = data.questions?.map((q) => ({
+      ANSWER: q.answer,
+      QUESTION: q.questionId,
+    }));
+    return omitUndefined({
+      ...payload,
+      QUESTIONS: questions,
+    });
   }
 
   async update(id: string, data: UpdateSummaryInput): Promise<Summary> {

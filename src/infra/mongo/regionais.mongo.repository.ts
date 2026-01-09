@@ -11,6 +11,7 @@ import { Regional } from '../../domain/entities/regional';
 import { RegionalDocument } from '../../regionais/schemas/regionais.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class RegionaisMongoRepository
@@ -30,36 +31,35 @@ export class RegionaisMongoRepository
   }
 
   protected toDomain(doc: any): Regional {
+    const core: Omit<Regional, 'id'> = mapProps(doc, {
+      NOME_REGIONAL: 'nomeRegional',
+      PAIS: 'pais',
+      COORDENADOR_ID: 'coordenadorId',
+    });
     return {
       id: doc._id?.toString(),
-      nomeRegional: doc.NOME_REGIONAL,
-      pais: doc.PAIS,
-      coordenadorId: doc.COORDENADOR_ID,
+      ...core,
     };
   }
 
   protected buildFilter(filter?: RegionalFilter): Record<string, any> {
-    const query: Record<string, any> = {};
-    if (!filter) return query;
-    if ((filter as any).nomeRegional) query['NOME_REGIONAL'] = (filter as any).nomeRegional;
-    if ((filter as any).pais) query['PAIS'] = (filter as any).pais;
-    if ((filter as any).coordenadorId) query['COORDENADOR_ID'] = (filter as any).coordenadorId;
-    if ((filter as any).fields) query['fields'] = (filter as any).fields;
-    return query;
+    return mapProps(filter as any, {
+      nomeRegional: 'NOME_REGIONAL',
+      pais: 'PAIS',
+      coordenadorId: 'COORDENADOR_ID',
+      fields: 'fields',
+    });
   }
 
   protected toPersistence(
     data: CreateRegionalInput | UpdateRegionalInput,
   ): Record<string, any> {
-    const payload: Record<string, any> = {
-      NOME_REGIONAL: data.nomeRegional,
-      PAIS: data.pais,
-      COORDENADOR_ID: data.coordenadorId,
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    const payload = mapProps(data as any, {
+      nomeRegional: 'NOME_REGIONAL',
+      pais: 'PAIS',
+      coordenadorId: 'COORDENADOR_ID',
+    });
+    return omitUndefined(payload);
   }
 
   async update(id: string, data: UpdateRegionalInput): Promise<Regional> {

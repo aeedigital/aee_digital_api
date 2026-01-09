@@ -11,6 +11,7 @@ import { Person } from '../../domain/entities/person';
 import { PessoasDocument } from '../../pessoas/schemas/pessoas.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class PessoasMongoRepository
@@ -25,33 +26,33 @@ export class PessoasMongoRepository
   }
 
   protected toDomain(doc: any): Person {
+    const core: Omit<Person, 'id'> = mapProps(doc as any, {
+      NOME: 'name',
+      'E-MAIL': 'email',
+      CELULAR: 'celular',
+    });
     return {
       id: doc._id?.toString(),
-      name: doc.NOME,
-      email: doc['E-MAIL'],
-      celular: doc.CELULAR,
+      ...core,
     };
   }
 
   protected buildFilter(filter?: PersonFilter): Record<string, any> {
-    return {
-      ...(filter?.name ? { NOME: filter.name } : {}),
-      ...(filter?.email ? { 'E-MAIL': filter.email } : {}),
-      ...(filter?.celular ? { CELULAR: filter.celular } : {}),
-      ...(filter?.fields ? { fields: (filter as any).fields } : {}),
-    };
+    return mapProps(filter as any, {
+      name: 'NOME',
+      email: 'E-MAIL',
+      celular: 'CELULAR',
+      fields: 'fields',
+    });
   }
 
   protected toPersistence(data: CreatePersonInput | UpdatePersonInput) {
-    const payload: Record<string, any> = {
-      NOME: data.name,
-      'E-MAIL': data.email,
-      CELULAR: data.celular,
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    const payload = mapProps(data as any, {
+      name: 'NOME',
+      email: 'E-MAIL',
+      celular: 'CELULAR',
+    });
+    return omitUndefined(payload);
   }
 
   async update(id: string, data: UpdatePersonInput): Promise<Person> {

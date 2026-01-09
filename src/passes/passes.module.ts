@@ -4,7 +4,7 @@ import { CacheService } from '../services/cache.service';
 import { PassesController } from './passes.controller';
 import { PassesSchema } from './schemas/passes.schema';
 import { PassesMongoRepository } from '../infra/mongo/passes.mongo.repository';
-import { PASS_REPOSITORY } from './passes.tokens';
+import { PASS_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { PassesAppService } from '../application/passes/passes.service';
 
 @Module({

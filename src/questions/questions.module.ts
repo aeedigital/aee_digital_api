@@ -6,7 +6,7 @@ import { QuestionsController } from './questions.controller';
 
 import { QuestionsSchema } from './schemas/questions.schema';
 import { QuestionsMongoRepository } from '../infra/mongo/questions.mongo.repository';
-import { QUESTION_REPOSITORY } from './questions.tokens';
+import { QUESTION_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { QuestionsAppService } from '../application/questions/questions.service';
 
 @Module({

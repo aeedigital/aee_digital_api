@@ -2,6 +2,10 @@ import { PassesAppService as Service } from '../application/passes/passes.servic
 import { Pass } from '../domain/entities/pass';
 import { FilterDto } from './dto/filter-passes.dto';
 import { CreatePassesDto as CreateDto } from './dto/create-passes.dto';
+import {
+  CreatePassInput,
+  UpdatePassInput,
+} from '../domain/repositories/pass.repository';
 
 import {
   Controller,
@@ -16,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdatePassesDto } from './dto/update-pass.dto';
+import { mapProps } from '../base/mappers/object.mapper';
 
 @Controller('passes')
 export class PassesController {
@@ -30,20 +35,34 @@ export class PassesController {
     return filter;
   }
 
-  private toInput(dto: CreateDto) {
+  private toCreateInput(dto: CreateDto): CreatePassInput {
+    const payload = mapProps<any, CreatePassInput>(dto as any, {
+      user: 'user',
+      pass: 'pass',
+      scope_id: 'scopeId',
+      groups: 'groups',
+      lastLogged: 'lastLogged',
+    });
     return {
-      user: dto.user,
-      pass: dto.pass,
-      scopeId: dto.scope_id,
-      groups: dto.groups,
+      ...payload,
       lastLogged: dto.lastLogged ?? null,
     };
+  }
+
+  private toUpdateInput(dto: UpdatePassesDto): UpdatePassInput {
+    return mapProps<any, UpdatePassInput>(dto as any, {
+      user: 'user',
+      pass: 'pass',
+      scope_id: 'scopeId',
+      groups: 'groups',
+      lastLogged: 'lastLogged',
+    });
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toInput(createDto));
+    return this.service.create(this.toCreateInput(createDto));
   }
 
   @Get()
@@ -58,7 +77,7 @@ export class PassesController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdatePassesDto) {
-    return this.service.update(id, this.toInput(updateDto as any));
+    return this.service.update(id, this.toUpdateInput(updateDto));
   }
 
   @Patch(':id/last-logged-in')
@@ -69,7 +88,7 @@ export class PassesController {
       lastLogged,
     }
 
-    return this.service.update(id, this.toInput(updatedPass as any));
+    return this.service.update(id, this.toUpdateInput(updatedPass));
   }
 
 

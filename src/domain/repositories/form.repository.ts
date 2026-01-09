@@ -1,4 +1,5 @@
 import { Form } from '../entities/form';
+import { CrudRepository } from './crud.repository';
 
 export type FormFilter = Record<string, any>;
 
@@ -11,14 +12,5 @@ export interface CreateFormInput {
 
 export interface UpdateFormInput extends Partial<CreateFormInput> {}
 
-export interface FormRepository {
-  create(data: CreateFormInput): Promise<Form>;
-  findAll(filter?: FormFilter): Promise<Form[]>;
-  findById(id: string): Promise<Form | null>;
-  update(id: string, data: UpdateFormInput): Promise<Form>;
-  updateOrCreate(
-    filter: Partial<FormFilter> & { id?: string },
-    data: CreateFormInput,
-  ): Promise<Form>;
-  delete(id: string): Promise<void>;
-}
+export interface FormRepository
+  extends CrudRepository<Form, CreateFormInput, UpdateFormInput, FormFilter> {}

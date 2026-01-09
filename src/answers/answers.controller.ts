@@ -2,6 +2,10 @@ import { AnswersAppService } from '../application/answers/answers.service';
 import { Answer } from '../domain/entities/answer';
 import { FilterDto } from './dto/filter-answers.dto';
 import { CreateAnswersDto as CreateDto } from './dto/create-answers.dto';
+import {
+  CreateAnswerInput,
+  UpdateAnswerInput,
+} from '../domain/repositories/answer.repository';
 
 import {
   Controller,
@@ -17,36 +21,38 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdateDto } from './dto/update-answer.dto';
+import { mapProps } from '../base/mappers/object.mapper';
 
 @Controller('answers')
 export class AnswersController {
   constructor(private readonly service: AnswersAppService) {}
 
   private toFilter(filterDto: FilterDto) {
-    return {
-      questionId: filterDto.QUESTION_ID,
-      centroId: filterDto.CENTRO_ID,
-      quizId: filterDto.QUIZ_ID,
-      answer: filterDto.ANSWER,
-    };
+    return mapProps(filterDto, {
+      QUESTION_ID: 'questionId',
+      CENTRO_ID: 'centroId',
+      QUIZ_ID: 'quizId',
+      ANSWER: 'answer',
+      fields: 'fields',
+    });
   }
 
-  private toCreateInput(createDto: CreateDto) {
-    return {
-      questionId: createDto.QUESTION_ID,
-      centroId: createDto.CENTRO_ID,
-      answer: createDto.ANSWER,
-      quizId: createDto.QUIZ_ID,
-    };
+  private toCreateInput(createDto: CreateDto): CreateAnswerInput {
+    return mapProps<any, CreateAnswerInput>(createDto as any, {
+      QUESTION_ID: 'questionId',
+      CENTRO_ID: 'centroId',
+      ANSWER: 'answer',
+      QUIZ_ID: 'quizId',
+    });
   }
 
-  private toUpdateInput(updateDto: UpdateDto) {
-    return {
-      questionId: updateDto.QUESTION_ID,
-      centroId: updateDto.CENTRO_ID,
-      answer: updateDto.ANSWER,
-      quizId: updateDto.QUIZ_ID,
-    };
+  private toUpdateInput(updateDto: UpdateDto): UpdateAnswerInput {
+    return mapProps<any, UpdateAnswerInput>(updateDto as any, {
+      QUESTION_ID: 'questionId',
+      CENTRO_ID: 'centroId',
+      ANSWER: 'answer',
+      QUIZ_ID: 'quizId',
+    });
   }
 
   @Post()
@@ -77,12 +83,11 @@ export class AnswersController {
     @Query('questionId') QUESTION_ID?: string,
     @Query('answerId') _id?: string,
   ) {
-    const filter = { CENTRO_ID, QUESTION_ID, _id };
-    const mappedFilter = {
-      centroId: filter.CENTRO_ID,
-      questionId: filter.QUESTION_ID,
-      id: filter._id,
-    };
+    const mappedFilter = mapProps({ CENTRO_ID, QUESTION_ID, _id }, {
+      CENTRO_ID: 'centroId',
+      QUESTION_ID: 'questionId',
+      _id: 'id',
+    });
 
     return this.service.updateOrCreate(
       mappedFilter,

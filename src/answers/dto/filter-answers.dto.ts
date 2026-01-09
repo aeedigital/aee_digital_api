@@ -1,6 +1,7 @@
 import { IsString, IsOptional } from 'class-validator';
+import { BaseFilterDto } from '../../base/dto/base-filter.dto';
 
-export class FilterDto {
+export class FilterDto extends BaseFilterDto {
   @IsOptional()
   @IsString()
   QUESTION_ID: string;
@@ -13,8 +14,4 @@ export class FilterDto {
   @IsOptional()
   @IsString()
   ANSWER: string;
-
-  @IsString()
-  @IsOptional()
-  fields?: string;
 }

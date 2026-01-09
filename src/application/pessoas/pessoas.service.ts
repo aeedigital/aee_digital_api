@@ -6,7 +6,7 @@ import {
   UpdatePersonInput,
 } from '../../domain/repositories/person.repository';
 import { Person } from '../../domain/entities/person';
-import { PERSON_REPOSITORY } from '../../pessoas/pessoas.tokens';
+import { PERSON_REPOSITORY } from '../../domain/repositories/repository.tokens';
 
 @Injectable()
 export class PessoasAppService {

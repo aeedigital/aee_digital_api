@@ -4,6 +4,10 @@ import { Centro } from '../domain/entities/centro';
 import { Summary } from '../domain/entities/summary';
 import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
 import { FilterDto } from './dto/filter-centro.dto';
+import {
+  CreateCentroInput,
+  UpdateCentroInput,
+} from '../domain/repositories/centro.repository';
 
 import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
 
@@ -19,6 +23,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { mapProps } from '../base/mappers/object.mapper';
 
 @Controller('centros')
 export class CentrosController {
@@ -28,38 +33,55 @@ export class CentrosController {
   ) {}
 
   private toFilter(filterDto: FilterDto) {
-    return {
-      funcionamento: filterDto['FUNCIONAMENTO' as any],
-      nomeCentro: filterDto.NOME_CENTRO,
-      nomeCurto: filterDto.NOME_CURTO,
-      cnpjCentro: filterDto.CNPJ_CENTRO,
-      dataFundacao: filterDto.DATA_FUNDACAO,
-      regional: filterDto.REGIONAL,
-      endereco: filterDto.ENDERECO,
-      cep: filterDto.CEP,
-      bairro: filterDto.BAIRRO,
-      cidade: filterDto.CIDADE,
-      estado: filterDto.ESTADO,
-      pais: filterDto.PAIS,
-      fields: filterDto.fields,
-    };
+    return mapProps(filterDto, {
+      FUNCIONAMENTO: 'funcionamento',
+      NOME_CENTRO: 'nomeCentro',
+      NOME_CURTO: 'nomeCurto',
+      CNPJ_CENTRO: 'cnpjCentro',
+      DATA_FUNDACAO: 'dataFundacao',
+      REGIONAL: 'regional',
+      ENDERECO: 'endereco',
+      CEP: 'cep',
+      BAIRRO: 'bairro',
+      CIDADE: 'cidade',
+      ESTADO: 'estado',
+      PAIS: 'pais',
+      fields: 'fields',
+    });
   }
 
-  private toInput(dto: CreateDto) {
-    return {
-      funcionamento: dto.FUNCIONAMENTO,
-      nomeCentro: dto.NOME_CENTRO,
-      nomeCurto: dto.NOME_CURTO,
-      cnpjCentro: dto.CNPJ_CENTRO,
-      dataFundacao: dto.DATA_FUNDACAO,
-      regional: dto.REGIONAL,
-      endereco: dto.ENDERECO,
-      cep: dto.CEP,
-      bairro: dto.BAIRRO,
-      cidade: dto.CIDADE,
-      estado: dto.ESTADO,
-      pais: dto.PAIS,
-    };
+  private toCreateInput(dto: CreateDto): CreateCentroInput {
+    return mapProps<any, CreateCentroInput>(dto as any, {
+      FUNCIONAMENTO: 'funcionamento',
+      NOME_CENTRO: 'nomeCentro',
+      NOME_CURTO: 'nomeCurto',
+      CNPJ_CENTRO: 'cnpjCentro',
+      DATA_FUNDACAO: 'dataFundacao',
+      REGIONAL: 'regional',
+      ENDERECO: 'endereco',
+      CEP: 'cep',
+      BAIRRO: 'bairro',
+      CIDADE: 'cidade',
+      ESTADO: 'estado',
+      PAIS: 'pais',
+    });
+  }
+
+  private toUpdateInput(dto: CreateDto): UpdateCentroInput {
+    return mapProps<any, UpdateCentroInput>(dto as any, {
+      FUNCIONAMENTO: 'funcionamento',
+      NOME_CENTRO: 'nomeCentro',
+      NOME_CURTO: 'nomeCurto',
+      CNPJ_CENTRO: 'cnpjCentro',
+      DATA_FUNDACAO: 'dataFundacao',
+      REGIONAL: 'regional',
+      ENDERECO: 'endereco',
+      CEP: 'cep',
+      BAIRRO: 'bairro',
+      CIDADE: 'cidade',
+      ESTADO: 'estado',
+      PAIS: 'pais',
+    });
   }
 
   private toSummaryFilter(filterDto: SummaryFilterDto) {
@@ -73,7 +95,7 @@ export class CentrosController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toInput(createDto));
+    return this.service.create(this.toCreateInput(createDto));
   }
 
   @Get()
@@ -93,7 +115,7 @@ export class CentrosController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto));
   }
 
   @Delete(':id')

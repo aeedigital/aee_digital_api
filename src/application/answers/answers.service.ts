@@ -6,7 +6,7 @@ import {
   UpdateAnswerInput,
 } from '../../domain/repositories/answer.repository';
 import { Answer } from '../../domain/entities/answer';
-import { ANSWER_REPOSITORY } from '../../answers/answers.tokens';
+import { ANSWER_REPOSITORY } from '../../domain/repositories/repository.tokens';
 
 @Injectable()
 export class AnswersAppService {

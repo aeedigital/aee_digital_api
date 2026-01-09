@@ -2,6 +2,10 @@ import { QuestionsAppService as Service } from '../application/questions/questio
 import { QuestionEntity } from '../domain/entities/question';
 import { FilterDto } from './dto/filter-questions.dto';
 import { CreateQuestionsDto as CreateDto } from './dto/create-questions.dto';
+import {
+  CreateQuestionInput,
+  UpdateQuestionInput,
+} from '../domain/repositories/question.repository';
 
 import {
   Controller,
@@ -15,37 +19,49 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { mapProps } from '../base/mappers/object.mapper';
 
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly service: Service) {}
 
   private toFilter(filterDto: FilterDto) {
-    return {
-      question: filterDto.QUESTION,
-      answerType: filterDto.ANSWER_TYPE,
-      isRequired: filterDto.IS_REQUIRED,
-      isMultiple: filterDto.IS_MULTIPLE,
-      role: filterDto.ROLE,
-      fields: filterDto.fields,
-    };
+    return mapProps(filterDto, {
+      QUESTION: 'question',
+      ANSWER_TYPE: 'answerType',
+      IS_REQUIRED: 'isRequired',
+      IS_MULTIPLE: 'isMultiple',
+      ROLE: 'role',
+      fields: 'fields',
+    });
   }
 
-  private toInput(dto: CreateDto) {
-    return {
-      question: dto.QUESTION,
-      answerType: dto.ANSWER_TYPE,
-      isRequired: dto.IS_REQUIRED,
-      isMultiple: dto.IS_MULTIPLE,
-      presetValues: dto.PRESET_VALUES,
-      role: dto.ROLE,
-    };
+  private toCreateInput(dto: CreateDto): CreateQuestionInput {
+    return mapProps<any, CreateQuestionInput>(dto as any, {
+      QUESTION: 'question',
+      ANSWER_TYPE: 'answerType',
+      IS_REQUIRED: 'isRequired',
+      IS_MULTIPLE: 'isMultiple',
+      PRESET_VALUES: 'presetValues',
+      ROLE: 'role',
+    });
+  }
+
+  private toUpdateInput(dto: CreateDto): UpdateQuestionInput {
+    return mapProps<any, UpdateQuestionInput>(dto as any, {
+      QUESTION: 'question',
+      ANSWER_TYPE: 'answerType',
+      IS_REQUIRED: 'isRequired',
+      IS_MULTIPLE: 'isMultiple',
+      PRESET_VALUES: 'presetValues',
+      ROLE: 'role',
+    });
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toInput(createDto));
+    return this.service.create(this.toCreateInput(createDto));
   }
 
   @Get()
@@ -62,7 +78,7 @@ export class QuestionsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto));
   }
 
   @Delete(':id')

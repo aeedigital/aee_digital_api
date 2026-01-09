@@ -7,7 +7,7 @@ import { CentrosController } from './centros.controller';
 import { Centro, CentroSchema } from './schemas/centro.schema';
 import { SummaryModule } from '../summary/summary.module';
 import { CentrosMongoRepository } from '../infra/mongo/centros.mongo.repository';
-import { CENTRO_REPOSITORY } from './centros.tokens';
+import { CENTRO_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { CentrosAppService } from '../application/centros/centros.service';
 
 @Module({

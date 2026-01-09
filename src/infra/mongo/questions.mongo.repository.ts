@@ -11,6 +11,7 @@ import { QuestionEntity } from '../../domain/entities/question';
 import { QuestionsDocument } from '../../questions/schemas/questions.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class QuestionsMongoRepository
@@ -30,46 +31,43 @@ export class QuestionsMongoRepository
   }
 
   protected toDomain(doc: any): QuestionEntity {
+    const core: Omit<QuestionEntity, 'id' | 'presetValues'> = mapProps(doc, {
+      QUESTION: 'question',
+      ANSWER_TYPE: 'answerType',
+      IS_REQUIRED: 'isRequired',
+      IS_MULTIPLE: 'isMultiple',
+      ROLE: 'role',
+    });
     return {
       id: doc._id?.toString(),
-      question: doc.QUESTION,
-      answerType: doc.ANSWER_TYPE,
-      isRequired: doc.IS_REQUIRED,
-      isMultiple: doc.IS_MULTIPLE,
+      ...core,
       presetValues: doc.PRESET_VALUES || [],
-      role: doc.ROLE,
     };
   }
 
   protected buildFilter(filter?: QuestionFilter): Record<string, any> {
-    const query: Record<string, any> = {};
-    if (!filter) return query;
-    if ((filter as any).question) query['QUESTION'] = (filter as any).question;
-    if ((filter as any).answerType) query['ANSWER_TYPE'] = (filter as any).answerType;
-    if ((filter as any).isRequired !== undefined)
-      query['IS_REQUIRED'] = (filter as any).isRequired;
-    if ((filter as any).isMultiple !== undefined)
-      query['IS_MULTIPLE'] = (filter as any).isMultiple;
-    if ((filter as any).role) query['ROLE'] = (filter as any).role;
-    if ((filter as any).fields) query['fields'] = (filter as any).fields;
-    return query;
+    return mapProps(filter as any, {
+      question: 'QUESTION',
+      answerType: 'ANSWER_TYPE',
+      isRequired: 'IS_REQUIRED',
+      isMultiple: 'IS_MULTIPLE',
+      role: 'ROLE',
+      fields: 'fields',
+    });
   }
 
   protected toPersistence(
     data: CreateQuestionInput | UpdateQuestionInput,
   ): Record<string, any> {
-    const payload: Record<string, any> = {
-      QUESTION: data.question,
-      ANSWER_TYPE: data.answerType,
-      IS_REQUIRED: data.isRequired,
-      IS_MULTIPLE: data.isMultiple,
-      PRESET_VALUES: data.presetValues,
-      ROLE: data.role,
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    const payload = mapProps(data as any, {
+      question: 'QUESTION',
+      answerType: 'ANSWER_TYPE',
+      isRequired: 'IS_REQUIRED',
+      isMultiple: 'IS_MULTIPLE',
+      presetValues: 'PRESET_VALUES',
+      role: 'ROLE',
+    });
+    return omitUndefined(payload);
   }
 
   async update(id: string, data: UpdateQuestionInput): Promise<QuestionEntity> {

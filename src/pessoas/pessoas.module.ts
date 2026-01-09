@@ -6,7 +6,7 @@ import { PessoasController } from './pessoas.controller';
 
 import { Pessoas, PessoasSchema } from './schemas/pessoas.schema';
 import { PessoasMongoRepository } from '../infra/mongo/pessoas.mongo.repository';
-import { PERSON_REPOSITORY } from './pessoas.tokens';
+import { PERSON_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { PessoasAppService } from '../application/pessoas/pessoas.service';
 
 @Module({

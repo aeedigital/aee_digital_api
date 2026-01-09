@@ -8,7 +8,7 @@ import { RegionalSchema } from './schemas/regionais.schema';
 import { CentrosModule } from '../centros/centros.module';
 import { SummaryModule } from '../summary/summary.module';
 import { RegionaisMongoRepository } from '../infra/mongo/regionais.mongo.repository';
-import { REGIONAL_REPOSITORY } from './regionais.tokens';
+import { REGIONAL_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { RegionaisAppService } from '../application/regionais/regionais.service';
 
 @Module({

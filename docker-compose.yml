@@ -1,11 +1,10 @@
-version: '3.8'
 services:
   app:
     build: .
     image: aee_digital_api
     container_name: aee_digital_api
     ports:
-      - '5000:5000'
+      - '5001:5000'
     networks:
       - aee_digital_backend
     # Se estiver em produção, normalmente não se monta a pasta local.
@@ -18,3 +17,4 @@ networks:
   aee_digital_backend:
     name: aee_digital_backend
     driver: bridge
+    external: true

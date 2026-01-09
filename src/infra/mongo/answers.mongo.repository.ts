@@ -9,6 +9,7 @@ import {
 } from '../../domain/repositories/answer.repository';
 import { Answer } from '../../domain/entities/answer';
 import { AnswersDocument } from '../../answers/schemas/answers.schema';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class AnswersMongoRepository implements AnswerRepository {
@@ -18,34 +19,43 @@ export class AnswersMongoRepository implements AnswerRepository {
   ) {}
 
   private toDomain(doc: any): Answer {
+    const core: Omit<Answer, 'id' | 'createdAt' | 'updatedAt'> = mapProps(
+      doc,
+      {
+        QUESTION_ID: 'questionId',
+        CENTRO_ID: 'centroId',
+        ANSWER: 'answer',
+        QUIZ_ID: 'quizId',
+      },
+    );
     return {
       id: doc._id?.toString(),
-      questionId: doc.QUESTION_ID,
-      centroId: doc.CENTRO_ID,
-      answer: doc.ANSWER,
-      quizId: doc.QUIZ_ID,
+      ...core,
       createdAt: doc.createdAt ? new Date(doc.createdAt) : undefined,
       updatedAt: doc.updatedAt ? new Date(doc.updatedAt) : undefined,
     };
   }
 
   private buildFilter(filter?: AnswerFilter): Record<string, any> {
-    if (!filter) return {};
-    const query: Record<string, any> = {};
-    if (filter.questionId) query['QUESTION_ID'] = filter.questionId;
-    if (filter.centroId) query['CENTRO_ID'] = filter.centroId;
-    if (filter.quizId) query['QUIZ_ID'] = filter.quizId;
-    if (filter.answer) query['ANSWER'] = filter.answer;
-    return query;
+    return mapProps(filter as any, {
+      questionId: 'QUESTION_ID',
+      centroId: 'CENTRO_ID',
+      quizId: 'QUIZ_ID',
+      answer: 'ANSWER',
+    });
   }
 
   async create(data: CreateAnswerInput): Promise<Answer> {
-    const doc = new this.model({
-      QUESTION_ID: data.questionId,
-      CENTRO_ID: data.centroId,
-      ANSWER: data.answer,
-      QUIZ_ID: data.quizId,
-    });
+    const doc = new this.model(
+      omitUndefined(
+        mapProps(data as any, {
+          questionId: 'QUESTION_ID',
+          centroId: 'CENTRO_ID',
+          answer: 'ANSWER',
+          quizId: 'QUIZ_ID',
+        }),
+      ),
+    );
     const saved = await doc.save();
     return this.toDomain(saved);
   }
@@ -62,11 +72,14 @@ export class AnswersMongoRepository implements AnswerRepository {
   }
 
   async update(id: string, data: UpdateAnswerInput): Promise<Answer> {
-    const payload: Record<string, any> = {};
-    if (data.questionId) payload['QUESTION_ID'] = data.questionId;
-    if (data.centroId) payload['CENTRO_ID'] = data.centroId;
-    if (data.answer) payload['ANSWER'] = data.answer;
-    if (data.quizId) payload['QUIZ_ID'] = data.quizId;
+    const payload = omitUndefined(
+      mapProps(data as any, {
+        questionId: 'QUESTION_ID',
+        centroId: 'CENTRO_ID',
+        answer: 'ANSWER',
+        quizId: 'QUIZ_ID',
+      }),
+    );
 
     const updated = await this.model.findByIdAndUpdate(
       id,
@@ -87,12 +100,14 @@ export class AnswersMongoRepository implements AnswerRepository {
     if (filter.id) {
       query['_id'] = filter.id;
     }
-    const updateDoc = {
-      QUESTION_ID: data.questionId,
-      CENTRO_ID: data.centroId,
-      ANSWER: data.answer,
-      QUIZ_ID: data.quizId,
-    };
+    const updateDoc = omitUndefined(
+      mapProps(data as any, {
+        questionId: 'QUESTION_ID',
+        centroId: 'CENTRO_ID',
+        answer: 'ANSWER',
+        quizId: 'QUIZ_ID',
+      }),
+    );
 
     const doc = await this.model
       .findOneAndUpdate(query, updateDoc, { new: true, upsert: true, lean: true })

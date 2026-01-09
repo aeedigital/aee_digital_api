@@ -1,4 +1,5 @@
 import { Answer } from '../entities/answer';
+import { CrudRepository } from './crud.repository';
 
 export interface AnswerFilter {
   questionId?: string;
@@ -21,14 +22,5 @@ export interface UpdateAnswerInput {
   quizId?: string;
 }
 
-export interface AnswerRepository {
-  create(data: CreateAnswerInput): Promise<Answer>;
-  findAll(filter?: AnswerFilter): Promise<Answer[]>;
-  findById(id: string): Promise<Answer | null>;
-  update(id: string, data: UpdateAnswerInput): Promise<Answer>;
-  updateOrCreate(
-    filter: Partial<AnswerFilter> & { id?: string },
-    data: CreateAnswerInput,
-  ): Promise<Answer>;
-  delete(id: string): Promise<void>;
-}
+export interface AnswerRepository
+  extends CrudRepository<Answer, CreateAnswerInput, UpdateAnswerInput, AnswerFilter> {}

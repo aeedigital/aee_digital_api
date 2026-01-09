@@ -1,4 +1,5 @@
 import { Summary } from '../entities/summary';
+import { CrudRepository } from './crud.repository';
 
 export type SummaryFilter = Record<string, any>;
 
@@ -16,14 +17,5 @@ export interface CreateSummaryInput {
 
 export interface UpdateSummaryInput extends Partial<CreateSummaryInput> {}
 
-export interface SummaryRepository {
-  create(data: CreateSummaryInput): Promise<Summary>;
-  findAll(filter?: SummaryFilter): Promise<Summary[]>;
-  findById(id: string): Promise<Summary | null>;
-  update(id: string, data: UpdateSummaryInput): Promise<Summary>;
-  updateOrCreate(
-    filter: Partial<SummaryFilter> & { id?: string },
-    data: CreateSummaryInput,
-  ): Promise<Summary>;
-  delete(id: string): Promise<void>;
-}
+export interface SummaryRepository
+  extends CrudRepository<Summary, CreateSummaryInput, UpdateSummaryInput, SummaryFilter> {}

@@ -11,6 +11,7 @@ import { Pass } from '../../domain/entities/pass';
 import { PassesDocument } from '../../passes/schemas/passes.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class PassesMongoRepository
@@ -25,11 +26,15 @@ export class PassesMongoRepository
   }
 
   protected toDomain(doc: any): Pass {
+    const core: Omit<Pass, 'id' | 'createdAt' | 'updatedAt' | 'lastLogged' | 'groups'> =
+      mapProps(doc, {
+        user: 'user',
+        pass: 'pass',
+        scope_id: 'scopeId',
+      });
     return {
       id: doc._id?.toString(),
-      user: doc.user,
-      pass: doc.pass,
-      scopeId: doc.scope_id,
+      ...core,
       groups: doc.groups || [],
       lastLogged: doc.lastLogged ? new Date(doc.lastLogged) : null,
       createdAt: doc.createdAt ? new Date(doc.createdAt) : undefined,
@@ -38,7 +43,7 @@ export class PassesMongoRepository
   }
 
   protected buildFilter(filter?: PassFilter): Record<string, any> {
-    const query: Record<string, any> = { ...(filter || {}) };
+    const query: Record<string, any> = omitUndefined({ ...(filter || {}) });
     if ((query as any).scopeId) {
       query['scope_id'] = (query as any).scopeId;
       delete (query as any).scopeId;
@@ -47,17 +52,14 @@ export class PassesMongoRepository
   }
 
   protected toPersistence(data: CreatePassInput | UpdatePassInput): any {
-    const payload: Record<string, any> = {
-      user: data.user,
-      pass: data.pass,
-      scope_id: data.scopeId,
-      groups: data.groups,
-      lastLogged: data.lastLogged,
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    const payload = mapProps(data as any, {
+      user: 'user',
+      pass: 'pass',
+      scopeId: 'scope_id',
+      groups: 'groups',
+      lastLogged: 'lastLogged',
+    });
+    return omitUndefined(payload);
   }
 
   async update(id: string, data: UpdatePassInput): Promise<Pass> {

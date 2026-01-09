@@ -6,7 +6,7 @@ import {
   UpdateSummaryInput,
 } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
-import { SUMMARY_REPOSITORY } from '../../summary/summary.tokens';
+import { SUMMARY_REPOSITORY } from '../../domain/repositories/repository.tokens';
 
 @Injectable()
 export class SummaryAppService {

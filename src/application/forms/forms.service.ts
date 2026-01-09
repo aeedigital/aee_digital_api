@@ -6,7 +6,7 @@ import {
   UpdateFormInput,
 } from '../../domain/repositories/form.repository';
 import { Form } from '../../domain/entities/form';
-import { FORM_REPOSITORY } from '../../forms/forms.tokens';
+import { FORM_REPOSITORY } from '../../domain/repositories/repository.tokens';
 
 @Injectable()
 export class FormsAppService {

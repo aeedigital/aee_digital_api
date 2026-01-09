@@ -11,6 +11,7 @@ import { Centro } from '../../domain/entities/centro';
 import { CentroDocument } from '../../centros/schemas/centro.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
+import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
 
 @Injectable()
 export class CentrosMongoRepository
@@ -25,65 +26,67 @@ export class CentrosMongoRepository
   }
 
   protected toDomain(doc: any): Centro {
+    const core: Omit<Centro, 'id' | 'createdAt' | 'updatedAt'> = mapProps(
+      doc,
+      {
+      FUNCIONAMENTO: 'funcionamento',
+      NOME_CENTRO: 'nomeCentro',
+      NOME_CURTO: 'nomeCurto',
+      CNPJ_CENTRO: 'cnpjCentro',
+      DATA_FUNDACAO: 'dataFundacao',
+      REGIONAL: 'regional',
+      ENDERECO: 'endereco',
+      CEP: 'cep',
+      BAIRRO: 'bairro',
+      CIDADE: 'cidade',
+      ESTADO: 'estado',
+      PAIS: 'pais',
+      },
+    );
     return {
       id: doc._id?.toString(),
-      funcionamento: doc.FUNCIONAMENTO,
-      nomeCentro: doc.NOME_CENTRO,
-      nomeCurto: doc.NOME_CURTO,
-      cnpjCentro: doc.CNPJ_CENTRO,
-      dataFundacao: doc.DATA_FUNDACAO,
-      regional: doc.REGIONAL,
-      endereco: doc.ENDERECO,
-      cep: doc.CEP,
-      bairro: doc.BAIRRO,
-      cidade: doc.CIDADE,
-      estado: doc.ESTADO,
-      pais: doc.PAIS,
+      ...core,
       createdAt: doc.createdAt ? new Date(doc.createdAt) : undefined,
       updatedAt: doc.updatedAt ? new Date(doc.updatedAt) : undefined,
     };
   }
 
   protected buildFilter(filter?: CentroFilter): Record<string, any> {
-    const query: Record<string, any> = {};
-    if (!filter) return query;
-    if ((filter as any).funcionamento) query['FUNCIONAMENTO'] = (filter as any).funcionamento;
-    if ((filter as any).nomeCentro) query['NOME_CENTRO'] = (filter as any).nomeCentro;
-    if ((filter as any).nomeCurto) query['NOME_CURTO'] = (filter as any).nomeCurto;
-    if ((filter as any).cnpjCentro) query['CNPJ_CENTRO'] = (filter as any).cnpjCentro;
-    if ((filter as any).dataFundacao) query['DATA_FUNDACAO'] = (filter as any).dataFundacao;
-    if ((filter as any).regional) query['REGIONAL'] = (filter as any).regional;
-    if ((filter as any).endereco) query['ENDERECO'] = (filter as any).endereco;
-    if ((filter as any).cep) query['CEP'] = (filter as any).cep;
-    if ((filter as any).bairro) query['BAIRRO'] = (filter as any).bairro;
-    if ((filter as any).cidade) query['CIDADE'] = (filter as any).cidade;
-    if ((filter as any).estado) query['ESTADO'] = (filter as any).estado;
-    if ((filter as any).pais) query['PAIS'] = (filter as any).pais;
-    if ((filter as any).fields) query['fields'] = (filter as any).fields;
-    return query;
+    return mapProps(filter as any, {
+      funcionamento: 'FUNCIONAMENTO',
+      nomeCentro: 'NOME_CENTRO',
+      nomeCurto: 'NOME_CURTO',
+      cnpjCentro: 'CNPJ_CENTRO',
+      dataFundacao: 'DATA_FUNDACAO',
+      regional: 'REGIONAL',
+      endereco: 'ENDERECO',
+      cep: 'CEP',
+      bairro: 'BAIRRO',
+      cidade: 'CIDADE',
+      estado: 'ESTADO',
+      pais: 'PAIS',
+      fields: 'fields',
+    });
   }
 
   protected toPersistence(
     data: CreateCentroInput | UpdateCentroInput,
   ): Record<string, any> {
-    const payload: Record<string, any> = {
-      FUNCIONAMENTO: data.funcionamento,
-      NOME_CENTRO: data.nomeCentro,
-      NOME_CURTO: data.nomeCurto,
-      CNPJ_CENTRO: data.cnpjCentro,
-      DATA_FUNDACAO: data.dataFundacao,
-      REGIONAL: data.regional,
-      ENDERECO: data.endereco,
-      CEP: data.cep,
-      BAIRRO: data.bairro,
-      CIDADE: data.cidade,
-      ESTADO: data.estado,
-      PAIS: data.pais,
-    };
-    Object.keys(payload).forEach(
-      (key) => payload[key] === undefined && delete payload[key],
-    );
-    return payload;
+    const payload = mapProps(data as any, {
+      funcionamento: 'FUNCIONAMENTO',
+      nomeCentro: 'NOME_CENTRO',
+      nomeCurto: 'NOME_CURTO',
+      cnpjCentro: 'CNPJ_CENTRO',
+      dataFundacao: 'DATA_FUNDACAO',
+      regional: 'REGIONAL',
+      endereco: 'ENDERECO',
+      cep: 'CEP',
+      bairro: 'BAIRRO',
+      cidade: 'CIDADE',
+      estado: 'ESTADO',
+      pais: 'PAIS',
+    });
+    return omitUndefined(payload);
   }
 
   async update(id: string, data: UpdateCentroInput): Promise<Centro> {

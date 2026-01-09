@@ -6,7 +6,7 @@ import {
   UpdateCentroInput,
 } from '../../domain/repositories/centro.repository';
 import { Centro } from '../../domain/entities/centro';
-import { CENTRO_REPOSITORY } from '../../centros/centros.tokens';
+import { CENTRO_REPOSITORY } from '../../domain/repositories/repository.tokens';
 import { SummaryAppService } from '../summary/summary.service';
 import { SummaryFilter } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';

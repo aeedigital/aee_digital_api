@@ -8,7 +8,7 @@ import { FormsController } from './forms.controller';
 import { Forms, FormSchema } from './schemas/forms.schema';
 import { CacheModule } from '@nestjs/cache-manager';
 import { FormsMongoRepository } from '../infra/mongo/forms.mongo.repository';
-import { FORM_REPOSITORY } from './forms.tokens';
+import { FORM_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { FormsAppService } from '../application/forms/forms.service';
 
 @Module({

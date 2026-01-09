@@ -2,6 +2,10 @@ import { RegionaisAppService as Service } from '../application/regionais/regiona
 import { Regional } from '../domain/entities/regional';
 import { FilterDto } from './dto/filter-regional.dto';
 import { CreateRegionalDto as CreateDto } from './dto/create-regional.dto';
+import {
+  CreateRegionalInput,
+  UpdateRegionalInput,
+} from '../domain/repositories/regional.repository';
 
 import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
 import { FilterDto as CentroFilterDto } from '../centros/dto/filter-centro.dto';
@@ -22,57 +26,66 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdateRegionalDto } from './dto/update-regional.dto';
+import { mapProps } from '../base/mappers/object.mapper';
 
 @Controller('regionais')
 export class RegionaisController {
   constructor(private readonly service: Service) {}
 
   private toFilter(filterDto: FilterDto) {
-    return {
-      nomeRegional: filterDto.NOME_REGIONAL,
-      pais: filterDto.PAIS,
-      coordenadorId: filterDto.COORDENADOR_ID,
-      fields: filterDto.fields,
-    };
+    return mapProps(filterDto, {
+      NOME_REGIONAL: 'nomeRegional',
+      PAIS: 'pais',
+      COORDENADOR_ID: 'coordenadorId',
+      fields: 'fields',
+    });
   }
 
-  private toInput(dto: CreateDto | UpdateRegionalDto) {
-    return {
-      nomeRegional: dto.NOME_REGIONAL,
-      pais: dto.PAIS,
-      coordenadorId: dto.COORDENADOR_ID,
-    };
+  private toCreateInput(dto: CreateDto): CreateRegionalInput {
+    return mapProps<any, CreateRegionalInput>(dto as any, {
+      NOME_REGIONAL: 'nomeRegional',
+      PAIS: 'pais',
+      COORDENADOR_ID: 'coordenadorId',
+    });
+  }
+
+  private toUpdateInput(dto: UpdateRegionalDto): UpdateRegionalInput {
+    return mapProps<any, UpdateRegionalInput>(dto as any, {
+      NOME_REGIONAL: 'nomeRegional',
+      PAIS: 'pais',
+      COORDENADOR_ID: 'coordenadorId',
+    });
   }
 
   private toSummaryFilter(filterDto: SummaryFilterDto) {
-    return {
-      formId: filterDto.FORM_ID,
-      centroId: filterDto.CENTRO_ID,
-      fields: filterDto.fields,
-    };
+    return mapProps(filterDto, {
+      FORM_ID: 'formId',
+      CENTRO_ID: 'centroId',
+      fields: 'fields',
+    });
   }
 
   private toCentroFilter(filterDto: CentroFilterDto) {
-    return {
-      nomeCentro: filterDto.NOME_CENTRO,
-      nomeCurto: filterDto.NOME_CURTO,
-      cnpjCentro: filterDto.CNPJ_CENTRO,
-      dataFundacao: filterDto.DATA_FUNDACAO,
-      regional: filterDto.REGIONAL,
-      endereco: filterDto.ENDERECO,
-      cep: filterDto.CEP,
-      bairro: filterDto.BAIRRO,
-      cidade: filterDto.CIDADE,
-      estado: filterDto.ESTADO,
-      pais: filterDto.PAIS,
-      fields: filterDto.fields,
-    };
+    return mapProps(filterDto, {
+      NOME_CENTRO: 'nomeCentro',
+      NOME_CURTO: 'nomeCurto',
+      CNPJ_CENTRO: 'cnpjCentro',
+      DATA_FUNDACAO: 'dataFundacao',
+      REGIONAL: 'regional',
+      ENDERECO: 'endereco',
+      CEP: 'cep',
+      BAIRRO: 'bairro',
+      CIDADE: 'cidade',
+      ESTADO: 'estado',
+      PAIS: 'pais',
+      fields: 'fields',
+    });
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toInput(createDto));
+    return this.service.create(this.toCreateInput(createDto));
   }
 
   @Get()
@@ -97,7 +110,7 @@ export class RegionaisController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateRegionalDto) {
-    return this.service.update(id, this.toInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto));
   }
 
   @Delete(':id')
