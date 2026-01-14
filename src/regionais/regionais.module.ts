@@ -1,31 +1,26 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { CacheService } from '../services/cache.service';
 
 import { RegionaisController } from './regionais.controller';
 
-import { RegionalSchema } from './schemas/regionais.schema';
 import { CentrosModule } from '../centros/centros.module';
 import { SummaryModule } from '../summary/summary.module';
-import { RegionaisMongoRepository } from '../infra/mongo/regionais.mongo.repository';
 import { REGIONAL_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { RegionaisAppService } from '../application/regionais/regionais.service';
+import { PersistenceModule } from '../infra/persistence/persistence.module';
 
 @Module({
   imports: [
     CentrosModule,
     SummaryModule,
-    MongooseModule.forFeature([{ name: 'Regional', schema: RegionalSchema }]),
+    PersistenceModule.forRoot(),
   ],
 
   controllers: [RegionaisController],
   providers: [
     RegionaisAppService,
     CacheService,
-    {
-      provide: REGIONAL_REPOSITORY,
-      useClass: RegionaisMongoRepository,
-    },
+    // repository provided by PersistenceModule
   ],
 })
 export class RegionaisModule {}

@@ -21,6 +21,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ReqnameMiddleware } from './base/reqname.middleware';
 
 import { MongooseModule } from '@nestjs/mongoose';
+import { isMemoryDriver } from './infra/persistence/persistence.config';
 
 @Module({
   imports: [
@@ -28,9 +29,13 @@ import { MongooseModule } from '@nestjs/mongoose';
     CacheModule.register({
       isGlobal: true, // 🔥 Isso torna o CacheModule global para toda a aplicação
     }),
-    MongooseModule.forRoot(
-      'mongodb+srv://aliancadigital:aliancadigital@aee.pvgzm2s.mongodb.net/',
-    ),
+    ...(isMemoryDriver()
+      ? []
+      : [
+          MongooseModule.forRoot(
+            'mongodb+srv://aliancadigital:aliancadigital@aee.pvgzm2s.mongodb.net/',
+          ),
+        ]),
     ConfigModule.forRoot({
       isGlobal: true, // Deixa disponível em toda a aplicação
       envFilePath: '.env', // Especifica o arquivo de ambiente
