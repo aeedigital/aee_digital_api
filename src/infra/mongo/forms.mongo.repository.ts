@@ -13,6 +13,7 @@ import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
 import { extractId } from '../../base/mappers/mongo-id.mapper';
 import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
+import { Question } from '../../questions/schemas/questions.schema';
 
 @Injectable()
 export class FormsMongoRepository
@@ -24,6 +25,37 @@ export class FormsMongoRepository
     protected readonly cacheService: CacheService,
   ) {
     super(model, cacheService);
+  }
+
+  private populateGroups(query: any) {
+    return query.populate({
+      path: 'PAGES.QUIZES.QUESTIONS.GROUP',
+      model: 'Questions',
+    });
+  }
+
+  private mapGroupQuestion(question?: Partial<Question> & { _id?: any }) {
+    if (!question) return undefined;
+    const id = extractId(question);
+    // When not populated, we only have an id string/ObjectId
+    if (
+      typeof question === 'string' ||
+      typeof question === 'number' ||
+      (question as any)?._id === undefined
+    ) {
+      return id;
+    }
+
+    const source: any = (question as any)?._doc || question;
+    return omitUndefined({
+      id,
+      question: source.QUESTION,
+      answerType: source.ANSWER_TYPE,
+      isRequired: source.IS_REQUIRED,
+      isMultiple: source.IS_MULTIPLE,
+      presetValues: source.PRESET_VALUES,
+      role: source.ROLE,
+    });
   }
 
   protected toDomain(doc: any): Form {
@@ -44,7 +76,9 @@ export class FormsMongoRepository
         quizes: (page.QUIZES || []).map((quiz: any) => ({
           category: quiz.CATEGORY,
           questions: (quiz.QUESTIONS || []).map((question: any) => ({
-            group: (question.GROUP || []).map((g: any) => extractId(g)),
+            group: (question.GROUP || [])
+              .map((g: any) => this.mapGroupQuestion(g))
+              .filter((g: any) => g !== undefined),
             isMultiple: question.IS_MULTIPLE,
           })),
         })),
@@ -77,7 +111,7 @@ export class FormsMongoRepository
         QUIZES: page.quizes?.map((quiz) => ({
           CATEGORY: quiz.category,
           QUESTIONS: quiz.questions?.map((question) => ({
-            GROUP: question.group,
+            GROUP: question.group?.map((g) => extractId(g)),
             IS_MULTIPLE: question.isMultiple,
           })),
         })),
@@ -106,10 +140,7 @@ export class FormsMongoRepository
     query.select(selectedFields);
 
     if (!fields || (fields && selectedFields.includes('PAGES'))) {
-      query.populate({
-        path: 'PAGES.QUIZES.QUESTIONS.GROUP',
-        model: 'Questions',
-      });
+      this.populateGroups(query);
     }
 
     if (sortBy) {
@@ -128,13 +159,30 @@ export class FormsMongoRepository
     return query.lean();
   }
 
+  async findById(id: string): Promise<Form | null> {
+    const cacheKey = `${this.model.modelName.toLowerCase()}:${id}`;
+    const cached = await this.cacheService.get(cacheKey);
+    if (cached) return this.toDomain(cached);
+
+    const doc = await this.populateGroups(this.model.findById(id)).lean();
+    if (doc) {
+      await this.cacheService.set(cacheKey, doc);
+    }
+    return doc ? this.toDomain(doc) : null;
+  }
+
   async update(id: string, data: UpdateFormInput): Promise<Form> {
-    const updated = await this.model
-      .findByIdAndUpdate(id, { $set: this.toPersistence(data) }, { new: true, lean: true })
-      .exec();
+    const updated = await this.populateGroups(
+      this.model.findByIdAndUpdate(
+        id,
+        { $set: this.toPersistence(data) },
+        { new: true, lean: true },
+      ),
+    ).exec();
     if (!updated) {
       throw new NotFoundException('Form not found');
     }
+    await this.cacheService.set(`${this.model.modelName.toLowerCase()}:${id}`, updated);
     return this.toDomain(updated);
   }
 }

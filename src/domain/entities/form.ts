@@ -1,5 +1,16 @@
+export interface FormQuestionGroup {
+  id: string;
+  question?: string;
+  answerType?: string;
+  isRequired?: boolean;
+  isMultiple?: boolean | string;
+  presetValues?: string[];
+  role?: string;
+}
+
 export interface FormQuestion {
-  group: string[];
+  // When populated, entries include question details; otherwise they may be ids.
+  group: Array<string | FormQuestionGroup>;
   isMultiple: boolean;
 }
 
