@@ -1,6 +1,3 @@
-// Inicializa o APM (IMPORTANTE: primeiro!)
-import './apm';
-
 import { ManagementModule } from './management/management.module';
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -17,6 +14,7 @@ import { ConfigModule } from '@nestjs/config';
 
 
 import { CacheModule } from '@nestjs/cache-manager';
+import { WinstonLogger } from './services/logger.service';
 
 import { ReqnameMiddleware } from './base/reqname.middleware';
 
@@ -50,7 +48,7 @@ import { isMemoryDriver } from './infra/persistence/persistence.config';
     SummaryModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, WinstonLogger],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

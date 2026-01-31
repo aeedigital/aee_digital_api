@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
 import { format } from './dateFormater.helper';
 
@@ -16,20 +16,14 @@ export class MongoGenericService<S, D, U = D> {
     protected readonly cacheService: CacheService,
   ) {
     this.listenToChanges();
-    this.shouldUseCache = false;;
+    this.shouldUseCache = false;
   }
 
   async listenToChanges() {
     const changeStream = this.model.watch();
 
-    changeStream.on('change', (change) => {
-      console.log('Mudança detectada:', change);
-      const modelName = change?.ns?.coll;
-      // this.cacheService.invalidateModelCache(modelName); // Agora o CacheService cuida da invalidação
-    });
-
     changeStream.on('error', (error) => {
-      console.error('Erro no Change Stream:', error);
+      this.logger.error('Erro no Change Stream', error?.stack || JSON.stringify(error));
     });
   }
 

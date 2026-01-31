@@ -7,10 +7,18 @@ apm.start({
   serverUrl: process.env.ELASTIC_APM_SERVER_URL || 'http://localhost:8200',
   environment: process.env.NODE_ENV || 'development',
 
-  // Outras configurações opcionais:
-  // active: true, // para ativar/desativar a coleta
-  // captureBody: 'all', // para capturar body das requisições
-  // logLevel: 'info'
+  // Configurações para evitar fila cheia
+  maxQueueSize: 4096, // Fila muito maior
+
+  // Sampling agressivo para reduzir volume
+  transactionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0.5, // 10% em produção
+
+  // Desativa capturas desnecessárias
+  captureBody: 'off',
+  captureHeaders: false,
+  centralConfig: false,
+  // Tolera erros do APM Server
+  errorOnAbortedRequests: false,
 });
 
 export default apm;
