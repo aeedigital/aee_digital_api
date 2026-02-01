@@ -24,6 +24,8 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
+import { toCentroResponse } from './centro.presenter';
+import { toSummaryResponse } from '../summary/summary.presenter';
 
 @Controller('centros')
 export class CentrosController {
@@ -95,27 +97,28 @@ export class CentrosController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toCentroResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Centro[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toCentroResponse));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Centro> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toCentroResponse);
   }
 
   @Get(':id/summaries')
-  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<Summary[]> {
-    return await this.service.findSummaries(id, this.toSummaryFilter(filterDto));
+  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<any[]> {
+    const items = await this.service.findSummaries(id, this.toSummaryFilter(filterDto));
+    return items.map(toSummaryResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toCentroResponse);
   }
 
   @Delete(':id')

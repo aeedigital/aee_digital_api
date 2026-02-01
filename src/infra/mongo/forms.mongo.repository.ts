@@ -43,18 +43,19 @@ export class FormsMongoRepository
       typeof question === 'number' ||
       (question as any)?._id === undefined
     ) {
-      return id;
+      return { _id: id };
     }
 
     const source: any = (question as any)?._doc || question;
     return omitUndefined({
-      id,
-      question: source.QUESTION,
-      answerType: source.ANSWER_TYPE,
-      isRequired: source.IS_REQUIRED,
-      isMultiple: source.IS_MULTIPLE,
-      presetValues: source.PRESET_VALUES,
-      role: source.ROLE,
+      _id: id,
+      QUESTION: source.QUESTION,
+      ANSWER_TYPE: source.ANSWER_TYPE,
+      IS_REQUIRED: source.IS_REQUIRED,
+      IS_MULTIPLE: source.IS_MULTIPLE,
+      PRESET_VALUES: source.PRESET_VALUES,
+      ROLE: source.ROLE,
+      __v: source.__v,
     });
   }
 

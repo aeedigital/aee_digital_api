@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
+import { toFormResponse } from './form.presenter';
 
 @Controller('forms')
 export class FormsController {
@@ -81,22 +82,22 @@ export class FormsController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toFormResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Form[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toFormResponse));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Form> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toFormResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toFormResponse);
   }
 
   @Delete(':id')

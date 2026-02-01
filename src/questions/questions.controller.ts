@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
+import { toQuestionResponse } from './question.presenter';
 
 @Controller('questions')
 export class QuestionsController {
@@ -61,24 +62,24 @@ export class QuestionsController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toQuestionResponse);
   }
 
   @Get()
   findAll(
     @Query(ValidationPipe) filterDto: FilterDto,
-  ): Promise<QuestionEntity[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  ): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toQuestionResponse));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<QuestionEntity> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toQuestionResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toQuestionResponse);
   }
 
   @Delete(':id')

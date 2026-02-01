@@ -5,6 +5,9 @@ import {
   CreateSummaryInput,
   SummaryFilter,
   SummaryRepository,
+  SummaryStatsParams,
+  SummaryStatsResult,
+  SummaryManyFilter,
   UpdateSummaryInput,
 } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
@@ -13,6 +16,7 @@ import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
 import { extractId } from '../../base/mappers/mongo-id.mapper';
 import { mapProps, omitUndefined } from '../../base/mappers/object.mapper';
+import { CentroDocument } from '../../centros/schemas/centro.schema';
 
 @Injectable()
 export class SummariesMongoRepository
@@ -27,6 +31,8 @@ export class SummariesMongoRepository
   constructor(
     @InjectModel(Summaries.name)
     protected readonly model: Model<SummariesDocument>,
+    @InjectModel('Centro')
+    private readonly centroModel: Model<CentroDocument>,
     protected readonly cacheService: CacheService,
   ) {
     super(model, cacheService);
@@ -52,11 +58,16 @@ export class SummariesMongoRepository
   }
 
   protected buildFilter(filter?: SummaryFilter): Record<string, any> {
-    return mapProps(filter as any, {
+    const base = mapProps(filter as any, {
       formId: 'FORM_ID',
       centroId: 'CENTRO_ID',
-      fields: 'fields',
     });
+    if (filter?.dateFrom || filter?.dateTo) {
+      base['createdAt'] = {};
+      if (filter.dateFrom) base['createdAt']['$gte'] = filter.dateFrom;
+      if (filter.dateTo) base['createdAt']['$lte'] = filter.dateTo;
+    }
+    return base;
   }
 
   protected toPersistence(
@@ -85,5 +96,77 @@ export class SummariesMongoRepository
       throw new NotFoundException('Summary not found');
     }
     return this.toDomain(updated);
+  }
+
+  async findAll(filter?: SummaryFilter): Promise<Summary[]> {
+    const { fields, sort, skip, limit, ...rest } = filter || {};
+    const query = this.model.find(this.buildFilter(rest)).lean();
+    if (fields) {
+      query.select(fields.split(',').join(' '));
+    }
+    if (sort) {
+      query.sort(sort);
+    } else {
+      query.sort({ updatedAt: -1 });
+    }
+    if (skip) query.skip(skip);
+    if (limit) query.limit(limit);
+    const docs = await query.exec();
+    return docs.map((doc) => this.toDomain(doc));
+  }
+
+  async stats(params: SummaryStatsParams): Promise<SummaryStatsResult> {
+    const { dateFrom, dateTo } = params;
+    const match: any = {
+      createdAt: { $gte: dateFrom, $lte: dateTo },
+    };
+
+    const events = await this.model
+      .aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' },
+            },
+            total: { $sum: 1 },
+            centros: { $addToSet: '$CENTRO_ID' },
+          },
+        },
+      ])
+      .exec();
+
+    const eventsByDay = events.reduce((acc, cur) => {
+      acc[cur._id] = cur.total;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const respondedCentersSet = new Set<string>();
+    events.forEach((e) => (e.centros || []).forEach((c) => respondedCentersSet.add(String(c))));
+
+    const totalCentros = await this.centroModel.countDocuments().exec();
+
+    return {
+      eventsByDay,
+      respondedCount: respondedCentersSet.size,
+      totalCentros,
+    };
+  }
+
+  async findByCentroIds(filter: SummaryManyFilter): Promise<Summary[]> {
+    const { centroIds, dateFrom, dateTo, fields, sort } = filter;
+    const query: any = {
+      CENTRO_ID: { $in: centroIds },
+    };
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+      if (dateFrom) query.createdAt['$gte'] = dateFrom;
+      if (dateTo) query.createdAt['$lte'] = dateTo;
+    }
+    const q = this.model.find(query).lean();
+    if (fields) q.select(fields.split(',').join(' '));
+    q.sort(sort || { updatedAt: -1 });
+    const docs = await q.exec();
+    return docs.map((doc) => this.toDomain(doc));
   }
 }

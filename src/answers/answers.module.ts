@@ -10,5 +10,6 @@ import { PersistenceModule } from '../infra/persistence/persistence.module';
 
   controllers: [AnswersController],
   providers: [AnswersAppService],
+  exports: [AnswersAppService],
 })
 export class AnswersModule {}

@@ -38,6 +38,7 @@ resource "aws_lambda_function" "api" {
   role          = aws_iam_role.lambda_role.arn
   handler       = var.lambda_handler
   runtime       = "nodejs20.x"
+  architectures = [var.lambda_arch]
 
   filename         = var.lambda_package
   source_code_hash = filebase64sha256(var.lambda_package)
@@ -52,6 +53,7 @@ resource "aws_lambda_function" "api" {
   # Keep log retention lean; adjust if needed.
   depends_on = [aws_iam_role_policy_attachment.lambda_basic]
 }
+
 
 # API Gateway REST (proxy) to expor a Lambda
 resource "aws_api_gateway_rest_api" "api" {

@@ -3,6 +3,8 @@ import { Regional } from '../../domain/entities/regional';
 import {
   CreateRegionalInput,
   RegionalFilter,
+  RegionalOverviewFilter,
+  RegionalOverviewItem,
   RegionalRepository,
   UpdateRegionalInput,
 } from '../../domain/repositories/regional.repository';
@@ -17,4 +19,8 @@ export class RegionaisMemoryRepository
     RegionalFilter
   >
   implements RegionalRepository
-{}
+{
+  async overview(_filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]> {
+    return [];
+  }
+}

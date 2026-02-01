@@ -22,5 +22,6 @@ import { PersistenceModule } from '../infra/persistence/persistence.module';
     CacheService,
     // repository provided by PersistenceModule
   ],
+  exports: [FormsAppService],
 })
 export class FormsModule {}

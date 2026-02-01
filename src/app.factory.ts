@@ -22,6 +22,7 @@ export async function createApp(expressInstance?: Express) {
   const allowedOrigins = new Set([
     'http://162.214.123.133:4200',
     'http://162.214.123.133:3000',
+    'http://localhost:3000',
     'https://d2enljusu1yyvy.cloudfront.net', // domínio correto
   ]);
 

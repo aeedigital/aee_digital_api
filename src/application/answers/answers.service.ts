@@ -45,4 +45,8 @@ export class AnswersAppService {
   delete(id: string): Promise<void> {
     return this.repository.delete(id);
   }
+
+  findByCentroIds(filter: any): Promise<Answer[]> {
+    return this.repository.findByCentroIds(filter);
+  }
 }

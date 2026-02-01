@@ -21,6 +21,7 @@ import {
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdatePassesDto } from './dto/update-pass.dto';
 import { mapProps } from '../base/mappers/object.mapper';
+import { toPassResponse } from './pass.presenter';
 
 @Controller('passes')
 export class PassesController {
@@ -62,22 +63,22 @@ export class PassesController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toPassResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Pass[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toPassResponse));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Pass> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toPassResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdatePassesDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toPassResponse);
   }
 
   @Patch(':id/last-logged-in')
@@ -88,7 +89,7 @@ export class PassesController {
       lastLogged,
     }
 
-    return this.service.update(id, this.toUpdateInput(updatedPass));
+    return this.service.update(id, this.toUpdateInput(updatedPass)).then(toPassResponse);
   }
 
 

@@ -11,5 +11,21 @@ export interface CreateRegionalInput {
 
 export interface UpdateRegionalInput extends Partial<CreateRegionalInput> {}
 
+export type RegionalOverviewFilter = {
+  dateFrom?: Date;
+  dateTo?: Date;
+  status?: string[];
+};
+
+export type RegionalOverviewItem = {
+  id: string;
+  nomeRegional: string;
+  pais: string;
+  centrosCount: number;
+  finalizadosCount: number;
+};
+
 export interface RegionalRepository
-  extends CrudRepository<Regional, CreateRegionalInput, UpdateRegionalInput, RegionalFilter> {}
+  extends CrudRepository<Regional, CreateRegionalInput, UpdateRegionalInput, RegionalFilter> {
+  overview(filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]>;
+}

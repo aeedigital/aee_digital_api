@@ -36,9 +36,7 @@
     "mongodb": "^6.13.0",
     "mongoose": "^8.10.1",
     "reflect-metadata": "^0.2.2",
-    "winston": "^3.17.0",
-    "winston-logstash": "^1.2.1",
-    "winston-logstash-transport": "^2.0.0"
+    "winston": "^3.17.0"
   },
   "jest": {
     "moduleFileExtensions": [

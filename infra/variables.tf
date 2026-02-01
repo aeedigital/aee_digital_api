@@ -38,6 +38,12 @@ variable "lambda_env" {
   default     = {}
 }
 
+variable "lambda_arch" {
+  description = "Lambda architecture (arm64 or x86_64)"
+  type        = string
+  default     = "arm64"
+}
+
 variable "api_stage" {
   description = "API Gateway stage name"
   type        = string

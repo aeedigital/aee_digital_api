@@ -16,5 +16,6 @@ import { PersistenceModule } from '../infra/persistence/persistence.module';
     CacheService,
     // repository provided by PersistenceModule
   ],
+  exports: [PessoasAppService],
 })
 export class PessoasModule {}

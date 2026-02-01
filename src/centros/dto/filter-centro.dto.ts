@@ -37,4 +37,8 @@ export class FilterDto extends BaseFilterDto {
   PAIS?: string;
 
   // Adicione outros campos de filtro, se necessário
+
+  @IsOptional()
+  @IsString()
+  STATUS?: string;
 }

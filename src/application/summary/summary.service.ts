@@ -3,6 +3,9 @@ import {
   CreateSummaryInput,
   SummaryFilter,
   SummaryRepository,
+  SummaryStatsParams,
+  SummaryStatsResult,
+  SummaryManyFilter,
   UpdateSummaryInput,
 } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
@@ -21,6 +24,14 @@ export class SummaryAppService {
 
   findAll(filter?: SummaryFilter): Promise<Summary[]> {
     return this.repository.findAll(filter);
+  }
+
+  stats(params: SummaryStatsParams): Promise<SummaryStatsResult> {
+    return this.repository.stats(params);
+  }
+
+  findByCentroIds(filter: SummaryManyFilter): Promise<Summary[]> {
+    return this.repository.findByCentroIds(filter);
   }
 
   async findOne(id: string): Promise<Summary> {

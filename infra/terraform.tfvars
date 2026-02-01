@@ -8,3 +8,4 @@ lambda_env = {
   NODE_ENV = "production"
 }
 api_stage = "prod"
+lambda_arch = "arm64"

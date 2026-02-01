@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
+import { toPessoaResponse } from './pessoa.presenter';
 
 @Controller('pessoas')
 export class PessoasController {
@@ -53,22 +54,22 @@ export class PessoasController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toPessoaResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Person[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toPessoaResponse));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Person> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toPessoaResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: CreateDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toPessoaResponse);
   }
 
   @Delete(':id')

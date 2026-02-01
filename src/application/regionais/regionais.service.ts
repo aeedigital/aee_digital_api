@@ -3,16 +3,35 @@ import {
   CreateRegionalInput,
   RegionalFilter,
   RegionalRepository,
+  RegionalOverviewFilter,
+  RegionalOverviewItem,
   UpdateRegionalInput,
 } from '../../domain/repositories/regional.repository';
 import { Regional } from '../../domain/entities/regional';
 import { REGIONAL_REPOSITORY } from '../../domain/repositories/repository.tokens';
 import { CentrosAppService } from '../centros/centros.service';
 import { SummaryAppService } from '../summary/summary.service';
+import { PessoasAppService } from '../pessoas/pessoas.service';
+import { FormsAppService } from '../forms/forms.service';
+import { AnswersAppService } from '../answers/answers.service';
 import { CentroFilter } from '../../domain/repositories/centro.repository';
 import { Centro } from '../../domain/entities/centro';
-import { SummaryFilter } from '../../domain/repositories/summary.repository';
+import { SummaryFilter, SummaryManyFilter } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
+
+export interface CoordSummaryParams {
+  dateFrom?: Date;
+  dateTo?: Date;
+}
+
+export interface CentrosWithAnswersParams {
+  dateFrom?: Date;
+  dateTo?: Date;
+  fields?: string;
+  includeAnswers: boolean;
+  includeSummaries: boolean;
+  limitSummaries: number;
+}
 
 @Injectable()
 export class RegionaisAppService {
@@ -21,6 +40,9 @@ export class RegionaisAppService {
     private readonly repository: RegionalRepository,
     private readonly centrosService: CentrosAppService,
     private readonly summariesService: SummaryAppService,
+    private readonly pessoasService: PessoasAppService,
+    private readonly formsService: FormsAppService,
+    private readonly answersService: AnswersAppService,
   ) {}
 
   create(data: CreateRegionalInput): Promise<Regional> {
@@ -70,5 +92,127 @@ export class RegionaisAppService {
       ),
     );
     return summariesArray.flat();
+  }
+
+  overview(filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]> {
+    return this.repository.overview(filter);
+  }
+
+  async coordSummary(id: string, params: CoordSummaryParams) {
+    const regional = await this.repository.findById(id);
+    if (!regional) {
+      throw new NotFoundException('Regional not found');
+    }
+
+    const centros = await this.centrosService.findAll({
+      regional: id,
+      sortBy: 'NOME_CENTRO',
+    } as any);
+    const centroIds = centros.map((c) => c.id).filter(Boolean);
+
+    const summaries =
+      centroIds.length === 0
+        ? []
+        : await this.summariesService.findByCentroIds({
+            centroIds,
+            dateFrom: params.dateFrom,
+            dateTo: params.dateTo,
+            fields: 'FORM_ID,CENTRO_ID,QUESTIONS,createdAt,updatedAt',
+            sort: { updatedAt: -1 },
+          } as SummaryManyFilter);
+
+    const formId =
+      summaries.find((s: any) => s.formId)?.formId ||
+      (await this.formsService.findAll({} as any)).at(0)?.id;
+    const form = formId ? await this.formsService.findOne(formId) : null;
+
+    let coordenador = null;
+    if ((regional as any).coordenadorId) {
+      try {
+        coordenador = await this.pessoasService.findOne((regional as any).coordenadorId);
+      } catch (err) {
+        if (!(err instanceof NotFoundException)) throw err;
+        coordenador = null;
+      }
+    }
+
+    const allRegionais = await this.repository.findAll({});
+    const uniqueCoordIds = Array.from(
+      new Set(allRegionais.map((r: any) => r.coordenadorId).filter(Boolean)),
+    );
+    const coordenadores = (
+      await Promise.all(
+        uniqueCoordIds.map(async (pid) => {
+          try {
+            return await this.pessoasService.findOne(pid);
+          } catch (err) {
+            if (err instanceof NotFoundException) return null;
+            throw err;
+          }
+        }),
+      )
+    ).filter(Boolean);
+
+    return {
+      regional,
+      coordenador,
+      centros,
+      summaries,
+      form,
+      coordenadores,
+    };
+  }
+
+  async centrosWithAnswers(id: string, params: CentrosWithAnswersParams) {
+    const centros = await this.centrosService.findAll({
+      regional: id,
+      fields: params.fields,
+      sortBy: 'NOME_CENTRO',
+    } as any);
+    const centroIds = centros.map((c) => c.id).filter(Boolean);
+
+    const summaries =
+      params.includeSummaries && centroIds.length
+        ? await this.summariesService.findByCentroIds({
+            centroIds,
+            dateFrom: params.dateFrom,
+            dateTo: params.dateTo,
+            sort: { updatedAt: -1 },
+          })
+        : [];
+
+    const answers =
+      params.includeAnswers && centroIds.length
+        ? await this.answersService.findByCentroIds({
+            centroIds,
+          } as any)
+        : [];
+
+    const summariesByCentro = new Map<string, Summary[]>();
+    summaries.forEach((s: any) => {
+      const key = s.centroId;
+      if (!summariesByCentro.has(key)) summariesByCentro.set(key, []);
+      summariesByCentro.get(key)!.push(s);
+    });
+
+    const answersByCentro = new Map<string, any[]>();
+    answers.forEach((a: any) => {
+      const key = a.centroId;
+      if (!answersByCentro.has(key)) answersByCentro.set(key, []);
+      answersByCentro.get(key)!.push(a);
+    });
+
+    const centrosEnriched = centros.map((c) => ({
+      centro: c,
+      answers: params.includeAnswers ? answersByCentro.get(c.id) || [] : undefined,
+      summaries: params.includeSummaries
+        ? (summariesByCentro.get(c.id) || []).slice(0, params.limitSummaries)
+        : undefined,
+    }));
+
+    return {
+      regionalId: id,
+      centros: centrosEnriched,
+    };
   }
 }

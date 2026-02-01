@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   AnswerFilter,
   AnswerRepository,
   CreateAnswerInput,
   UpdateAnswerInput,
+  AnswerManyFilter,
 } from '../../domain/repositories/answer.repository';
 import { Answer } from '../../domain/entities/answer';
 import { AnswersDocument } from '../../answers/schemas/answers.schema';
@@ -61,7 +62,13 @@ export class AnswersMongoRepository implements AnswerRepository {
   }
 
   async findAll(filter?: AnswerFilter): Promise<Answer[]> {
-    const query = this.buildFilter(filter);
+    const { dateFrom, dateTo, ...rest } = filter || {};
+    const query = this.buildFilter(rest);
+    if (dateFrom || dateTo) {
+      query.updatedAt = {};
+      if (dateFrom) query.updatedAt['$gte'] = dateFrom;
+      if (dateTo) query.updatedAt['$lte'] = dateTo;
+    }
     const docs = await this.model.find(query).lean();
     return docs.map((doc) => this.toDomain(doc));
   }
@@ -117,5 +124,26 @@ export class AnswersMongoRepository implements AnswerRepository {
 
   async delete(id: string): Promise<void> {
     await this.model.deleteOne({ _id: id }).lean();
+  }
+
+  async findByCentroIds(filter: AnswerManyFilter): Promise<Answer[]> {
+    const { centroIds, dateFrom, dateTo } = filter;
+    const objectIds = centroIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    const query: any = {
+      $or: [
+        { CENTRO_ID: { $in: centroIds } }, // caso esteja salvo como string
+        ...(objectIds.length ? [{ CENTRO_ID: { $in: objectIds } }] : []), // caso ObjectId
+      ],
+    };
+    if (dateFrom || dateTo) {
+      query.updatedAt = {};
+      if (dateFrom) query.updatedAt['$gte'] = dateFrom;
+      if (dateTo) query.updatedAt['$lte'] = dateTo;
+    }
+    const docs = await this.model.find(query).sort({ updatedAt: -1 }).lean();
+    return docs.map((doc) => this.toDomain(doc));
   }
 }

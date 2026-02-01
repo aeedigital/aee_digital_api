@@ -27,13 +27,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
         : 'Internal server error';
 
     // Aqui você pode integrar com seu serviço de log
-    this.logger.error({
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      status,
-      message,
-    });
+    this.logger.error(
+      {
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+        status,
+        message,
+      },
+      exception instanceof Error ? exception.stack : undefined,
+    );
 
     response.status(status).json({
       statusCode: status,

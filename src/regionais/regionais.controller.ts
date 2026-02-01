@@ -9,6 +9,7 @@ import {
 
 import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
 import { FilterDto as CentroFilterDto } from '../centros/dto/filter-centro.dto';
+import { OverviewRegionalDto } from './dto/overview-regional.dto';
 
 import { Summary } from '../domain/entities/summary';
 import { Centro } from '../domain/entities/centro';
@@ -27,6 +28,14 @@ import {
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdateRegionalDto } from './dto/update-regional.dto';
 import { mapProps } from '../base/mappers/object.mapper';
+import { toSummaryResponse } from '../summary/summary.presenter';
+import { toRegionalResponse } from './regional.presenter';
+import { toCentroResponse } from '../centros/centro.presenter';
+import { parseDateInput } from '../base/date-parse.helper';
+import { CoordSummaryQueryDto } from './dto/coord-summary.dto';
+import { toCoordSummaryResponse } from './coord-summary.presenter';
+import { CentrosWithAnswersQueryDto } from './dto/centros-with-answers.dto';
+import { toAnswerResponse } from '../answers/answer.presenter';
 
 @Controller('regionais')
 export class RegionaisController {
@@ -85,32 +94,100 @@ export class RegionaisController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toRegionalResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Regional[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toRegionalResponse));
+  }
+
+  @Get('overview')
+  overview(@Query(ValidationPipe) filterDto: OverviewRegionalDto) {
+    const status = filterDto.status
+      ? filterDto.status.split(',').map((s) => s.trim()).filter(Boolean)
+      : undefined;
+    return this.service.overview({
+      dateFrom: parseDateInput(filterDto.dateFrom),
+      dateTo: parseDateInput(filterDto.dateTo),
+      status,
+    });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Regional> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toRegionalResponse);
   }
 
   @Get(':id/summaries')
-  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<Summary[]> {
-    return await this.service.findSummaries(id, this.toSummaryFilter(filterDto));
+  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<any[]> {
+    const items = await this.service.findSummaries(id, {
+      ...this.toSummaryFilter(filterDto),
+      ...(parseDateInput(filterDto.dateFrom) ? { dateFrom: parseDateInput(filterDto.dateFrom) } : {}),
+      ...(parseDateInput(filterDto.dateTo) ? { dateTo: parseDateInput(filterDto.dateTo) } : {}),
+    });
+    return items.map(toSummaryResponse);
   }
 
   @Get(':id/centros')
-  async findCentros(@Param('id') id: string, @Query(ValidationPipe) filterDto: CentroFilterDto): Promise<Centro[]> {
-    return await this.service.findCentros(id, this.toCentroFilter(filterDto));
+  async findCentros(@Param('id') id: string, @Query(ValidationPipe) filterDto: CentroFilterDto): Promise<any[]> {
+    const centros = await this.service.findCentros(id, this.toCentroFilter(filterDto));
+    return centros.map(toCentroResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateRegionalDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toRegionalResponse);
+  }
+
+  @Get(':id/coord-summary')
+  async coordSummary(
+    @Param('id') id: string,
+    @Query(ValidationPipe) query: CoordSummaryQueryDto,
+  ) {
+    const dateFrom = parseDateInput(query.dateFrom);
+    const dateTo = parseDateInput(query.dateTo);
+    const data = await this.service.coordSummary(id, { dateFrom, dateTo });
+    return toCoordSummaryResponse(data);
+  }
+
+  @Get(':id/centros-with-answers')
+  async centrosWithAnswers(
+    @Param('id') id: string,
+    @Query(ValidationPipe) query: CentrosWithAnswersQueryDto,
+  ) {
+    const dateFrom = parseDateInput(query.dateFrom);
+    const dateTo = parseDateInput(query.dateTo);
+    const includeRaw = query.include || 'answers,summaries';
+    const includeSet = new Set(includeRaw.split(',').map((s) => s.trim()).filter(Boolean));
+    const includeAnswers = includeSet.has('answers');
+    const includeSummaries = includeSet.has('summaries');
+    const limitSummaries = query.limitSummaries ? parseInt(query.limitSummaries, 10) : 1;
+
+    const data = await this.service.centrosWithAnswers(id, {
+      dateFrom,
+      dateTo,
+      fields: query.fields,
+      includeAnswers,
+      includeSummaries,
+      limitSummaries,
+    });
+
+    return {
+      regionalId: data.regionalId,
+      centros: data.centros.map((item) => {
+        const base = toCentroResponse(item.centro);
+        return {
+          ...base,
+          ...(includeAnswers
+            ? { answers: (item.answers || []).map((a: any) => toAnswerResponse(a)) }
+            : {}),
+          ...(includeSummaries
+            ? { summaries: (item.summaries || []).map((s: any) => toSummaryResponse(s)) }
+            : {}),
+        };
+      }),
+    };
   }
 
   @Delete(':id')

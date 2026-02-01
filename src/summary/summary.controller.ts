@@ -22,17 +22,39 @@ import { ApiOperation } from '@nestjs/swagger';
 import { UpdateSummaryDto } from './dto/update-summary.dto';
 import { mapProps } from '../base/mappers/object.mapper';
 import { extractId } from '../base/mappers/mongo-id.mapper';
+import { StatsSummariesDto } from './dto/stats-summaries.dto';
+import { toSummaryResponse } from './summary.presenter';
+import { parseDateInput } from '../base/date-parse.helper';
 
 @Controller('summaries')
 export class SummariesController {
   constructor(private readonly service: Service) { }
 
   private toFilter(filterDto: FilterDto) {
-    return mapProps(filterDto, {
+    const mapped = mapProps(filterDto, {
       FORM_ID: 'formId',
       CENTRO_ID: 'centroId',
       fields: 'fields',
     });
+    const dateFrom = parseDateInput(filterDto.dateFrom);
+    const dateTo = parseDateInput(filterDto.dateTo);
+    const limit = filterDto.limit ? parseInt(filterDto.limit, 10) : undefined;
+    const skip = filterDto.skip ? parseInt(filterDto.skip, 10) : undefined;
+    const sort =
+      filterDto.sort &&
+      filterDto.sort.split(',').reduce((acc, part) => {
+        const [field, dir] = part.split(':');
+        if (field) acc[field] = dir === '-1' ? -1 : 1;
+        return acc;
+      }, {} as Record<string, 1 | -1>);
+    return {
+      ...mapped,
+      ...(dateFrom ? { dateFrom } : {}),
+      ...(dateTo ? { dateTo } : {}),
+      ...(limit ? { limit } : {}),
+      ...(skip ? { skip } : {}),
+      ...(sort && Object.keys(sort).length ? { sort } : {}),
+    };
   }
 
   private toCreateInput(dto: CreateDto): CreateSummaryInput {
@@ -74,22 +96,31 @@ export class SummariesController {
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto));
+    return this.service.create(this.toCreateInput(createDto)).then(toSummaryResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Summary[]> {
-    return this.service.findAll(this.toFilter(filterDto));
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toSummaryResponse));
+  }
+
+  @Get('stats')
+  stats(@Query(ValidationPipe) filter: StatsSummariesDto) {
+    return this.service.stats({
+      dateFrom: parseDateInput(filter.dateFrom),
+      dateTo: parseDateInput(filter.dateTo),
+      status: filter.status,
+    });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Summary> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toSummaryResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateSummaryDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto));
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toSummaryResponse);
   }
 
   @Patch(':id/validated-by-coord')
@@ -100,7 +131,7 @@ export class SummariesController {
       validatedByCoordAt,
     }
 
-    return this.service.update(id, this.toUpdateInput(updatedPass));
+    return this.service.update(id, this.toUpdateInput(updatedPass)).then(toSummaryResponse);
   }
 
   @Delete(':id')

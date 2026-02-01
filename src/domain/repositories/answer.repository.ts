@@ -6,6 +6,8 @@ export interface AnswerFilter {
   centroId?: string;
   quizId?: string;
   answer?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
 }
 
 export interface CreateAnswerInput {
@@ -22,5 +24,13 @@ export interface UpdateAnswerInput {
   quizId?: string;
 }
 
+export type AnswerManyFilter = {
+  centroIds: string[];
+  dateFrom?: Date;
+  dateTo?: Date;
+};
+
 export interface AnswerRepository
-  extends CrudRepository<Answer, CreateAnswerInput, UpdateAnswerInput, AnswerFilter> {}
+  extends CrudRepository<Answer, CreateAnswerInput, UpdateAnswerInput, AnswerFilter> {
+  findByCentroIds(filter: AnswerManyFilter): Promise<Answer[]>;
+}
