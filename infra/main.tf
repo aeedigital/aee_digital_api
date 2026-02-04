@@ -54,61 +54,106 @@ resource "aws_lambda_function" "api" {
   depends_on = [aws_iam_role_policy_attachment.lambda_basic]
 }
 
-
-# API Gateway REST (proxy) to expor a Lambda
+# API Gateway REST
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "${var.project}-api-gw"
-  description = "Proxy API Gateway for ${var.project}"
+  name = "${var.project}-api-gw"
+  body = jsonencode(local.api_spec)
 }
 
-# Proxy resource {proxy+}
-resource "aws_api_gateway_resource" "proxy" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "{proxy+}"
+# Rotas explícitas para o API Gateway; atualize sempre que uma rota for criada/migrada
+locals {
+  api_routes = [
+    { method = "GET", path = "/" },
+    { method = "GET", path = "/clearcache" },
+    { method = "GET", path = "/forms" },
+    { method = "POST", path = "/forms" },
+    { method = "GET", path = "/forms/{id}" },
+    { method = "PATCH", path = "/forms/{id}" },
+    { method = "DELETE", path = "/forms/{id}" },
+    { method = "GET", path = "/answers" },
+    { method = "POST", path = "/answers" },
+    { method = "PUT", path = "/answers" },
+    { method = "GET", path = "/answers/{id}" },
+    { method = "PATCH", path = "/answers/{id}" },
+    { method = "DELETE", path = "/answers/{id}" },
+    { method = "GET", path = "/centros" },
+    { method = "POST", path = "/centros" },
+    { method = "GET", path = "/centros/{id}" },
+    { method = "PATCH", path = "/centros/{id}" },
+    { method = "DELETE", path = "/centros/{id}" },
+    { method = "GET", path = "/centros/{id}/summaries" },
+    { method = "GET", path = "/pessoas" },
+    { method = "POST", path = "/pessoas" },
+    { method = "GET", path = "/pessoas/{id}" },
+    { method = "PATCH", path = "/pessoas/{id}" },
+    { method = "DELETE", path = "/pessoas/{id}" },
+    { method = "GET", path = "/regionais" },
+    { method = "POST", path = "/regionais" },
+    { method = "GET", path = "/regionais/overview" },
+    { method = "GET", path = "/regionais/{id}" },
+    { method = "PATCH", path = "/regionais/{id}" },
+    { method = "DELETE", path = "/regionais/{id}" },
+    { method = "GET", path = "/regionais/{id}/summaries" },
+    { method = "GET", path = "/regionais/{id}/centros" },
+    { method = "GET", path = "/regionais/{id}/coord-summary" },
+    { method = "GET", path = "/regionais/{id}/centros-with-answers" },
+    { method = "GET", path = "/passes" },
+    { method = "POST", path = "/passes" },
+    { method = "GET", path = "/passes/{id}" },
+    { method = "PATCH", path = "/passes/{id}" },
+    { method = "DELETE", path = "/passes/{id}" },
+    { method = "PATCH", path = "/passes/{id}/last-logged-in" },
+    { method = "GET", path = "/summaries" },
+    { method = "POST", path = "/summaries" },
+    { method = "GET", path = "/summaries/stats" },
+    { method = "GET", path = "/summaries/{id}" },
+    { method = "PATCH", path = "/summaries/{id}" },
+    { method = "DELETE", path = "/summaries/{id}" },
+    { method = "PATCH", path = "/summaries/{id}/validated-by-coord" },
+    { method = "GET", path = "/questions" },
+    { method = "POST", path = "/questions" },
+    { method = "GET", path = "/questions/{id}" },
+    { method = "PATCH", path = "/questions/{id}" },
+    { method = "DELETE", path = "/questions/{id}" },
+    { method = "GET", path = "/api" },      # Swagger UI
+    { method = "GET", path = "/api-json" }, # Swagger JSON
+  ]
 }
 
-# ANY on proxy
-resource "aws_api_gateway_method" "proxy_any" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.proxy.id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
+# Caminhos únicos (sem "/") e metadados
+locals {
+  api_routes_by_path = {
+    for path in distinct([for r in local.api_routes : r.path]) :
+    path => [for r in local.api_routes : r if r.path == path]
+  }
 
-resource "aws_api_gateway_integration" "proxy" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.proxy.id
-  http_method = aws_api_gateway_method.proxy_any.http_method
+  api_paths = {
+    for path, routes in local.api_routes_by_path :
+    path => merge([
+      for r in routes : {
+        (r.method == "ANY" ? "x-amazon-apigateway-any-method" : lower(r.method)) = {
+          "x-amazon-apigateway-integration" = {
+            uri        = aws_lambda_function.api.invoke_arn
+            httpMethod = "POST"
+            type       = "aws_proxy"
+          }
+        }
+      }
+    ]...)
+  }
 
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.api.invoke_arn
-}
-
-# ANY on root for convenience
-resource "aws_api_gateway_method" "root_any" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_rest_api.api.root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "root" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_rest_api.api.root_resource_id
-  http_method = aws_api_gateway_method.root_any.http_method
-
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.api.invoke_arn
+  api_spec = {
+    swagger = "2.0"
+    info = {
+      title   = "${var.project}-api"
+      version = "1.0"
+    }
+    paths = local.api_paths
+  }
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [
-    aws_api_gateway_integration.proxy,
-    aws_api_gateway_integration.root
-  ]
+  depends_on  = [aws_api_gateway_rest_api.api]
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = var.api_stage
 }

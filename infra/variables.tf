@@ -17,7 +17,7 @@ variable "lambda_package" {
 variable "lambda_handler" {
   description = "Handler entrypoint"
   type        = string
-  default     = "dist/src/lambda.handler"
+  default     = "dist/lambda.handler"
 }
 
 variable "lambda_memory_mb" {
