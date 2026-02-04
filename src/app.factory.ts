@@ -4,6 +4,7 @@ import { WinstonLogger } from './services/logger.service';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/HttpExceptionFilter';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { parse as parseUrlEncoded } from 'fast-querystring';
 
 // Shared bootstrap used both for HTTP server and Lambda handler
 export async function createApp(): Promise<NestFastifyApplication> {
@@ -16,16 +17,18 @@ export async function createApp(): Promise<NestFastifyApplication> {
   });
 
   // Permite requisições com Content-Type application/json e body vazio (ex.: DELETE sem payload)
-  const fastify = app.getHttpAdapter().getInstance();
-  fastify.addContentTypeParser(
+  const adapterInstance = app.getHttpAdapter() as FastifyAdapter;
+  const fastify = adapterInstance.getInstance();
+  // Substitui parser JSON padrão para aceitar corpo vazio; remove o existente antes de registrar
+  fastify.removeContentTypeParser('application/json');
+  adapterInstance.useBodyParser(
     'application/json',
-    { parseAs: 'string' },
-    (req, body: string, done) => {
+    false,
+    undefined,
+    (_req, body: Buffer, done) => {
       try {
-        const json =
-          body && body.trim().length > 0
-            ? JSON.parse(body)
-            : {};
+        const payload = body && body.length > 0 ? body.toString() : '';
+        const json = payload.trim().length > 0 ? JSON.parse(payload) : {};
         done(null, json);
       } catch (err) {
         done(err as Error, undefined);
@@ -33,45 +36,32 @@ export async function createApp(): Promise<NestFastifyApplication> {
     },
   );
 
-  const allowedOrigins = new Set([
-    'http://162.214.123.133:4200',
-    'http://162.214.123.133:3000',
-    'http://localhost:3000',
-    'https://d2enljusu1yyvy.cloudfront.net', // domínio antigo
-    'https://www.aliancadigital.org.br',     // front em produção
-    'https://aliancadigital.org.br',         // domínio sem www
-    ...(process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
-      : []),
-  ]);
+  // Como marcamos o parser como registrado, precisamos garantir parser urlencoded manualmente
+  const bodyLimit = (fastify as any).initialConfig?.bodyLimit;
+  fastify.addContentTypeParser(
+    'application/x-www-form-urlencoded',
+    { parseAs: 'buffer', bodyLimit },
+    (_req, body: Buffer, done) => {
+      try {
+        const parsed = parseUrlEncoded(body?.toString() ?? '');
+        done(null, parsed);
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    },
+  );
+
+  // CORS totalmente liberado temporariamente
+  const allowAllCors = true;
 
   app.enableCors({
-    origin: (origin, callback) => {
-      // curl, Postman e chamadas internas não possuem Origin
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      // Permite chamadas vindas diretamente do domínio do API Gateway (execute-api)
-      try {
-        const url = new URL(origin);
-        if (url.hostname.includes('execute-api')) {
-          return callback(null, true);
-        }
-      } catch (_) {
-        // se não for URL válida, segue fluxo normal
-      }
-
-      if (allowedOrigins.has(origin)) {
-        return callback(null, true);
-      }
-
-      // Não lança erro (evita 500) — apenas bloqueia o CORS
-      return callback(null, false);
-    },
+    origin: allowAllCors ? true : false,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'Content-Type'],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   app.useGlobalPipes(new ValidationPipe());
