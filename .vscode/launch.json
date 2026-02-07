@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "name": "Debug NestJS",
+        "name": "Debug NestJS (Local)",
         "type": "node",
         "request": "launch",
         "args": ["${workspaceFolder}/src/main.ts"],
@@ -11,6 +11,35 @@
         "cwd": "${workspaceFolder}",
         "protocol": "inspector",
         "console": "integratedTerminal"
+      },
+      {
+        "name": "Attach to Docker",
+        "type": "node",
+        "request": "attach",
+        "port": 9229,
+        "restart": true,
+        "skipFiles": ["<node_internals>/**"],
+        "preLaunchTask": "docker:up",
+        "postDebugTask": "docker:logs"
+      },
+      {
+        "name": "Debug Tests",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["--runInBand", "--no-cache", "--detectOpenHandles"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      },
+      {
+        "name": "Debug E2E Tests",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/node_modules/.bin/jest",
+        "args": ["--runInBand", "--config", "./test/jest-e2e.json"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "preLaunchTask": "docker:up"
       }
     ]
   }

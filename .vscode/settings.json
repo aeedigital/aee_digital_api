@@ -1,0 +1,60 @@
+{
+  // TypeScript
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // JavaScript
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // Prettier
+  "prettier.printWidth": 100,
+  "prettier.semi": true,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "es5",
+  "prettier.arrowParens": "always",
+
+  // Jest
+  "jest.autoRun": "off",
+  "jest.runMode": "on-demand",
+
+  // ESLint
+  "eslint.validate": ["javascript", "typescript"],
+  "eslint.format.enable": true,
+
+  // Editor
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // Files
+  "files.exclude": {
+    "**/.git": true,
+    "**/.gitignore": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.env": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true
+  },
+
+  // Debugging
+  "debug.node.autoAttach": "off",
+  "debug.internalConsoleOptions": "neverOpen",
+
+  // Misc
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
+}

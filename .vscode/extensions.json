@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "firsttris.vscode-jest-runner",
+    "orta.vscode-jest",
+    "formulahendry.code-runner",
+    "ms-vscode.makefile-tools",
+    "docker extension",
+    "mongodb.mongodb-vscode",
+    "bradlc.vscode-tailwindcss"
+  ]
+}

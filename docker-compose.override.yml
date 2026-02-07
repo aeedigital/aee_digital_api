@@ -1,0 +1,20 @@
+# docker-compose.override.yml
+# Este arquivo é carregado automaticamente pelo docker-compose
+# Use para customizações locais do seu machine
+
+version: '3.8'
+
+services:
+  app:
+    # Para usar o Dockerfile.dev mais otimizado:
+    # build:
+    #   dockerfile: Dockerfile.dev
+    
+    # Descomentar para log mais detalhado:
+    # environment:
+    #   - LOG_LEVEL=trace
+    
+    # Descomentar para usar Dockerfile.dev:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.dev
