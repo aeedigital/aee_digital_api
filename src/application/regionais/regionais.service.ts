@@ -110,48 +110,35 @@ export class RegionaisAppService {
     } as any);
     const centroIds = centros.map((c) => c.id).filter(Boolean);
 
-    const summaries =
+    const summariesPromise =
       centroIds.length === 0
-        ? []
-        : await this.summariesService.findByCentroIds({
+        ? Promise.resolve([])
+        : this.summariesService.findLatestByCentroIds({
             centroIds,
             dateFrom: params.dateFrom,
             dateTo: params.dateTo,
             fields: 'FORM_ID,CENTRO_ID,QUESTIONS,createdAt,updatedAt',
-            sort: { updatedAt: -1 },
           } as SummaryManyFilter);
 
-    const formId =
-      summaries.find((s: any) => s.formId)?.formId ||
-      (await this.formsService.findAll({} as any)).at(0)?.id;
+    const [summaries, allRegionais, forms] = await Promise.all([
+      summariesPromise,
+      this.repository.findAll({}),
+      this.formsService.findAll({} as any),
+    ]);
+
+    const formId = summaries.find((s: any) => s.formId)?.formId || forms.at(0)?.id;
     const form = formId ? await this.formsService.findOne(formId) : null;
 
-    let coordenador = null;
-    if ((regional as any).coordenadorId) {
-      try {
-        coordenador = await this.pessoasService.findOne((regional as any).coordenadorId);
-      } catch (err) {
-        if (!(err instanceof NotFoundException)) throw err;
-        coordenador = null;
-      }
-    }
-
-    const allRegionais = await this.repository.findAll({});
-    const uniqueCoordIds = Array.from(
-      new Set(allRegionais.map((r: any) => r.coordenadorId).filter(Boolean)),
-    );
-    const coordenadores = (
-      await Promise.all(
-        uniqueCoordIds.map(async (pid) => {
-          try {
-            return await this.pessoasService.findOne(pid);
-          } catch (err) {
-            if (err instanceof NotFoundException) return null;
-            throw err;
-          }
-        }),
-      )
-    ).filter(Boolean);
+    const coordIdSet = new Set<string>();
+    const regionalCoordId = (regional as any).coordenadorId;
+    if (regionalCoordId) coordIdSet.add(regionalCoordId);
+    allRegionais.forEach((r: any) => {
+      if (r.coordenadorId) coordIdSet.add(r.coordenadorId);
+    });
+    const coordenadores = await this.pessoasService.findByIds(Array.from(coordIdSet));
+    const coordenador = regionalCoordId
+      ? coordenadores.find((p: any) => p.id === regionalCoordId) || null
+      : null;
 
     return {
       regional,

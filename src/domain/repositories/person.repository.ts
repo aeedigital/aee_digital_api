@@ -12,4 +12,6 @@ export interface CreatePersonInput {
 export interface UpdatePersonInput extends Partial<CreatePersonInput> {}
 
 export interface PersonRepository
-  extends CrudRepository<Person, CreatePersonInput, UpdatePersonInput, PersonFilter> {}
+  extends CrudRepository<Person, CreatePersonInput, UpdatePersonInput, PersonFilter> {
+  findByIds(ids: string[]): Promise<Person[]>;
+}

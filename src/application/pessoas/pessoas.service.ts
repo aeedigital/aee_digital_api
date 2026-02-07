@@ -23,6 +23,10 @@ export class PessoasAppService {
     return this.repository.findAll(filter);
   }
 
+  findByIds(ids: string[]): Promise<Person[]> {
+    return this.repository.findByIds(ids);
+  }
+
   async findOne(id: string): Promise<Person> {
     const person = await this.repository.findById(id);
     if (!person) {

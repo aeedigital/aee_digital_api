@@ -34,6 +34,10 @@ export class SummaryAppService {
     return this.repository.findByCentroIds(filter);
   }
 
+  findLatestByCentroIds(filter: SummaryManyFilter): Promise<Summary[]> {
+    return this.repository.findLatestByCentroIds(filter);
+  }
+
   async findOne(id: string): Promise<Summary> {
     const summary = await this.repository.findById(id);
     if (!summary) {

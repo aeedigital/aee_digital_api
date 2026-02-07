@@ -29,11 +29,9 @@ import { QuestionsSchema } from '../../questions/schemas/questions.schema';
 import { RegionalSchema } from '../../regionais/schemas/regionais.schema';
 import { Summaries, SummariesSchema } from '../../summary/schemas/summaries.schema';
 
-const repositoryProvider = (token: symbol, mongoToken: any, memoryToken: any) => ({
+const repositoryProvider = (token: symbol, repositoryToken: any) => ({
   provide: token,
-  useFactory: (mongoRepo: any, memoryRepo: any) =>
-    isMemoryDriver() ? memoryRepo : mongoRepo,
-  inject: [mongoToken, memoryToken],
+  useExisting: repositoryToken,
 });
 
 @Module({})
@@ -58,30 +56,43 @@ export class PersistenceModule {
 
     const providers = [
       CacheService,
-      AnswersMongoRepository,
-      AnswersMemoryRepository,
-      repositoryProvider(ANSWER_REPOSITORY, AnswersMongoRepository, AnswersMemoryRepository),
-      CentrosMongoRepository,
-      CentrosMemoryRepository,
-      repositoryProvider(CENTRO_REPOSITORY, CentrosMongoRepository, CentrosMemoryRepository),
-      FormsMongoRepository,
-      FormsMemoryRepository,
-      repositoryProvider(FORM_REPOSITORY, FormsMongoRepository, FormsMemoryRepository),
-      PassesMongoRepository,
-      PassesMemoryRepository,
-      repositoryProvider(PASS_REPOSITORY, PassesMongoRepository, PassesMemoryRepository),
-      PessoasMongoRepository,
-      PessoasMemoryRepository,
-      repositoryProvider(PERSON_REPOSITORY, PessoasMongoRepository, PessoasMemoryRepository),
-      QuestionsMongoRepository,
-      QuestionsMemoryRepository,
-      repositoryProvider(QUESTION_REPOSITORY, QuestionsMongoRepository, QuestionsMemoryRepository),
-      RegionaisMongoRepository,
-      RegionaisMemoryRepository,
-      repositoryProvider(REGIONAL_REPOSITORY, RegionaisMongoRepository, RegionaisMemoryRepository),
-      SummariesMongoRepository,
-      SummariesMemoryRepository,
-      repositoryProvider(SUMMARY_REPOSITORY, SummariesMongoRepository, SummariesMemoryRepository),
+      ...(useMemory
+        ? [
+            AnswersMemoryRepository,
+            repositoryProvider(ANSWER_REPOSITORY, AnswersMemoryRepository),
+            CentrosMemoryRepository,
+            repositoryProvider(CENTRO_REPOSITORY, CentrosMemoryRepository),
+            FormsMemoryRepository,
+            repositoryProvider(FORM_REPOSITORY, FormsMemoryRepository),
+            PassesMemoryRepository,
+            repositoryProvider(PASS_REPOSITORY, PassesMemoryRepository),
+            PessoasMemoryRepository,
+            repositoryProvider(PERSON_REPOSITORY, PessoasMemoryRepository),
+            QuestionsMemoryRepository,
+            repositoryProvider(QUESTION_REPOSITORY, QuestionsMemoryRepository),
+            RegionaisMemoryRepository,
+            repositoryProvider(REGIONAL_REPOSITORY, RegionaisMemoryRepository),
+            SummariesMemoryRepository,
+            repositoryProvider(SUMMARY_REPOSITORY, SummariesMemoryRepository),
+          ]
+        : [
+            AnswersMongoRepository,
+            repositoryProvider(ANSWER_REPOSITORY, AnswersMongoRepository),
+            CentrosMongoRepository,
+            repositoryProvider(CENTRO_REPOSITORY, CentrosMongoRepository),
+            FormsMongoRepository,
+            repositoryProvider(FORM_REPOSITORY, FormsMongoRepository),
+            PassesMongoRepository,
+            repositoryProvider(PASS_REPOSITORY, PassesMongoRepository),
+            PessoasMongoRepository,
+            repositoryProvider(PERSON_REPOSITORY, PessoasMongoRepository),
+            QuestionsMongoRepository,
+            repositoryProvider(QUESTION_REPOSITORY, QuestionsMongoRepository),
+            RegionaisMongoRepository,
+            repositoryProvider(REGIONAL_REPOSITORY, RegionaisMongoRepository),
+            SummariesMongoRepository,
+            repositoryProvider(SUMMARY_REPOSITORY, SummariesMongoRepository),
+          ]),
     ];
 
     return {

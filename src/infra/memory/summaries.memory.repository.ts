@@ -65,4 +65,26 @@ export class SummariesMemoryRepository
     );
     return sorted;
   }
+
+  async findLatestByCentroIds(filter: SummaryManyFilter): Promise<Summary[]> {
+    const items = await this.findAll({
+      dateFrom: filter.dateFrom,
+      dateTo: filter.dateTo,
+    });
+    const filtered = items.filter((s) => filter.centroIds.includes(s.centroId));
+    const latestByCentro = new Map<string, Summary>();
+    for (const item of filtered) {
+      const current = latestByCentro.get(item.centroId);
+      if (!current) {
+        latestByCentro.set(item.centroId, item);
+        continue;
+      }
+      const currentTime = current.updatedAt?.getTime() || current.createdAt?.getTime() || 0;
+      const itemTime = item.updatedAt?.getTime() || item.createdAt?.getTime() || 0;
+      if (itemTime > currentTime) {
+        latestByCentro.set(item.centroId, item);
+      }
+    }
+    return Array.from(latestByCentro.values());
+  }
 }

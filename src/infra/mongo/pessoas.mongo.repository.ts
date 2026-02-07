@@ -64,4 +64,10 @@ export class PessoasMongoRepository
     }
     return this.toDomain(updated);
   }
+
+  async findByIds(ids: string[]): Promise<Person[]> {
+    if (!ids.length) return [];
+    const docs = await this.model.find({ _id: { $in: ids } }).lean().exec();
+    return docs.map((doc) => this.toDomain(doc));
+  }
 }

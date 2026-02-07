@@ -169,4 +169,42 @@ export class SummariesMongoRepository
     const docs = await q.exec();
     return docs.map((doc) => this.toDomain(doc));
   }
+
+  async findLatestByCentroIds(filter: SummaryManyFilter): Promise<Summary[]> {
+    const { centroIds, dateFrom, dateTo, fields } = filter;
+    if (!centroIds.length) return [];
+
+    const match: any = { CENTRO_ID: { $in: centroIds } };
+    if (dateFrom || dateTo) {
+      match.createdAt = {};
+      if (dateFrom) match.createdAt['$gte'] = dateFrom;
+      if (dateTo) match.createdAt['$lte'] = dateTo;
+    }
+
+    const pipeline: any[] = [
+      { $match: match },
+      { $sort: { updatedAt: -1, createdAt: -1 } },
+      {
+        $group: {
+          _id: '$CENTRO_ID',
+          doc: { $first: '$$ROOT' },
+        },
+      },
+      { $replaceRoot: { newRoot: '$doc' } },
+    ];
+
+    if (fields) {
+      const projection = fields.split(',').reduce(
+        (acc, field) => {
+          acc[field.trim()] = 1;
+          return acc;
+        },
+        { _id: 1 } as Record<string, 1>,
+      );
+      pipeline.push({ $project: projection });
+    }
+
+    const docs = await this.model.aggregate(pipeline).exec();
+    return docs.map((doc: any) => this.toDomain(doc));
+  }
 }

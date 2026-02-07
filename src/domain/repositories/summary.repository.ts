@@ -50,4 +50,5 @@ export interface SummaryRepository
   extends CrudRepository<Summary, CreateSummaryInput, UpdateSummaryInput, SummaryFilter> {
   stats(params: SummaryStatsParams): Promise<SummaryStatsResult>;
   findByCentroIds(filter: SummaryManyFilter): Promise<Summary[]>;
+  findLatestByCentroIds(filter: SummaryManyFilter): Promise<Summary[]>;
 }
