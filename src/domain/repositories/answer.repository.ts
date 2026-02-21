@@ -28,6 +28,7 @@ export type AnswerManyFilter = {
   centroIds: string[];
   dateFrom?: Date;
   dateTo?: Date;
+  sortByUpdatedAt?: boolean;
 };
 
 export interface AnswerRepository

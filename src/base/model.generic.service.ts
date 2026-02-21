@@ -15,16 +15,31 @@ export class MongoGenericService<S, D, U = D> {
     protected readonly model: Model<S>,
     protected readonly cacheService: CacheService,
   ) {
-    this.listenToChanges();
+    // Change streams abrem conexoes long-lived e tendem a ser instaveis em Lambda.
+    if (process.env.ENABLE_MONGO_CHANGE_STREAMS === 'true') {
+      this.listenToChanges();
+    }
     this.shouldUseCache = false;
   }
 
-  async listenToChanges() {
-    const changeStream = this.model.watch();
+  listenToChanges() {
+    if (typeof (this.model as any).watch !== 'function') {
+      return;
+    }
 
-    changeStream.on('error', (error) => {
-      this.logger.error('Erro no Change Stream', error?.stack || JSON.stringify(error));
-    });
+    try {
+      const changeStream = (this.model as any).watch();
+      if (typeof changeStream?.on === 'function') {
+        changeStream.on('error', (error) => {
+          this.logger.error('Erro no Change Stream', error?.stack || JSON.stringify(error));
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        'Falha ao iniciar Change Stream',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
+    }
   }
 
   private async getCached(key, saveMethod): Promise<any> {

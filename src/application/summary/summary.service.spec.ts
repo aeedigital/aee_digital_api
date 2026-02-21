@@ -18,11 +18,14 @@ describe('SummaryAppService', () => {
     repository = {
       create: jest.fn(),
       findAll: jest.fn(),
+      stats: jest.fn(),
+      findByCentroIds: jest.fn(),
+      findLatestByCentroIds: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
-    };
+    } as jest.Mocked<SummaryRepository>;
     service = new SummaryAppService(repository);
   });
 
@@ -59,5 +62,25 @@ describe('SummaryAppService', () => {
   it('deletes a summary', async () => {
     repository.delete.mockResolvedValue(undefined);
     await expect(service.delete('s1')).resolves.toBeUndefined();
+  });
+
+  it('delegates stats to repository', async () => {
+    const response = { eventsByDay: {}, respondedCount: 0, totalCentros: 0 };
+    repository.stats.mockResolvedValue(response);
+    await expect(
+      service.stats({ dateFrom: new Date('2026-01-01'), dateTo: new Date('2026-01-31') }),
+    ).resolves.toEqual(response);
+  });
+
+  it('delegates findByCentroIds to repository', async () => {
+    repository.findByCentroIds.mockResolvedValue([summary]);
+    await expect(service.findByCentroIds({ centroIds: ['c1'] })).resolves.toEqual([summary]);
+  });
+
+  it('delegates findLatestByCentroIds to repository', async () => {
+    repository.findLatestByCentroIds.mockResolvedValue([summary]);
+    await expect(service.findLatestByCentroIds({ centroIds: ['c1'] })).resolves.toEqual([
+      summary,
+    ]);
   });
 });

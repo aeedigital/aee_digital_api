@@ -127,7 +127,7 @@ export class AnswersMongoRepository implements AnswerRepository {
   }
 
   async findByCentroIds(filter: AnswerManyFilter): Promise<Answer[]> {
-    const { centroIds, dateFrom, dateTo } = filter;
+    const { centroIds, dateFrom, dateTo, sortByUpdatedAt = true } = filter;
     const objectIds = centroIds
       .filter((id) => Types.ObjectId.isValid(id))
       .map((id) => new Types.ObjectId(id));
@@ -143,7 +143,11 @@ export class AnswersMongoRepository implements AnswerRepository {
       if (dateFrom) query.updatedAt['$gte'] = dateFrom;
       if (dateTo) query.updatedAt['$lte'] = dateTo;
     }
-    const docs = await this.model.find(query).sort({ updatedAt: -1 }).lean();
+    const mongoQuery = this.model.find(query);
+    if (sortByUpdatedAt) {
+      mongoQuery.sort({ updatedAt: -1 });
+    }
+    const docs = await mongoQuery.lean();
     return docs.map((doc) => this.toDomain(doc));
   }
 }

@@ -19,11 +19,12 @@ describe('AnswersAppService', () => {
     repository = {
       create: jest.fn(),
       findAll: jest.fn(),
+      findByCentroIds: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
-    };
+    } as jest.Mocked<AnswerRepository>;
     service = new AnswersAppService(repository);
   });
 
@@ -71,5 +72,12 @@ describe('AnswersAppService', () => {
   it('deletes an answer', async () => {
     repository.delete.mockResolvedValue(undefined);
     await expect(service.delete('a1')).resolves.toBeUndefined();
+  });
+
+  it('finds answers by center ids', async () => {
+    repository.findByCentroIds.mockResolvedValue([sampleAnswer]);
+    await expect(service.findByCentroIds({ centroIds: ['c1'] })).resolves.toEqual([
+      sampleAnswer,
+    ]);
   });
 });

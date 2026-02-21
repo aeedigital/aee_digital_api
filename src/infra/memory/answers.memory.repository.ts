@@ -15,12 +15,14 @@ export class AnswersMemoryRepository
   implements AnswerRepository
 {
   async findByCentroIds(filter: AnswerManyFilter): Promise<Answer[]> {
+    const { sortByUpdatedAt = true } = filter;
     const items = await this.findAll({
       dateFrom: filter.dateFrom,
       dateTo: filter.dateTo,
     });
-    return items
-      .filter((a) => filter.centroIds.includes(a.centroId))
-      .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+    const filtered = items.filter((a) => filter.centroIds.includes(a.centroId));
+    return sortByUpdatedAt
+      ? filtered.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0))
+      : filtered;
   }
 }

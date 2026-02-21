@@ -158,22 +158,25 @@ export class RegionaisAppService {
     } as any);
     const centroIds = centros.map((c) => c.id).filter(Boolean);
 
-    const summaries =
+    const summariesPromise =
       params.includeSummaries && centroIds.length
-        ? await this.summariesService.findByCentroIds({
+        ? this.summariesService.findByCentroIds({
             centroIds,
             dateFrom: params.dateFrom,
             dateTo: params.dateTo,
             sort: { updatedAt: -1 },
           })
-        : [];
+        : Promise.resolve([]);
 
-    const answers =
+    const answersPromise =
       params.includeAnswers && centroIds.length
-        ? await this.answersService.findByCentroIds({
+        ? this.answersService.findByCentroIds({
             centroIds,
-          } as any)
-        : [];
+            sortByUpdatedAt: false,
+          })
+        : Promise.resolve([]);
+
+    const [summaries, answers] = await Promise.all([summariesPromise, answersPromise]);
 
     const summariesByCentro = new Map<string, Summary[]>();
     summaries.forEach((s: any) => {

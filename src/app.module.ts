@@ -10,34 +10,66 @@ import { AnswersModule } from './answers/answers.module';
 import { PassesModule } from './passes/passes.module';
 import { PessoasModule } from './pessoas/pessoas.module';
 import { SummaryModule } from './summary/summary.module';
-import { ConfigModule } from '@nestjs/config';
-
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { WinstonLogger } from './services/logger.service';
-
 import { ReqnameMiddleware } from './base/reqname.middleware';
-
 import { MongooseModule } from '@nestjs/mongoose';
 import { isMemoryDriver } from './infra/persistence/persistence.config';
 
+const DEFAULT_MONGODB_URI =
+  'mongodb+srv://aliancadigital:aliancadigital@aee.pvgzm2s.mongodb.net/';
+
+const parsePositiveInt = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     ManagementModule,
     CacheModule.register({
-      isGlobal: true, // 🔥 Isso torna o CacheModule global para toda a aplicação
+      isGlobal: true,
     }),
     ...(isMemoryDriver()
       ? []
       : [
-          MongooseModule.forRoot(
-            'mongodb+srv://aliancadigital:aliancadigital@aee.pvgzm2s.mongodb.net/',
-          ),
+          MongooseModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+              uri: configService.get<string>('MONGODB_URI')?.trim() || DEFAULT_MONGODB_URI,
+              retryReads: true,
+              retryWrites: true,
+              family: 4,
+              appName: 'aee_digital_api',
+              minPoolSize: 0,
+              maxPoolSize: parsePositiveInt(
+                configService.get<string>('MONGODB_MAX_POOL_SIZE'),
+                10,
+              ),
+              maxIdleTimeMS: parsePositiveInt(
+                configService.get<string>('MONGODB_MAX_IDLE_TIME_MS'),
+                30000,
+              ),
+              connectTimeoutMS: parsePositiveInt(
+                configService.get<string>('MONGODB_CONNECT_TIMEOUT_MS'),
+                10000,
+              ),
+              socketTimeoutMS: parsePositiveInt(
+                configService.get<string>('MONGODB_SOCKET_TIMEOUT_MS'),
+                45000,
+              ),
+              serverSelectionTimeoutMS: parsePositiveInt(
+                configService.get<string>('MONGODB_SERVER_SELECTION_TIMEOUT_MS'),
+                5000,
+              ),
+            }),
+          }),
         ]),
-    ConfigModule.forRoot({
-      isGlobal: true, // Deixa disponível em toda a aplicação
-      envFilePath: '.env', // Especifica o arquivo de ambiente
-    }),
     CentrosModule,
     RegionaisModule,
     FormsModule,

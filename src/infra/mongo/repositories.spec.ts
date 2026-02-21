@@ -8,11 +8,24 @@ import { SummariesMongoRepository } from './summaries.mongo.repository';
 import { AnswersMongoRepository } from './answers.mongo.repository';
 import { CacheService } from '../../services/cache.service';
 
-const createModelStub = (doc: any) => ({
-  modelName: 'Test',
-  watch: jest.fn(() => ({ on: jest.fn() })),
-  findByIdAndUpdate: jest.fn(() => ({ exec: jest.fn().mockResolvedValue(doc) })),
-});
+const createModelStub = (doc: any) => {
+  const chain = {
+    populate: jest.fn().mockReturnThis(),
+    exec: jest.fn().mockResolvedValue(doc),
+    lean: jest.fn().mockResolvedValue(doc),
+    sort: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+  };
+  return {
+    modelName: 'Test',
+    watch: jest.fn(() => ({ on: jest.fn() })),
+    findByIdAndUpdate: jest.fn(() => chain),
+    findById: jest.fn(() => chain),
+    find: jest.fn(() => chain),
+    aggregate: jest.fn(() => ({ exec: jest.fn().mockResolvedValue([]) })),
+    countDocuments: jest.fn(() => ({ exec: jest.fn().mockResolvedValue(0) })),
+  };
+};
 
 const createCacheStub = () =>
   ({
@@ -97,6 +110,8 @@ describe('Mongo repositories mappings', () => {
 
   it('maps regionais repository', async () => {
     const model = createModelStub({ _id: 'r1', NOME_REGIONAL: 'R' });
+    const centroModel = createModelStub({});
+    const summaryModel = createModelStub({});
     class TestRepo extends RegionaisMongoRepository {
       mapDomain(doc: any) {
         return this.toDomain(doc);
@@ -108,7 +123,12 @@ describe('Mongo repositories mappings', () => {
         return this.toPersistence(data);
       }
     }
-    const repo = new TestRepo(model as any, createCacheStub());
+    const repo = new TestRepo(
+      model as any,
+      centroModel as any,
+      summaryModel as any,
+      createCacheStub(),
+    );
     expect(repo.mapDomain({ _id: 'r1', NOME_REGIONAL: 'R', PAIS: 'BR', COORDENADOR_ID: 'c' }))
       .toEqual({ id: 'r1', nomeRegional: 'R', pais: 'BR', coordenadorId: 'c' });
     expect(repo.mapFilter({ nomeRegional: 'R' })).toEqual({ NOME_REGIONAL: 'R' });
@@ -164,6 +184,7 @@ describe('Mongo repositories mappings', () => {
 
   it('maps summaries repository', async () => {
     const model = createModelStub({ _id: 's1', FORM_ID: 'f1', CENTRO_ID: 'c1' });
+    const centroModel = createModelStub({});
     class TestRepo extends SummariesMongoRepository {
       mapDomain(doc: any) {
         return this.toDomain(doc);
@@ -175,7 +196,7 @@ describe('Mongo repositories mappings', () => {
         return this.toPersistence(data);
       }
     }
-    const repo = new TestRepo(model as any, createCacheStub());
+    const repo = new TestRepo(model as any, centroModel as any, createCacheStub());
     expect(repo.mapDomain({ _id: 's1', FORM_ID: 'f1', CENTRO_ID: 'c1', QUESTIONS: [] }))
       .toEqual(expect.objectContaining({ id: 's1', formId: 'f1', centroId: 'c1' }));
     expect(repo.mapFilter({ formId: 'f1' })).toEqual({ FORM_ID: 'f1' });

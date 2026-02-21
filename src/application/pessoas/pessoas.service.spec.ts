@@ -18,11 +18,12 @@ describe('PessoasAppService', () => {
     repository = {
       create: jest.fn(),
       findAll: jest.fn(),
+      findByIds: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
-    };
+    } as jest.Mocked<PersonRepository>;
     service = new PessoasAppService(repository);
   });
 
@@ -59,5 +60,10 @@ describe('PessoasAppService', () => {
   it('deletes a person', async () => {
     repository.delete.mockResolvedValue(undefined);
     await expect(service.delete('p1')).resolves.toBeUndefined();
+  });
+
+  it('finds people by ids', async () => {
+    repository.findByIds.mockResolvedValue([person]);
+    await expect(service.findByIds(['p1'])).resolves.toEqual([person]);
   });
 });
