@@ -15,6 +15,7 @@ describe('RegionaisController (e2e)', () => {
     delete: jest.fn(),
     findSummaries: jest.fn(),
     findCentros: jest.fn(),
+    overview: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -51,5 +52,18 @@ describe('RegionaisController (e2e)', () => {
   it('lists regionais', () => {
     service.findAll.mockResolvedValue([{ id: 'r1' }]);
     return request(app.getHttpServer()).get('/regionais').expect(200);
+  });
+
+  it('accepts overview with default exclusion flag', () => {
+    service.overview.mockResolvedValue([]);
+    return request(app.getHttpServer())
+      .get('/regionais/overview?applyDefaultExclusion=true')
+      .expect(200);
+  });
+
+  it('rejects overview with incomplete custom exclusion params', () => {
+    return request(app.getHttpServer())
+      .get('/regionais/overview?excludeQuestionId=61ec11fe69001e0012bc299a')
+      .expect(400);
   });
 });

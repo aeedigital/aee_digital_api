@@ -15,6 +15,7 @@ import { Summary } from '../domain/entities/summary';
 import { Centro } from '../domain/entities/centro';
 
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -36,6 +37,8 @@ import { CoordSummaryQueryDto } from './dto/coord-summary.dto';
 import { toCoordSummaryResponse } from './coord-summary.presenter';
 import { CentrosWithAnswersQueryDto } from './dto/centros-with-answers.dto';
 import { toAnswerResponse } from '../answers/answer.presenter';
+import { OVERVIEW_DEFAULT_EXCLUDE_RULE } from '../application/regionais/constants/overview-exclusion.constants';
+import { RegionalOverviewExcludeRule } from '../domain/repositories/regional.repository';
 
 @Controller('regionais')
 export class RegionaisController {
@@ -107,10 +110,41 @@ export class RegionaisController {
     const status = filterDto.status
       ? filterDto.status.split(',').map((s) => s.trim()).filter(Boolean)
       : undefined;
+    const hasCustomQuestionId = !!filterDto.excludeQuestionId;
+    const hasCustomAnswers = !!filterDto.excludeAnswers;
+
+    if (hasCustomQuestionId !== hasCustomAnswers) {
+      throw new BadRequestException(
+        'excludeQuestionId and excludeAnswers must be informed together',
+      );
+    }
+
+    let excludeRule: RegionalOverviewExcludeRule | undefined;
+    if (hasCustomQuestionId && hasCustomAnswers) {
+      const answers = filterDto.excludeAnswers!
+        .split(',')
+        .map((answer) => answer.trim())
+        .filter(Boolean);
+
+      if (!answers.length) {
+        throw new BadRequestException('excludeAnswers must contain at least one answer');
+      }
+
+      excludeRule = {
+        questionId: filterDto.excludeQuestionId!,
+        answers,
+        summarySelection: 'latest',
+        matchMode: 'trim-case-insensitive',
+      };
+    } else if (filterDto.applyDefaultExclusion === 'true') {
+      excludeRule = OVERVIEW_DEFAULT_EXCLUDE_RULE;
+    }
+
     return this.service.overview({
       dateFrom: parseDateInput(filterDto.dateFrom),
       dateTo: parseDateInput(filterDto.dateTo),
       status,
+      excludeRule,
     });
   }
 

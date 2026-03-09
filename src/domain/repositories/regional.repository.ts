@@ -11,10 +11,18 @@ export interface CreateRegionalInput {
 
 export interface UpdateRegionalInput extends Partial<CreateRegionalInput> {}
 
+export type RegionalOverviewExcludeRule = {
+  questionId: string;
+  answers: string[];
+  summarySelection: 'latest';
+  matchMode: 'trim-case-insensitive';
+};
+
 export type RegionalOverviewFilter = {
   dateFrom?: Date;
   dateTo?: Date;
   status?: string[];
+  excludeRule?: RegionalOverviewExcludeRule;
 };
 
 export type RegionalOverviewItem = {

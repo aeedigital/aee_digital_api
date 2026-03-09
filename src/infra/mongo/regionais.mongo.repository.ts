@@ -83,6 +83,12 @@ export class RegionaisMongoRepository
     if (filter.dateFrom) dateMatch['$gte'] = filter.dateFrom;
     if (filter.dateTo) dateMatch['$lte'] = filter.dateTo;
     const hasDate = Object.keys(dateMatch).length > 0;
+    const excludeRule = filter.excludeRule;
+    const shouldApplyExclusion = !!excludeRule;
+    const excludeQuestionId = excludeRule?.questionId;
+    const excludeAnswers = (excludeRule?.answers || [])
+      .map((answer) => answer.trim().toLowerCase())
+      .filter(Boolean);
 
     const pipeline: any[] = [
       {
@@ -100,14 +106,108 @@ export class RegionaisMongoRepository
           as: 'centros',
         },
       },
-      { $addFields: { centrosCount: { $size: '$centros' } } },
+    ];
+
+    if (shouldApplyExclusion) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'summaries',
+            let: {
+              centroIds: {
+                $map: {
+                  input: '$centros._id',
+                  as: 'c',
+                  in: { $toString: '$$c' },
+                },
+              },
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $in: ['$CENTRO_ID', '$$centroIds'] },
+                  ...(hasDate ? { createdAt: dateMatch } : {}),
+                },
+              },
+              { $sort: { updatedAt: -1, createdAt: -1 } },
+              { $group: { _id: '$CENTRO_ID', latestSummary: { $first: '$$ROOT' } } },
+              { $replaceRoot: { newRoot: '$latestSummary' } },
+              {
+                $project: {
+                  _id: 0,
+                  centroId: '$CENTRO_ID',
+                  shouldExclude: {
+                    $let: {
+                      vars: {
+                        matchedQuestion: {
+                          $first: {
+                            $filter: {
+                              input: '$QUESTIONS',
+                              as: 'q',
+                              cond: { $eq: [{ $toString: '$$q.QUESTION' }, excludeQuestionId] },
+                            },
+                          },
+                        },
+                      },
+                      in: {
+                        $in: [
+                          {
+                            $toLower: {
+                              $trim: { input: { $ifNull: ['$$matchedQuestion.ANSWER', ''] } },
+                            },
+                          },
+                          excludeAnswers,
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+              { $match: { shouldExclude: true } },
+            ],
+            as: 'excludedCentros',
+          },
+        },
+        {
+          $addFields: {
+            excludedCentroIds: {
+              $map: {
+                input: '$excludedCentros',
+                as: 'excluded',
+                in: '$$excluded.centroId',
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            eligibleCentros: {
+              $filter: {
+                input: '$centros',
+                as: 'centro',
+                cond: {
+                  $not: {
+                    $in: [{ $toString: '$$centro._id' }, '$excludedCentroIds'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      );
+    } else {
+      pipeline.push({ $addFields: { eligibleCentros: '$centros' } });
+    }
+
+    pipeline.push(
+      { $addFields: { centrosCount: { $size: '$eligibleCentros' } } },
       {
         $lookup: {
           from: 'summaries',
           let: {
             centroIds: {
               $map: {
-                input: '$centros._id',
+                input: '$eligibleCentros._id',
                 as: 'c',
                 in: { $toString: '$$c' },
               },
@@ -146,7 +246,7 @@ export class RegionaisMongoRepository
       {
         $sort: { NOME_REGIONAL: 1 },
       },
-    ];
+    );
 
     const result = await this.model.aggregate(pipeline).exec();
     return result.map((doc: any) => ({

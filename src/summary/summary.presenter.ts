@@ -1,4 +1,5 @@
 import { Summary } from '../domain/entities/summary';
+import { toBrazilTimestamp } from '../base/date-timezone.helper';
 
 export function toSummaryResponse(summary: Summary) {
   return {
@@ -9,8 +10,8 @@ export function toSummaryResponse(summary: Summary) {
       ANSWER: q.answer,
       QUESTION: q.questionId,
     })),
-    validatedByCoordAt: summary.validatedByCoordAt,
-    createdAt: summary.createdAt,
-    updatedAt: summary.updatedAt,
+    validatedByCoordAt: toBrazilTimestamp(summary.validatedByCoordAt),
+    createdAt: toBrazilTimestamp(summary.createdAt),
+    updatedAt: toBrazilTimestamp(summary.updatedAt),
   };
 }

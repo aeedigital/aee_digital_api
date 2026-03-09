@@ -1,4 +1,5 @@
 import { Answer } from '../domain/entities/answer';
+import { toBrazilTimestamp } from '../base/date-timezone.helper';
 
 export function toAnswerResponse(answer: Answer) {
   return {
@@ -7,7 +8,7 @@ export function toAnswerResponse(answer: Answer) {
     CENTRO_ID: answer.centroId,
     ANSWER: answer.answer,
     QUIZ_ID: answer.quizId,
-    createdAt: answer.createdAt,
-    updatedAt: answer.updatedAt,
+    createdAt: toBrazilTimestamp(answer.createdAt),
+    updatedAt: toBrazilTimestamp(answer.updatedAt),
   };
 }

@@ -1,4 +1,5 @@
 import { Pass } from '../domain/entities/pass';
+import { toBrazilTimestamp } from '../base/date-timezone.helper';
 
 export function toPassResponse(pass: Pass) {
   return {
@@ -8,7 +9,7 @@ export function toPassResponse(pass: Pass) {
     scope_id: pass.scopeId,
     groups: pass.groups,
     lastLogged: pass.lastLogged,
-    createdAt: pass.createdAt,
-    updatedAt: pass.updatedAt,
+    createdAt: toBrazilTimestamp(pass.createdAt),
+    updatedAt: toBrazilTimestamp(pass.updatedAt),
   };
 }

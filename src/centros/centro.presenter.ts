@@ -1,4 +1,5 @@
 import { Centro } from '../domain/entities/centro';
+import { toBrazilTimestamp } from '../base/date-timezone.helper';
 
 export function toCentroResponse(centro: Centro) {
   return {
@@ -15,7 +16,7 @@ export function toCentroResponse(centro: Centro) {
     CIDADE: centro.cidade,
     ESTADO: centro.estado,
     PAIS: centro.pais,
-    createdAt: centro.createdAt,
-    updatedAt: centro.updatedAt,
+    createdAt: toBrazilTimestamp(centro.createdAt),
+    updatedAt: toBrazilTimestamp(centro.updatedAt),
   };
 }

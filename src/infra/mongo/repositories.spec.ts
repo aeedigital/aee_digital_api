@@ -135,6 +135,40 @@ describe('Mongo repositories mappings', () => {
     expect(repo.mapPersist({ nomeRegional: 'R' })).toEqual({ NOME_REGIONAL: 'R' });
     await repo.update('r1', { pais: 'AR' });
     expect(model.findByIdAndUpdate).toHaveBeenCalled();
+
+    await repo.overview({});
+    expect(model.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          $addFields: expect.objectContaining({
+            eligibleCentros: '$centros',
+          }),
+        }),
+      ]),
+    );
+
+    await repo.overview({
+      excludeRule: {
+        questionId: '61ec11fe69001e0012bc299a',
+        answers: ['Encerrada', 'Desfiliada'],
+        summarySelection: 'latest',
+        matchMode: 'trim-case-insensitive',
+      },
+    });
+    expect(model.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          $lookup: expect.objectContaining({
+            as: 'excludedCentros',
+          }),
+        }),
+        expect.objectContaining({
+          $addFields: expect.objectContaining({
+            eligibleCentros: expect.any(Object),
+          }),
+        }),
+      ]),
+    );
   });
 
   it('maps centros repository', async () => {

@@ -1,4 +1,5 @@
 import { Form } from '../domain/entities/form';
+import { toBrazilTimestamp } from '../base/date-timezone.helper';
 
 export function toFormResponse(form: Form) {
   return {
@@ -21,7 +22,7 @@ export function toFormResponse(form: Form) {
         })),
       })),
     })),
-    createdAt: form.createdAt,
-    updatedAt: form.updatedAt,
+    createdAt: toBrazilTimestamp(form.createdAt),
+    updatedAt: toBrazilTimestamp(form.updatedAt),
   };
 }
