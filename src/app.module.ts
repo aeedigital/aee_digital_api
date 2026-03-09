@@ -10,6 +10,7 @@ import { AnswersModule } from './answers/answers.module';
 import { PassesModule } from './passes/passes.module';
 import { PessoasModule } from './pessoas/pessoas.module';
 import { SummaryModule } from './summary/summary.module';
+import { CadastroInfoModule } from './cadastro-info/cadastro-info.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { WinstonLogger } from './services/logger.service';
@@ -78,6 +79,7 @@ const parsePositiveInt = (value: string | undefined, fallback: number): number =
     PassesModule,
     PessoasModule,
     SummaryModule,
+    CadastroInfoModule,
   ],
   controllers: [AppController],
   providers: [AppService, WinstonLogger],

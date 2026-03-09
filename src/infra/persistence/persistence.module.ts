@@ -2,9 +2,21 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
 import { isMemoryDriver } from './persistence.config';
-import { ANSWER_REPOSITORY, CENTRO_REPOSITORY, FORM_REPOSITORY, PASS_REPOSITORY, PERSON_REPOSITORY, QUESTION_REPOSITORY, REGIONAL_REPOSITORY, SUMMARY_REPOSITORY } from '../../domain/repositories/repository.tokens';
+import {
+  ANSWER_REPOSITORY,
+  CADASTRO_INFO_REPOSITORY,
+  CENTRO_REPOSITORY,
+  FORM_REPOSITORY,
+  PASS_REPOSITORY,
+  PERSON_REPOSITORY,
+  QUESTION_REPOSITORY,
+  REGIONAL_REPOSITORY,
+  SUMMARY_REPOSITORY,
+} from '../../domain/repositories/repository.tokens';
 import { AnswersMongoRepository } from '../mongo/answers.mongo.repository';
 import { AnswersMemoryRepository } from '../memory/answers.memory.repository';
+import { CadastroInfoMongoRepository } from '../mongo/cadastro-info.mongo.repository';
+import { CadastroInfoMemoryRepository } from '../memory/cadastro-info.memory.repository';
 import { CentrosMongoRepository } from '../mongo/centros.mongo.repository';
 import { CentrosMemoryRepository } from '../memory/centros.memory.repository';
 import { FormsMongoRepository } from '../mongo/forms.mongo.repository';
@@ -28,6 +40,10 @@ import { PessoasSchema } from '../../pessoas/schemas/pessoas.schema';
 import { QuestionsSchema } from '../../questions/schemas/questions.schema';
 import { RegionalSchema } from '../../regionais/schemas/regionais.schema';
 import { Summaries, SummariesSchema } from '../../summary/schemas/summaries.schema';
+import {
+  CadastroInfoSchema,
+  CadastroInfoSchemaClass,
+} from '../../cadastro-info/schemas/cadastro-info.schema';
 
 const repositoryProvider = (token: symbol, repositoryToken: any) => ({
   provide: token,
@@ -44,6 +60,7 @@ export class PersistenceModule {
         CacheModule.register(),
         MongooseModule.forFeature([
           { name: 'Answers', schema: AnswersSchema },
+          { name: CadastroInfoSchemaClass.name, schema: CadastroInfoSchema },
           { name: Centro.name, schema: CentroSchema },
           { name: Forms.name, schema: FormSchema },
           { name: 'Passes', schema: PassesSchema },
@@ -60,6 +77,8 @@ export class PersistenceModule {
         ? [
             AnswersMemoryRepository,
             repositoryProvider(ANSWER_REPOSITORY, AnswersMemoryRepository),
+            CadastroInfoMemoryRepository,
+            repositoryProvider(CADASTRO_INFO_REPOSITORY, CadastroInfoMemoryRepository),
             CentrosMemoryRepository,
             repositoryProvider(CENTRO_REPOSITORY, CentrosMemoryRepository),
             FormsMemoryRepository,
@@ -78,6 +97,8 @@ export class PersistenceModule {
         : [
             AnswersMongoRepository,
             repositoryProvider(ANSWER_REPOSITORY, AnswersMongoRepository),
+            CadastroInfoMongoRepository,
+            repositoryProvider(CADASTRO_INFO_REPOSITORY, CadastroInfoMongoRepository),
             CentrosMongoRepository,
             repositoryProvider(CENTRO_REPOSITORY, CentrosMongoRepository),
             FormsMongoRepository,
@@ -102,6 +123,7 @@ export class PersistenceModule {
       exports: [
         CacheService,
         ANSWER_REPOSITORY,
+        CADASTRO_INFO_REPOSITORY,
         CENTRO_REPOSITORY,
         FORM_REPOSITORY,
         PASS_REPOSITORY,
