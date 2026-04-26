@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 
 export type CadastroInfoDocument = HydratedDocument<CadastroInfoSchemaClass>;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'cadastrosinfo' })
 export class CadastroInfoSchemaClass {
   @Prop({ required: true })
   START_DATE: string;
