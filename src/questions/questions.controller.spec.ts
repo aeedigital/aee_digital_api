@@ -52,4 +52,14 @@ describe('QuestionsController', () => {
       fields: 'QUESTION',
     });
   });
+
+  it('maps a partial update payload', async () => {
+    service.update.mockResolvedValue({ id: 'q1', role: 'coord_regional' });
+
+    await controller.update('q1', { ROLE: 'coord_regional' });
+
+    expect(service.update).toHaveBeenCalledWith('q1', {
+      role: 'coord_regional',
+    });
+  });
 });

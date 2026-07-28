@@ -2,6 +2,7 @@ import { QuestionsAppService as Service } from '../application/questions/questio
 import { QuestionEntity } from '../domain/entities/question';
 import { FilterDto } from './dto/filter-questions.dto';
 import { CreateQuestionsDto as CreateDto } from './dto/create-questions.dto';
+import { UpdateQuestionsDto } from './dto/update-questions.dto';
 import {
   CreateQuestionInput,
   UpdateQuestionInput,
@@ -48,7 +49,7 @@ export class QuestionsController {
     });
   }
 
-  private toUpdateInput(dto: CreateDto): UpdateQuestionInput {
+  private toUpdateInput(dto: UpdateQuestionsDto): UpdateQuestionInput {
     return mapProps<any, UpdateQuestionInput>(dto as any, {
       QUESTION: 'question',
       ANSWER_TYPE: 'answerType',
@@ -78,7 +79,7 @@ export class QuestionsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateQuestionsDto) {
     return this.service.update(id, this.toUpdateInput(updateDto)).then(toQuestionResponse);
   }
 

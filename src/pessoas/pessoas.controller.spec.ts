@@ -43,4 +43,14 @@ describe('PessoasController', () => {
     await controller.findAll({ NOME: 'Pessoa', fields: 'NOME' } as any);
     expect(service.findAll).toHaveBeenCalledWith({ name: 'Pessoa', fields: 'NOME' });
   });
+
+  it('maps a partial update payload', async () => {
+    service.update.mockResolvedValue({ id: 'p1', celular: '8888' });
+
+    await controller.update('p1', { CELULAR: '8888' });
+
+    expect(service.update).toHaveBeenCalledWith('p1', {
+      celular: '8888',
+    });
+  });
 });

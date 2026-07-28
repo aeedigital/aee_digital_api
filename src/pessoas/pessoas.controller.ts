@@ -2,6 +2,7 @@ import { PessoasAppService as Service } from '../application/pessoas/pessoas.ser
 import { Person } from '../domain/entities/person';
 import { FilterDto } from './dto/filter-pessoas.dto';
 import { CreatePessoasDto as CreateDto } from './dto/create-pessoas.dto';
+import { UpdatePessoasDto } from './dto/update-pessoas.dto';
 import {
   CreatePersonInput,
   UpdatePersonInput,
@@ -43,7 +44,7 @@ export class PessoasController {
     });
   }
 
-  private toUpdateInput(dto: CreateDto): UpdatePersonInput {
+  private toUpdateInput(dto: UpdatePessoasDto): UpdatePersonInput {
     return mapProps<any, UpdatePersonInput>(dto as any, {
       NOME: 'name',
       'E-MAIL': 'email',
@@ -68,7 +69,7 @@ export class PessoasController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdatePessoasDto) {
     return this.service.update(id, this.toUpdateInput(updateDto)).then(toPessoaResponse);
   }
 

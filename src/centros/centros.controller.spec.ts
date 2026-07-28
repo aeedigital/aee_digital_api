@@ -66,6 +66,16 @@ describe('CentrosController', () => {
     });
   });
 
+  it('maps a partial update payload', async () => {
+    service.update.mockResolvedValue({ id: 'c1', endereco: 'Rua Nova' });
+
+    await controller.update('c1', { ENDERECO: 'Rua Nova' });
+
+    expect(service.update).toHaveBeenCalledWith('c1', {
+      endereco: 'Rua Nova',
+    });
+  });
+
   it('maps summaries filter', async () => {
     service.findSummaries.mockResolvedValue([]);
     await controller.findSummaries('c1', { FORM_ID: 'f1' } as any);

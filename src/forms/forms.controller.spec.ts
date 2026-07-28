@@ -70,4 +70,14 @@ describe('FormsController', () => {
       fields: 'NAME',
     });
   });
+
+  it('maps a partial update without clearing pages', async () => {
+    service.update.mockResolvedValue({ id: 'f1', version: 2 });
+
+    await controller.update('f1', { VERSION: 2 });
+
+    expect(service.update).toHaveBeenCalledWith('f1', {
+      version: 2,
+    });
+  });
 });

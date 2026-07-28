@@ -3,6 +3,7 @@ import { Centro } from '../domain/entities/centro';
 
 import { Summary } from '../domain/entities/summary';
 import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
+import { UpdateCentroDto } from './dto/update-centro.dto';
 import { FilterDto } from './dto/filter-centro.dto';
 import {
   CreateCentroInput,
@@ -69,7 +70,7 @@ export class CentrosController {
     });
   }
 
-  private toUpdateInput(dto: CreateDto): UpdateCentroInput {
+  private toUpdateInput(dto: UpdateCentroDto): UpdateCentroInput {
     return mapProps<any, UpdateCentroInput>(dto as any, {
       FUNCIONAMENTO: 'funcionamento',
       NOME_CENTRO: 'nomeCentro',
@@ -117,7 +118,7 @@ export class CentrosController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateCentroDto) {
     return this.service.update(id, this.toUpdateInput(updateDto)).then(toCentroResponse);
   }
 

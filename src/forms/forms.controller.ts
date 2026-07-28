@@ -2,6 +2,7 @@ import { FormsAppService as Service } from '../application/forms/forms.service';
 import { Form } from '../domain/entities/form';
 import { FilterDto } from './dto/filter-form.dto';
 import { CreateFormDto as CreateDto } from './dto/create-form.dto';
+import { UpdateFormDto } from './dto/update-form.dto';
 import {
   CreateFormInput,
   UpdateFormInput,
@@ -57,25 +58,26 @@ export class FormsController {
     };
   }
 
-  private toUpdateInput(dto: CreateDto): UpdateFormInput {
+  private toUpdateInput(dto: UpdateFormDto): UpdateFormInput {
     const payload = mapProps<any, Omit<UpdateFormInput, 'pages'>>(dto as any, {
       NAME: 'name',
       VERSION: 'version',
       CREATEDBY: 'createdBy',
     });
-    return {
-      ...payload,
-      pages: dto.PAGES?.map((page) => ({
-        name: page.NAME,
-        role: page.ROLE,
-        quizes: page.QUIZES?.map((quiz) => ({
-          category: quiz.CATEGORY,
-          questions: quiz.QUESTIONS?.map((question) => ({
-            group: question.GROUP,
-            isMultiple: question.IS_MULTIPLE,
-          })),
+    const pages = dto.PAGES?.map((page) => ({
+      name: page.NAME,
+      role: page.ROLE,
+      quizes: page.QUIZES?.map((quiz) => ({
+        category: quiz.CATEGORY,
+        questions: quiz.QUESTIONS?.map((question) => ({
+          group: question.GROUP,
+          isMultiple: question.IS_MULTIPLE,
         })),
       })),
+    }));
+    return {
+      ...payload,
+      ...(pages !== undefined ? { pages } : {}),
     };
   }
 
@@ -96,7 +98,7 @@ export class FormsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: CreateDto) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateFormDto) {
     return this.service.update(id, this.toUpdateInput(updateDto)).then(toFormResponse);
   }
 
