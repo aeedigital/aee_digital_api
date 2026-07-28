@@ -34,6 +34,36 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_s3_bucket" "lambda_artifacts" {
+  bucket = "${var.project}-lambda-artifacts-115186094843-${var.region}"
+}
+
+resource "aws_s3_bucket_public_access_block" "lambda_artifacts" {
+  bucket = aws_s3_bucket.lambda_artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "lambda_artifacts" {
+  bucket = aws_s3_bucket.lambda_artifacts.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "lambda_package" {
+  bucket      = aws_s3_bucket.lambda_artifacts.id
+  key         = "${var.project}.zip"
+  source      = var.lambda_package
+  source_hash = filebase64sha256(var.lambda_package)
+
+  depends_on = [aws_s3_bucket_versioning.lambda_artifacts]
+}
+
 resource "aws_lambda_function" "api" {
   function_name = "${var.project}-api"
   role          = aws_iam_role.lambda_role.arn
@@ -41,8 +71,10 @@ resource "aws_lambda_function" "api" {
   runtime       = "nodejs20.x"
   architectures = [var.lambda_arch]
 
-  filename         = var.lambda_package
-  source_code_hash = filebase64sha256(var.lambda_package)
+  s3_bucket         = aws_s3_object.lambda_package.bucket
+  s3_key            = aws_s3_object.lambda_package.key
+  s3_object_version = aws_s3_object.lambda_package.version_id
+  source_code_hash  = filebase64sha256(var.lambda_package)
 
   memory_size = var.lambda_memory_mb
   timeout     = var.lambda_timeout_seconds

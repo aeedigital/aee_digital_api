@@ -94,6 +94,10 @@ dist
 # Serverless directories
 .serverless/
 
+# Lambda deployment artifacts
+.lambda_build/
+dist.zip
+
 # FuseBox cache
 .fusebox/
 
