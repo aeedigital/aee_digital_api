@@ -336,3 +336,5 @@ Isso significa que, no estado atual, local pode conectar em banco real se nao es
 ---
 
 **Ultima atualizacao**: 2026-02-11
+
+@RTK.md
