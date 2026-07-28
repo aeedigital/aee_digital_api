@@ -9,7 +9,8 @@ terraform {
 }
 
 provider "aws" {
-  region = var.region
+  region              = var.region
+  allowed_account_ids = ["115186094843"]
 }
 
 # Assume role policy for Lambda
@@ -155,7 +156,20 @@ locals {
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on  = [aws_api_gateway_rest_api.api]
   rest_api_id = aws_api_gateway_rest_api.api.id
-  stage_name  = var.api_stage
+
+  triggers = {
+    redeployment = sha1(jsonencode(local.api_spec))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  stage_name    = var.api_stage
 }
 
 resource "aws_lambda_permission" "apigw" {
@@ -167,6 +181,6 @@ resource "aws_lambda_permission" "apigw" {
 }
 
 output "invoke_url" {
-  value       = aws_api_gateway_deployment.deployment.invoke_url
+  value       = aws_api_gateway_stage.prod.invoke_url
   description = "Invoke URL base for the API Gateway stage"
 }
