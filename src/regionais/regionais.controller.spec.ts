@@ -16,6 +16,8 @@ describe('RegionaisController', () => {
     findSummaries: jest.fn(),
     findCentros: jest.fn(),
     overview: jest.fn(),
+    coordSummary: jest.fn(),
+    centrosWithAnswers: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -121,5 +123,23 @@ describe('RegionaisController', () => {
         excludeAnswers: ' ,   ',
       } as any),
     ).toThrow(BadRequestException);
+  });
+
+  it('passes sortBy to centros-with-answers', async () => {
+    service.centrosWithAnswers.mockResolvedValue({ regionalId: 'r1', centros: [] });
+
+    await controller.centrosWithAnswers('r1', {
+      sortBy: 'updatedAt:desc',
+    } as any);
+
+    expect(service.centrosWithAnswers).toHaveBeenCalledWith('r1', {
+      dateFrom: undefined,
+      dateTo: undefined,
+      fields: undefined,
+      includeAnswers: true,
+      includeSummaries: true,
+      limitSummaries: 1,
+      sortBy: 'updatedAt:desc',
+    });
   });
 });

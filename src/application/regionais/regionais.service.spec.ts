@@ -144,4 +144,44 @@ describe('RegionaisAppService', () => {
     repository.overview.mockResolvedValue([]);
     await expect(service.overview({})).resolves.toEqual([]);
   });
+
+  it('applies sortBy=updatedAt:desc in centros-with-answers dependencies', async () => {
+    centrosService.findAll.mockResolvedValue([{ id: 'c1' } as any]);
+    summaryService.findByCentroIds.mockResolvedValue([{ id: 's1', centroId: 'c1' } as any]);
+    answersService.findByCentroIds.mockResolvedValue([{ id: 'a1', centroId: 'c1' } as any]);
+
+    await expect(
+      service.centrosWithAnswers('r1', {
+        includeAnswers: true,
+        includeSummaries: true,
+        limitSummaries: 1,
+        sortBy: 'updatedAt:desc',
+      }),
+    ).resolves.toEqual({
+      regionalId: 'r1',
+      centros: [
+        {
+          centro: { id: 'c1' },
+          answers: [{ id: 'a1', centroId: 'c1' }],
+          summaries: [{ id: 's1', centroId: 'c1' }],
+        },
+      ],
+    });
+
+    expect(centrosService.findAll).toHaveBeenCalledWith({
+      regional: 'r1',
+      fields: undefined,
+      sortBy: 'updatedAt:desc',
+    });
+    expect(summaryService.findByCentroIds).toHaveBeenCalledWith({
+      centroIds: ['c1'],
+      dateFrom: undefined,
+      dateTo: undefined,
+      sort: { updatedAt: -1 },
+    });
+    expect(answersService.findByCentroIds).toHaveBeenCalledWith({
+      centroIds: ['c1'],
+      sortByUpdatedAt: true,
+    });
+  });
 });

@@ -14,10 +14,45 @@ export abstract class BaseMemoryRepository<
 {
   protected store = new Map<string, TDomain>();
 
+  private sortItems(items: TDomain[], sortBy?: string): TDomain[] {
+    if (!sortBy) return items;
+
+    const sortParams = sortBy
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const [rawField, rawDirection] = part.split(':');
+        const direction = rawDirection?.trim().toLowerCase();
+        return {
+          field: rawField?.trim(),
+          direction: direction === 'desc' || direction === '-1' ? -1 : 1,
+        };
+      })
+      .filter((param) => param.field);
+
+    if (!sortParams.length) return items;
+
+    return [...items].sort((a, b) => {
+      for (const param of sortParams) {
+        const left = (a as any)[param.field!];
+        const right = (b as any)[param.field!];
+        const leftValue = left instanceof Date ? left.getTime() : left;
+        const rightValue = right instanceof Date ? right.getTime() : right;
+
+        if (leftValue === rightValue) continue;
+        if (leftValue === undefined || leftValue === null) return 1;
+        if (rightValue === undefined || rightValue === null) return -1;
+        return leftValue > rightValue ? param.direction : -param.direction;
+      }
+      return 0;
+    });
+  }
+
   protected matchesFilter(item: TDomain, filter?: Partial<TFilter>): boolean {
     if (!filter) return true;
     const entries = Object.entries(filter as Record<string, any>).filter(
-      ([key, value]) => key !== 'fields' && value !== undefined,
+      ([key, value]) => key !== 'fields' && key !== 'sortBy' && value !== undefined,
     );
     return entries.every(([key, value]) => (item as any)[key] === value);
   }
@@ -30,9 +65,10 @@ export abstract class BaseMemoryRepository<
   }
 
   async findAll(filter?: TFilter): Promise<TDomain[]> {
-    return Array.from(this.store.values()).filter((item) =>
+    const items = Array.from(this.store.values()).filter((item) =>
       this.matchesFilter(item, filter as any),
     );
+    return this.sortItems(items, (filter as any)?.sortBy);
   }
 
   async findById(id: string): Promise<TDomain | null> {

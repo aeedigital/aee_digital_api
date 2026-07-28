@@ -64,6 +64,16 @@ describe('MongoGenericService', () => {
     expect(cache.set).toHaveBeenCalled();
   });
 
+  it('parses colon sort params', async () => {
+    cache.get.mockResolvedValueOnce(null);
+    cache.set.mockResolvedValueOnce(undefined);
+
+    await service.findAll({ sortBy: 'updatedAt:desc' });
+
+    const query = model.find.mock.results[0].value;
+    expect(query.sort).toHaveBeenCalledWith({ updatedAt: -1 });
+  });
+
   it('finds one by id', async () => {
     cache.get.mockResolvedValueOnce(null);
     cache.set.mockResolvedValueOnce(undefined);

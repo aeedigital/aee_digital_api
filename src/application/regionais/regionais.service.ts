@@ -31,6 +31,28 @@ export interface CentrosWithAnswersParams {
   includeAnswers: boolean;
   includeSummaries: boolean;
   limitSummaries: number;
+  sortBy?: string;
+}
+
+function parseSortBy(
+  sortBy?: string,
+  allowedFields?: string[],
+): Record<string, 1 | -1> | undefined {
+  if (!sortBy) return undefined;
+
+  const sort = sortBy.split(',').reduce((acc, part) => {
+    const [rawField, rawDirection] = part.split(':');
+    const field = rawField?.trim();
+    if (!field || (allowedFields && !allowedFields.includes(field))) {
+      return acc;
+    }
+
+    const direction = rawDirection?.trim().toLowerCase();
+    acc[field] = direction === 'desc' || direction === '-1' ? -1 : 1;
+    return acc;
+  }, {} as Record<string, 1 | -1>);
+
+  return Object.keys(sort).length ? sort : undefined;
 }
 
 @Injectable()
@@ -151,10 +173,12 @@ export class RegionaisAppService {
   }
 
   async centrosWithAnswers(id: string, params: CentrosWithAnswersParams) {
+    const sort = parseSortBy(params.sortBy, ['updatedAt', 'createdAt']);
+
     const centros = await this.centrosService.findAll({
       regional: id,
       fields: params.fields,
-      sortBy: 'NOME_CENTRO',
+      sortBy: params.sortBy || 'NOME_CENTRO',
     } as any);
     const centroIds = centros.map((c) => c.id).filter(Boolean);
 
@@ -164,7 +188,7 @@ export class RegionaisAppService {
             centroIds,
             dateFrom: params.dateFrom,
             dateTo: params.dateTo,
-            sort: { updatedAt: -1 },
+            sort: sort || { updatedAt: -1 },
           })
         : Promise.resolve([]);
 
@@ -172,7 +196,7 @@ export class RegionaisAppService {
       params.includeAnswers && centroIds.length
         ? this.answersService.findByCentroIds({
             centroIds,
-            sortByUpdatedAt: false,
+            sortByUpdatedAt: sort?.updatedAt === -1,
           })
         : Promise.resolve([]);
 

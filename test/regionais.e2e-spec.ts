@@ -16,6 +16,8 @@ describe('RegionaisController (e2e)', () => {
     findSummaries: jest.fn(),
     findCentros: jest.fn(),
     overview: jest.fn(),
+    coordSummary: jest.fn(),
+    centrosWithAnswers: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -65,5 +67,20 @@ describe('RegionaisController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/regionais/overview?excludeQuestionId=61ec11fe69001e0012bc299a')
       .expect(400);
+  });
+
+  it('accepts centros-with-answers with encoded sortBy param', async () => {
+    service.centrosWithAnswers.mockResolvedValue({ regionalId: 'r1', centros: [] });
+
+    await request(app.getHttpServer())
+      .get('/regionais/r1/centros-with-answers?sortBy=updatedAt%3Adesc&')
+      .expect(200);
+
+    expect(service.centrosWithAnswers).toHaveBeenCalledWith(
+      'r1',
+      expect.objectContaining({
+        sortBy: 'updatedAt:desc',
+      }),
+    );
   });
 });

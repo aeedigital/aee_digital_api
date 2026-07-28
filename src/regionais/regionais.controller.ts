@@ -205,6 +205,7 @@ export class RegionaisController {
       includeAnswers,
       includeSummaries,
       limitSummaries,
+      sortBy: query.sortBy,
     });
 
     return {

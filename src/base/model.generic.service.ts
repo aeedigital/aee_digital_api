@@ -58,6 +58,27 @@ export class MongoGenericService<S, D, U = D> {
     return params.join(' ');
   }
 
+  private formatSortParams(sortBy: string) {
+    const sortByParams = sortBy
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (!sortByParams.some((part) => part.includes(':'))) {
+      return sortBy;
+    }
+
+    return sortByParams.reduce((acc, sortByItem) => {
+      const [rawField, rawDirection] = sortByItem.split(':');
+      const field = rawField?.trim();
+      if (!field) return acc;
+
+      const direction = rawDirection?.trim().toLowerCase();
+      acc[field] = direction === 'desc' || direction === '-1' ? -1 : 1;
+      return acc;
+    }, {} as Record<string, 1 | -1>);
+  }
+
   protected async findAllMethod(fields, filterParams, sortBy: string): Promise<any> {
     let query = this.model.find(filterParams);
     if (fields) {
@@ -65,7 +86,7 @@ export class MongoGenericService<S, D, U = D> {
       query = query.select(selectedFields);
     }
     if (sortBy) {
-      query = query.sort(sortBy);
+      query = query.sort(this.formatSortParams(sortBy));
     }
     return query.lean();
   }

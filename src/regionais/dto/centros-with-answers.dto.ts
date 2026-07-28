@@ -20,4 +20,8 @@ export class CentrosWithAnswersQueryDto {
   @IsOptional()
   @IsNumberString()
   limitSummaries?: string;
+
+  @IsOptional()
+  @IsString()
+  sortBy?: string; // e.g., updatedAt:desc
 }

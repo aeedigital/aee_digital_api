@@ -66,6 +66,7 @@ export class CentrosMongoRepository
       estado: 'ESTADO',
       pais: 'PAIS',
       fields: 'fields',
+      sortBy: 'sortBy',
     });
   }
 
