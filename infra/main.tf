@@ -162,17 +162,28 @@ locals {
 
   api_paths = {
     for path, routes in local.api_routes_by_path :
-    path => merge([
-      for r in routes : {
-        (r.method == "ANY" ? "x-amazon-apigateway-any-method" : lower(r.method)) = {
+    path => merge(
+      merge([
+        for r in routes : {
+          (r.method == "ANY" ? "x-amazon-apigateway-any-method" : lower(r.method)) = {
+            "x-amazon-apigateway-integration" = {
+              uri        = aws_lambda_function.api.invoke_arn
+              httpMethod = "POST"
+              type       = "aws_proxy"
+            }
+          }
+        }
+      ]...),
+      {
+        options = {
           "x-amazon-apigateway-integration" = {
             uri        = aws_lambda_function.api.invoke_arn
             httpMethod = "POST"
             type       = "aws_proxy"
           }
         }
-      }
-    ]...)
+      },
+    )
   }
 
   api_spec = {
