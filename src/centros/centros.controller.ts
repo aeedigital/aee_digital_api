@@ -1,38 +1,36 @@
 import { CentrosAppService as Service } from '../application/centros/centros.service';
-import { Centro } from '../domain/entities/centro';
 
-import { Summary } from '../domain/entities/summary';
-import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
-import { UpdateCentroDto } from './dto/update-centro.dto';
-import { FilterDto } from './dto/filter-centro.dto';
 import {
   CreateCentroInput,
   UpdateCentroInput,
 } from '../domain/repositories/centro.repository';
+import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
+import { FilterDto } from './dto/filter-centro.dto';
+import { UpdateCentroDto } from './dto/update-centro.dto';
 
 import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
 
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
-import { toCentroResponse } from './centro.presenter';
 import { toSummaryResponse } from '../summary/summary.presenter';
+import { toCentroResponse } from './centro.presenter';
 
 @Controller('centros')
 export class CentrosController {
   constructor(
     private readonly service: Service
-  
+
   ) {}
 
   private toFilter(filterDto: FilterDto) {
