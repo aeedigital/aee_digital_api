@@ -1,22 +1,22 @@
 /*
 https://docs.nestjs.com/modules
 */
-import { SummaryService } from './summary.service';
 import { SummariesController } from './summary.controller';
 
 import { Module } from '@nestjs/common';
 import { CacheService } from '../services/cache.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Summaries, SummariesSchema } from './schemas/summaries.schema';
+import { SUMMARY_REPOSITORY } from '../domain/repositories/repository.tokens';
+import { SummaryAppService } from '../application/summary/summary.service';
+import { PersistenceModule } from '../infra/persistence/persistence.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Summaries.name, schema: SummariesSchema },
-    ]),
-  ],
+  imports: [PersistenceModule.forRoot()],
   controllers: [SummariesController],
-  providers: [SummaryService, CacheService],
-  exports: [SummaryService]
+  providers: [
+    SummaryAppService,
+    CacheService,
+    // repository provided by PersistenceModule
+  ],
+  exports: [SummaryAppService],
 })
 export class SummaryModule {}

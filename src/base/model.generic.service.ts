@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { CacheService } from '../services/cache.service';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
 import { format } from './dateFormater.helper';
 
@@ -15,22 +15,31 @@ export class MongoGenericService<S, D, U = D> {
     protected readonly model: Model<S>,
     protected readonly cacheService: CacheService,
   ) {
-    this.listenToChanges();
-    this.shouldUseCache = false;;
+    // Change streams abrem conexoes long-lived e tendem a ser instaveis em Lambda.
+    if (process.env.ENABLE_MONGO_CHANGE_STREAMS === 'true') {
+      this.listenToChanges();
+    }
+    this.shouldUseCache = false;
   }
 
-  async listenToChanges() {
-    const changeStream = this.model.watch();
+  listenToChanges() {
+    if (typeof (this.model as any).watch !== 'function') {
+      return;
+    }
 
-    changeStream.on('change', (change) => {
-      console.log('Mudança detectada:', change);
-      const modelName = change?.ns?.coll;
-      // this.cacheService.invalidateModelCache(modelName); // Agora o CacheService cuida da invalidação
-    });
-
-    changeStream.on('error', (error) => {
-      console.error('Erro no Change Stream:', error);
-    });
+    try {
+      const changeStream = (this.model as any).watch();
+      if (typeof changeStream?.on === 'function') {
+        changeStream.on('error', (error) => {
+          this.logger.error('Erro no Change Stream', error?.stack || JSON.stringify(error));
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        'Falha ao iniciar Change Stream',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
+    }
   }
 
   private async getCached(key, saveMethod): Promise<any> {
@@ -49,6 +58,27 @@ export class MongoGenericService<S, D, U = D> {
     return params.join(' ');
   }
 
+  private formatSortParams(sortBy: string) {
+    const sortByParams = sortBy
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (!sortByParams.some((part) => part.includes(':'))) {
+      return sortBy;
+    }
+
+    return sortByParams.reduce((acc, sortByItem) => {
+      const [rawField, rawDirection] = sortByItem.split(':');
+      const field = rawField?.trim();
+      if (!field) return acc;
+
+      const direction = rawDirection?.trim().toLowerCase();
+      acc[field] = direction === 'desc' || direction === '-1' ? -1 : 1;
+      return acc;
+    }, {} as Record<string, 1 | -1>);
+  }
+
   protected async findAllMethod(fields, filterParams, sortBy: string): Promise<any> {
     let query = this.model.find(filterParams);
     if (fields) {
@@ -56,7 +86,7 @@ export class MongoGenericService<S, D, U = D> {
       query = query.select(selectedFields);
     }
     if (sortBy) {
-      query = query.sort(sortBy);
+      query = query.sort(this.formatSortParams(sortBy));
     }
     return query.lean();
   }

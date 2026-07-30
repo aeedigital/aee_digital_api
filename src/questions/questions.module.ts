@@ -1,18 +1,20 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { QuestionsService } from './questions.service';
 import { CacheService } from '../services/cache.service';
 
 import { QuestionsController } from './questions.controller';
 
-import { QuestionsSchema } from './schemas/questions.schema';
+import { QUESTION_REPOSITORY } from '../domain/repositories/repository.tokens';
+import { QuestionsAppService } from '../application/questions/questions.service';
+import { PersistenceModule } from '../infra/persistence/persistence.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'Questions', schema: QuestionsSchema }]),
-  ],
+  imports: [PersistenceModule.forRoot()],
 
   controllers: [QuestionsController],
-  providers: [QuestionsService, CacheService],
+  providers: [
+    QuestionsAppService,
+    CacheService,
+    // repository provided by PersistenceModule
+  ],
 })
 export class QuestionsModule {}

@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copia package.json e lock files
+COPY package*.json ./
+
+# Instala dependências
+RUN npm install
+
+# Copia código fonte
+COPY . .
+
+# Expõe portas
+EXPOSE 5000 9229
+
+# Inicia em modo desenvolvimento com watch
+CMD ["npm", "run", "start:dev"]

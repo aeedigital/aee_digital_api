@@ -11,7 +11,7 @@ export class CreateAnswersDto {
   QUIZ_ID: string;
   @ApiProperty()
   @IsString()
-  CENTRO_ID: boolean;
+  CENTRO_ID: string;
   @ApiProperty()
   @IsString()
   ANSWER: string;

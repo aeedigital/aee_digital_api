@@ -74,6 +74,7 @@ typings/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
+scripts/update-centro-address-question-ids.json
 
 # Next.js build output
 .next
@@ -94,6 +95,10 @@ dist
 # Serverless directories
 .serverless/
 
+# Lambda deployment artifacts
+.lambda_build/
+dist.zip
+
 # FuseBox cache
 .fusebox/
 
@@ -102,3 +107,18 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfstate
+*.tfstate.*

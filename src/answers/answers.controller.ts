@@ -1,7 +1,11 @@
-import { AnswersService as Service } from './answers.service';
-import { Answer as Schema } from './schemas/answers.schema';
+import { AnswersAppService } from '../application/answers/answers.service';
+import { Answer } from '../domain/entities/answer';
 import { FilterDto } from './dto/filter-answers.dto';
 import { CreateAnswersDto as CreateDto } from './dto/create-answers.dto';
+import {
+  CreateAnswerInput,
+  UpdateAnswerInput,
+} from '../domain/repositories/answer.repository';
 
 import {
   Controller,
@@ -17,30 +21,60 @@ import {
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { UpdateDto } from './dto/update-answer.dto';
+import { mapProps } from '../base/mappers/object.mapper';
+import { toAnswerResponse } from './answer.presenter';
 
 @Controller('answers')
 export class AnswersController {
-  constructor(private readonly service: Service) {}
+  constructor(private readonly service: AnswersAppService) {}
+
+  private toFilter(filterDto: FilterDto) {
+    return mapProps(filterDto, {
+      QUESTION_ID: 'questionId',
+      CENTRO_ID: 'centroId',
+      QUIZ_ID: 'quizId',
+      ANSWER: 'answer',
+      fields: 'fields',
+    });
+  }
+
+  private toCreateInput(createDto: CreateDto): CreateAnswerInput {
+    return mapProps<any, CreateAnswerInput>(createDto as any, {
+      QUESTION_ID: 'questionId',
+      CENTRO_ID: 'centroId',
+      ANSWER: 'answer',
+      QUIZ_ID: 'quizId',
+    });
+  }
+
+  private toUpdateInput(updateDto: UpdateDto): UpdateAnswerInput {
+    return mapProps<any, UpdateAnswerInput>(updateDto as any, {
+      QUESTION_ID: 'questionId',
+      CENTRO_ID: 'centroId',
+      ANSWER: 'answer',
+      QUIZ_ID: 'quizId',
+    });
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
   create(@Body() createDto: CreateDto) {
-    return this.service.create(createDto);
+    return this.service.create(this.toCreateInput(createDto)).then(toAnswerResponse);
   }
 
   @Get()
-  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<Schema[]> {
-    return this.service.findAll(filterDto);
+  findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
+    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toAnswerResponse));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Schema> {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string): Promise<any> {
+    return this.service.findOne(id).then(toAnswerResponse);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdateDto) {
-    return this.service.update(id, updateDto);
+    return this.service.update(id, this.toUpdateInput(updateDto)).then(toAnswerResponse);
   }
 
   @Put()
@@ -50,8 +84,16 @@ export class AnswersController {
     @Query('questionId') QUESTION_ID?: string,
     @Query('answerId') _id?: string,
   ) {
-    const filter = { CENTRO_ID, QUESTION_ID, _id };
-    return this.service.updateOrCreate(filter, updateDto);
+    const mappedFilter = mapProps({ CENTRO_ID, QUESTION_ID, _id }, {
+      CENTRO_ID: 'centroId',
+      QUESTION_ID: 'questionId',
+      _id: 'id',
+    });
+
+    return this.service.updateOrCreate(
+      mappedFilter,
+      this.toCreateInput(updateDto as any),
+    ).then(toAnswerResponse);
   }
 
   @Delete(':id')

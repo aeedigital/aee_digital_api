@@ -1,18 +1,21 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { PessoasService } from './pessoas.service';
 import { CacheService } from '../services/cache.service';
 
 import { PessoasController } from './pessoas.controller';
 
-import { Pessoas, PessoasSchema } from './schemas/pessoas.schema';
+import { PERSON_REPOSITORY } from '../domain/repositories/repository.tokens';
+import { PessoasAppService } from '../application/pessoas/pessoas.service';
+import { PersistenceModule } from '../infra/persistence/persistence.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Pessoas.name, schema: PessoasSchema }]),
-  ],
+  imports: [PersistenceModule.forRoot()],
 
   controllers: [PessoasController],
-  providers: [PessoasService, CacheService],
+  providers: [
+    PessoasAppService,
+    CacheService,
+    // repository provided by PersistenceModule
+  ],
+  exports: [PessoasAppService],
 })
 export class PessoasModule {}

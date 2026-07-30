@@ -1,25 +1,26 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { CentrosService } from './centros.service';
 import { CacheService } from '../services/cache.service';
 
 import { CentrosController } from './centros.controller';
 
 import { Centro, CentroSchema } from './schemas/centro.schema';
-import { SummaryService } from '../summary/summary.service';
 import { SummaryModule } from '../summary/summary.module';
+import { CENTRO_REPOSITORY } from '../domain/repositories/repository.tokens';
+import { CentrosAppService } from '../application/centros/centros.service';
+import { PersistenceModule } from '../infra/persistence/persistence.module';
 
 @Module({
   imports: [
     SummaryModule,
-    MongooseModule.forFeature([{ name: Centro.name, schema: CentroSchema }]),
+    PersistenceModule.forRoot(),
   ],
 
   controllers: [CentrosController],
   providers: [
-    CentrosService, 
-    CacheService
+    CentrosAppService,
+    CacheService,
+    // repository provided by PersistenceModule
   ],
-  exports:[CentrosService]
+  exports: [CentrosAppService],
 })
 export class CentrosModule {}

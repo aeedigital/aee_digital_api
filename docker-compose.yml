@@ -1,26 +1,25 @@
 services:
+  # API NestJS (desenvolvimento)
   app:
-    hostname: aee_digital_api
-    build: 
+    build:
       context: .
-      dockerfile: Dockerfile
-    image: aee_digital_api
-    restart: on-failure
+      dockerfile: Dockerfile.dev
+    image: aee_digital_api:dev
     container_name: aee_digital_api
     ports:
-      - '5001:5001'
-    networks:
-      - aee_digital_backend
+      - '5001:5000'
+      - '9229:9229'      # Debug remoto
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5000
+      - MONGODB_URI=${MONGODB_URI}
     volumes:
       - .:/app
       - /app/node_modules
-    environment:
-      - ELASTIC_APM_SERVICE_NAME=aee_digital_api
-      - ELASTIC_APM_SERVER_URL=http://apm-server:8200
-      - NODE_ENV=production
-      - LOGSTASH_HOST=logstash
-      - LOGSTASH_PORT=5044
+    networks:
+      - aee_digital_backend
 
 networks:
   aee_digital_backend:
-    external: true
+    name: aee_digital_backend
+    driver: bridge

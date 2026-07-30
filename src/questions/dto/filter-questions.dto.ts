@@ -1,8 +1,9 @@
 import { Transform } from 'class-transformer';
 import { IsString, IsOptional } from 'class-validator';
 import { IsStringOrBoolean } from '../../common/stringorboolean.validator';
+import { BaseFilterDto } from '../../base/dto/base-filter.dto';
 
-export class FilterDto {
+export class FilterDto extends BaseFilterDto {
   @IsString()
   @IsOptional()
   QUESTION?: string;
@@ -28,10 +29,6 @@ export class FilterDto {
   @IsOptional()
   @IsString()
   ROLE: string;
-
-  @IsString()
-  @IsOptional()
-  fields?: string;
 
   // Adicione outros campos de filtro, se necessário
 }

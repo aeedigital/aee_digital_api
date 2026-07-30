@@ -1,6 +1,7 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsNumberString } from 'class-validator';
+import { BaseFilterDto } from '../../base/dto/base-filter.dto';
 
-export class FilterDto {
+export class FilterDto extends BaseFilterDto {
   @IsString()
   @IsOptional()
   FORM_ID?: string;
@@ -11,5 +12,21 @@ export class FilterDto {
 
   @IsString()
   @IsOptional()
-  fields?: string;
+  dateFrom?: string; // ISO yyyy-mm-dd
+
+  @IsString()
+  @IsOptional()
+  dateTo?: string; // ISO yyyy-mm-dd
+
+  @IsOptional()
+  @IsNumberString()
+  limit?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  skip?: string;
+
+  @IsOptional()
+  @IsString()
+  sort?: string; // e.g., updatedAt:-1
 }

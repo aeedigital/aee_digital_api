@@ -1,20 +1,15 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from '@nestjs/cache-manager';
-import { MongooseModule } from '@nestjs/mongoose';
-import { AnswersService } from './answers.service';
-import { CacheService } from '../services/cache.service';
-
 import { AnswersController } from './answers.controller';
-
 import { AnswersSchema } from './schemas/answers.schema';
+import { ANSWER_REPOSITORY } from '../domain/repositories/repository.tokens';
+import { AnswersAppService } from '../application/answers/answers.service';
+import { PersistenceModule } from '../infra/persistence/persistence.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'Answers', schema: AnswersSchema }]),
-    CacheModule.register(), // Importe o CacheModule e registre-o aqui
-  ],
+  imports: [PersistenceModule.forRoot()],
 
   controllers: [AnswersController],
-  providers: [AnswersService, CacheService],
+  providers: [AnswersAppService],
+  exports: [AnswersAppService],
 })
 export class AnswersModule {}

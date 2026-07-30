@@ -1,6 +1,7 @@
 import { IsString, IsOptional } from 'class-validator';
+import { BaseFilterDto } from '../../base/dto/base-filter.dto';
 
-export class FilterDto {
+export class FilterDto extends BaseFilterDto {
   @IsString()
   @IsOptional()
   NOME_REGIONAL?: string;
@@ -12,10 +13,6 @@ export class FilterDto {
   @IsString()
   @IsOptional()
   COORDENADOR_ID: string;
-
-  @IsString()
-  @IsOptional()
-  fields?: string;
 
   // Adicione outros campos de filtro, se necessário
 }
