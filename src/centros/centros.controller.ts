@@ -1,15 +1,14 @@
 import { CentrosAppService as Service } from '../application/centros/centros.service';
-
 import {
   CreateCentroInput,
+  SaveCentroLocationInput,
   UpdateCentroInput,
 } from '../domain/repositories/centro.repository';
 import { CreateCentroDto as CreateDto } from './dto/create-centro.dto';
 import { FilterDto } from './dto/filter-centro.dto';
+import { SaveCentroLocationDto } from './dto/save-centro-location.dto';
 import { UpdateCentroDto } from './dto/update-centro.dto';
-
 import { FilterDto as SummaryFilterDto } from '../summary/dto/filter-summaries.dto';
-
 import {
   Body,
   Controller,
@@ -18,20 +17,26 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
 import { toSummaryResponse } from '../summary/summary.presenter';
 import { toCentroResponse } from './centro.presenter';
+import { LocationUpdateTokenGuard } from './location/location-update-token.guard';
+
+const strictBodyValidation = new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  transform: true,
+});
 
 @Controller('centros')
 export class CentrosController {
-  constructor(
-    private readonly service: Service
-
-  ) {}
+  constructor(private readonly service: Service) {}
 
   private toFilter(filterDto: FilterDto) {
     return mapProps(filterDto, {
@@ -85,6 +90,23 @@ export class CentrosController {
     });
   }
 
+  private toSaveLocationInput(
+    dto: SaveCentroLocationDto,
+  ): SaveCentroLocationInput {
+    return {
+      addressHash: dto.ENDERECO_HASH,
+      status: dto.STATUS,
+      latitude: dto.LATITUDE,
+      longitude: dto.LONGITUDE,
+      precision: dto.PRECISAO,
+      confidence: dto.CONFIANCA,
+      origin: dto.ORIGEM,
+      placeId: dto.PLACE_ID,
+      formattedAddress: dto.ENDERECO_FORMATADO,
+      errorCode: dto.ERRO_CODIGO,
+    };
+  }
+
   private toSummaryFilter(filterDto: SummaryFilterDto) {
     return {
       formId: filterDto.FORM_ID,
@@ -95,13 +117,17 @@ export class CentrosController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new resource' })
-  create(@Body() createDto: CreateDto) {
-    return this.service.create(this.toCreateInput(createDto)).then(toCentroResponse);
+  create(@Body(strictBodyValidation) createDto: CreateDto) {
+    return this.service
+      .create(this.toCreateInput(createDto))
+      .then(toCentroResponse);
   }
 
   @Get()
   findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
-    return this.service.findAll(this.toFilter(filterDto)).then((items) => items.map(toCentroResponse));
+    return this.service
+      .findAll(this.toFilter(filterDto))
+      .then((items) => items.map(toCentroResponse));
   }
 
   @Get(':id')
@@ -109,15 +135,40 @@ export class CentrosController {
     return this.service.findOne(id).then(toCentroResponse);
   }
 
+  @Put(':id/localizacao')
+  @UseGuards(LocationUpdateTokenGuard)
+  @ApiOperation({
+    summary: 'Salva a localização produzida pelo script operacional',
+  })
+  saveLocation(
+    @Param('id') id: string,
+    @Body(strictBodyValidation) locationDto: SaveCentroLocationDto,
+  ) {
+    return this.service
+      .saveLocation(id, this.toSaveLocationInput(locationDto))
+      .then(toCentroResponse);
+  }
+
   @Get(':id/summaries')
-  async findSummaries(@Param('id') id: string, @Query(ValidationPipe) filterDto: SummaryFilterDto): Promise<any[]> {
-    const items = await this.service.findSummaries(id, this.toSummaryFilter(filterDto));
+  async findSummaries(
+    @Param('id') id: string,
+    @Query(ValidationPipe) filterDto: SummaryFilterDto,
+  ): Promise<any[]> {
+    const items = await this.service.findSummaries(
+      id,
+      this.toSummaryFilter(filterDto),
+    );
     return items.map(toSummaryResponse);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDto: UpdateCentroDto) {
-    return this.service.update(id, this.toUpdateInput(updateDto)).then(toCentroResponse);
+  update(
+    @Param('id') id: string,
+    @Body(strictBodyValidation) updateDto: UpdateCentroDto,
+  ) {
+    return this.service
+      .update(id, this.toUpdateInput(updateDto))
+      .then(toCentroResponse);
   }
 
   @Delete(':id')
