@@ -26,6 +26,49 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Localização geográfica dos centros
+
+A API apenas valida e persiste `LOCALIZACAO`; ela nunca chama o
+[Geoapify](https://www.geoapify.com/). Criações e alterações reais de endereço
+ficam com `STATUS=PENDENTE`, sem conservar as coordenadas anteriores.
+
+O script externo `scripts/geocode-centros.mjs` consulta os centros pela API,
+monta o endereço estruturado, chama o Geoapify e salva o resultado em
+`PUT /centros/:id/localizacao`. Essa rota exige o header operacional
+`x-location-update-token` e valida que `ENDERECO_HASH` ainda corresponde ao endereço
+atual. Se o endereço mudar durante o processamento, a API responde `409` e não
+persiste as coordenadas antigas.
+
+No CRUD comum, `LOCALIZACAO`, latitude e longitude continuam somente leitura.
+Somente localizações com `STATUS=CONFIRMADA` devem ser exibidas
+automaticamente no mapa.
+
+O plano gratuito exige as atribuições “Powered by Geoapify” e
+“© OpenStreetMap contributors” na interface que utiliza os dados. A cota deve
+ser acompanhada no dashboard do projeto Geoapify.
+
+Para examinar a base sem consumir chamadas:
+
+```bash
+ALL_CENTROS=true npm run geocode:centros
+```
+
+Para executar o backfill:
+
+```bash
+API_BASE_URL=https://api.exemplo \
+GEOAPIFY_API_KEY=... \
+LOCATION_UPDATE_TOKEN=... \
+ALL_CENTROS=true \
+DRY_RUN=false \
+npm run geocode:centros
+```
+
+Também é possível limitar com `REGIONAL_ID` ou `CENTRO_IDS`, controlar
+`CONCURRENCY`, `INTERVAL_MS` e `MAX_CALLS`, ou usar `FORCE=true` para consultar
+novamente resultados já confirmados. O dry-run não chama o Geoapify nem altera
+centros. O script gera relatórios JSON e CSV.
+
 ## Installation
 
 ```bash
