@@ -46,6 +46,8 @@ export class CentrosMongoRepository
       CIDADE: 'cidade',
       ESTADO: 'estado',
       PAIS: 'pais',
+      TELEFONE: 'telefone',
+      SITE: 'site',
       LOCALIZACAO: 'location',
       },
     );
@@ -74,6 +76,8 @@ export class CentrosMongoRepository
       cidade: 'CIDADE',
       estado: 'ESTADO',
       pais: 'PAIS',
+      telefone: 'TELEFONE',
+      site: 'SITE',
       fields: 'fields',
       sortBy: 'sortBy',
     });
@@ -95,6 +99,8 @@ export class CentrosMongoRepository
       cidade: 'CIDADE',
       estado: 'ESTADO',
       pais: 'PAIS',
+      telefone: 'TELEFONE',
+      site: 'SITE',
       location: 'LOCALIZACAO',
     });
     if (payload.LOCALIZACAO) {

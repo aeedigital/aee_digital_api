@@ -98,6 +98,8 @@ dist
 # Lambda deployment artifacts
 .lambda_build/
 dist.zip
+.deploy-releases/
+.maintenance/
 
 # FuseBox cache
 .fusebox/

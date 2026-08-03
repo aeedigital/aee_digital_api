@@ -66,6 +66,12 @@ describe('CentrosController', () => {
     });
   });
 
+  it('requests attendance only through the include query parameter', async () => {
+    service.findAll.mockResolvedValue([]);
+    await controller.findAll({ include: 'atendimento' });
+    expect(service.findAll).toHaveBeenCalledWith({}, { includeAttendance: true });
+  });
+
   it('rejects client-controlled location fields', async () => {
     await expect(
       strictPipe.transform(

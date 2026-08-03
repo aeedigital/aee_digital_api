@@ -6,6 +6,9 @@ export interface AnswerFilter {
   centroId?: string;
   quizId?: string;
   answer?: string;
+  formId?: string;
+  groupKey?: string;
+  groupInstanceId?: string;
   dateFrom?: Date;
   dateTo?: Date;
 }
@@ -15,6 +18,11 @@ export interface CreateAnswerInput {
   centroId: string;
   answer: string;
   quizId?: string;
+  formId?: string;
+  groupKey?: string;
+  groupInstanceId?: string;
+  groupOccurrenceOrder?: number;
+  questionOrder?: number;
 }
 
 export interface UpdateAnswerInput {
@@ -22,6 +30,11 @@ export interface UpdateAnswerInput {
   centroId?: string;
   answer?: string;
   quizId?: string;
+  formId?: string;
+  groupKey?: string;
+  groupInstanceId?: string;
+  groupOccurrenceOrder?: number;
+  questionOrder?: number;
 }
 
 export type AnswerManyFilter = {

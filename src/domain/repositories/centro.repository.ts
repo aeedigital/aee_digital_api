@@ -16,6 +16,8 @@ export interface CreateCentroInput {
   cidade: string;
   estado: string;
   pais: string;
+  telefone?: string;
+  site?: string;
   location?: CentroLocation;
 }
 

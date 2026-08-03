@@ -14,4 +14,13 @@ export class FilterDto extends BaseFilterDto {
   @IsOptional()
   @IsString()
   ANSWER: string;
+  @IsOptional()
+  @IsString()
+  FORM_ID?: string;
+  @IsOptional()
+  @IsString()
+  GROUP_KEY?: string;
+  @IsOptional()
+  @IsString()
+  GROUP_INSTANCE_ID?: string;
 }

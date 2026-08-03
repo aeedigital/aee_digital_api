@@ -14,7 +14,7 @@ const centroIds = (process.env.CENTRO_IDS || '')
   .filter(Boolean);
 const concurrency = positiveInteger(process.env.CONCURRENCY, 1);
 const intervalMs = positiveInteger(process.env.INTERVAL_MS, 300);
-const timeoutMs = positiveInteger(process.env.GEOCODING_TIMEOUT_MS, 5000);
+const timeoutMs = positiveInteger(process.env.GEOCODING_TIMEOUT_MS, 15000);
 const maxCalls = positiveInteger(process.env.MAX_CALLS, 2800);
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 const reportPrefix = process.env.REPORT_PREFIX?.trim() || `geocoding-report-${timestamp}`;
@@ -47,6 +47,32 @@ const countryCodes = {
   'united states': 'us',
   'united states of america': 'us',
 };
+
+function log(scope, message) {
+  console.log(`${new Date().toISOString()} [${scope}] ${message}`);
+}
+
+function itemScope(item, index, total) {
+  const position = index === undefined ? '?' : index + 1;
+  return `centro ${position}/${total ?? '?'} ${item.centro._id}`;
+}
+
+function oneLine(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function formatAddress(address) {
+  return [
+    address.ENDERECO,
+    address.BAIRRO,
+    `${address.CIDADE}/${address.ESTADO}`,
+    address.CEP,
+    address.PAIS,
+  ]
+    .map(oneLine)
+    .filter(Boolean)
+    .join(', ');
+}
 
 function positiveInteger(value, fallback) {
   const parsed = Number.parseInt(value ?? '', 10);
@@ -116,17 +142,35 @@ function matchesPostcode(expected, actual) {
   return expectedDigits === actualDigits || expectedDigits.startsWith(actualDigits) || actualDigits.startsWith(expectedDigits);
 }
 
-function isConfirmed(address, result) {
+function assessConfirmation(address, result) {
   const addressHasNumber = /\d/.test(address.ENDERECO);
-  return (
-    result.matchType === 'full_match' &&
-    result.confidence >= 0.95 &&
-    (!addressHasNumber || (result.confidenceBuilding ?? 0) >= 0.95) &&
-    matchesText(address.CIDADE, [result.city]) &&
-    matchesAdministrativeArea(address.ESTADO, [result.state, result.stateCode]) &&
-    matchesCountry(address.PAIS, [result.country, result.countryCode]) &&
-    matchesPostcode(address.CEP, result.postcode)
-  );
+  const checks = [
+    ['match_type diferente de full_match', result.matchType === 'full_match'],
+    ['confiança geral abaixo de 0.95', result.confidence >= 0.95],
+    [
+      'confiança de prédio ausente ou abaixo de 0.95',
+      !addressHasNumber || (result.confidenceBuilding ?? 0) >= 0.95,
+    ],
+    ['cidade divergente', matchesText(address.CIDADE, [result.city])],
+    [
+      'estado divergente',
+      matchesAdministrativeArea(address.ESTADO, [
+        result.state,
+        result.stateCode,
+        result.county,
+        result.countyCode,
+      ]),
+    ],
+    [
+      'país divergente',
+      matchesCountry(address.PAIS, [result.country, result.countryCode]),
+    ],
+    ['CEP divergente ou ausente', matchesPostcode(address.CEP, result.postcode)],
+  ];
+  const rejectionReasons = checks
+    .filter(([, passed]) => !passed)
+    .map(([reason]) => reason);
+  return { confirmed: rejectionReasons.length === 0, rejectionReasons };
 }
 
 async function apiRequest(path, options = {}) {
@@ -147,7 +191,11 @@ async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(`${options.method || 'GET'} ${path} retornou ${response.status}: ${JSON.stringify(payload)}`);
+    const error = new Error(
+      `${options.method || 'GET'} ${path} retornou ${response.status}: ${JSON.stringify(payload)}`,
+    );
+    error.code = `API_HTTP_${response.status}`;
+    throw error;
   }
 
   return payload;
@@ -244,12 +292,20 @@ async function geocode(address) {
       city: item.city,
       state: item.state,
       stateCode: item.state_code,
+      county: item.county,
+      countyCode: item.county_code,
       country: item.country,
       countryCode: item.country_code,
       postcode: item.postcode,
     };
   } catch (error) {
-    if (error.name === 'AbortError') error.code = 'TIMEOUT';
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error(
+        `Geoapify excedeu o timeout de ${timeoutMs}ms`,
+      );
+      timeoutError.code = 'TIMEOUT';
+      throw timeoutError;
+    }
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -267,6 +323,41 @@ async function saveLocation(centroId, location) {
   });
 }
 
+async function validateLocationEndpoint() {
+  const path = '/centros/preflight/localizacao';
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'x-location-update-token': operationalToken,
+    },
+    body: '{}',
+  });
+  if (response.status === 400) {
+    log('preflight', 'Rota operacional de localização disponível e token aceito.');
+    return;
+  }
+
+  const body = await response.text();
+  const error = new Error(
+    `Preflight da rota de localização retornou ${response.status}: ${body}`,
+  );
+  error.code = `API_PREFLIGHT_${response.status}`;
+  throw error;
+}
+
+function isFatalOperationalError(code) {
+  return [
+    'HTTP_401',
+    'RATE_LIMIT',
+    'LIMITE_OPERACIONAL',
+    'API_HTTP_401',
+    'API_HTTP_403',
+    'API_HTTP_503',
+  ].includes(code);
+}
+
 function classify(centro) {
   const address = toAddress(centro);
   if (!force && centro.LOCALIZACAO?.STATUS === 'CONFIRMADA') {
@@ -278,7 +369,8 @@ function classify(centro) {
   return { centro, address, resultado: dryRun ? 'ELEGIVEL' : 'PENDENTE', motivo: dryRun ? 'seria consultado' : '' };
 }
 
-async function processItem(item) {
+async function processItem(item, index, total) {
+  const scope = itemScope(item, index, total);
   const baseReport = {
     centroId: item.centro._id,
     nomeCentro: item.centro.NOME_CENTRO,
@@ -286,17 +378,25 @@ async function processItem(item) {
     resultado: item.resultado,
     motivo: item.motivo,
   };
-  if (item.resultado !== 'PENDENTE') return baseReport;
+  if (item.resultado !== 'PENDENTE') {
+    log(scope, `${item.resultado}: ${item.motivo || 'nenhuma ação necessária'}.`);
+    return baseReport;
+  }
 
   const addressHash = hashAddress(item.address);
   try {
+    log(
+      scope,
+      `Consultando Geoapify: ${formatAddress(item.address)}.`,
+    );
     const result = await geocode(item.address);
+    const assessment = result ? assessConfirmation(item.address, result) : undefined;
     const location = result
       ? {
           ENDERECO_HASH: addressHash,
           LATITUDE: result.latitude,
           LONGITUDE: result.longitude,
-          STATUS: isConfirmed(item.address, result) ? 'CONFIRMADA' : 'APROXIMADA',
+          STATUS: assessment.confirmed ? 'CONFIRMADA' : 'APROXIMADA',
           PRECISAO: result.resultType?.toLocaleUpperCase('pt-BR'),
           CONFIANCA: result.confidence,
           ORIGEM: 'GEOAPIFY',
@@ -305,7 +405,21 @@ async function processItem(item) {
         }
       : { ENDERECO_HASH: addressHash, STATUS: 'NAO_ENCONTRADA', ORIGEM: 'GEOAPIFY' };
 
+    if (result) {
+      log(
+        scope,
+        `Resposta recebida: status=${location.STATUS}, precisão=${location.PRECISAO || 'não informada'}, confiança=${location.CONFIANCA}, confiança_prédio=${result.confidenceBuilding ?? 'ausente'}, match_type=${result.matchType || 'ausente'}, retorno="${oneLine(result.formattedAddress)}"${assessment.rejectionReasons.length ? `, motivos=${assessment.rejectionReasons.join('; ')}` : ''}.`,
+      );
+    } else {
+      log(scope, 'Geoapify não encontrou resultados para o endereço.');
+    }
+
+    log(scope, `Salvando localização com status=${location.STATUS}.`);
     const centro = await saveLocation(item.centro._id, location);
+    log(
+      scope,
+      `Concluído com status=${centro.LOCALIZACAO?.STATUS || location.STATUS}.`,
+    );
     return {
       ...baseReport,
       resultado: centro.LOCALIZACAO?.STATUS || location.STATUS,
@@ -315,18 +429,25 @@ async function processItem(item) {
     };
   } catch (error) {
     const code = error.code || 'UNEXPECTED';
+    if (isFatalOperationalError(code)) {
+      log(scope, `Erro operacional fatal: código=${code}; ${error.message}`);
+      throw error;
+    }
     if (code !== 'LIMITE_OPERACIONAL') {
       try {
+        log(scope, `Registrando STATUS=ERRO, código=${code}.`);
         await saveLocation(item.centro._id, {
           ENDERECO_HASH: addressHash,
           STATUS: 'ERRO',
           ORIGEM: 'GEOAPIFY',
           ERRO_CODIGO: code,
         });
-      } catch {
+      } catch (saveError) {
+        log(scope, `Não foi possível registrar o erro na API: ${saveError.message}`);
         // O erro original é o mais útil no relatório; a próxima execução tentará novamente.
       }
     }
+    log(scope, `Falhou: código=${code}; ${error.message}`);
     return { ...baseReport, resultado: code === 'LIMITE_OPERACIONAL' ? 'IGNORADO' : 'ERRO', motivo: error.message };
   }
 }
@@ -337,7 +458,7 @@ async function mapWithConcurrency(items, workerCount, mapper) {
   async function worker() {
     while (nextIndex < items.length) {
       const index = nextIndex++;
-      results[index] = await mapper(items[index]);
+      results[index] = await mapper(items[index], index, items.length);
     }
   }
   await Promise.all(Array.from({ length: Math.min(workerCount, items.length) }, () => worker()));
@@ -365,18 +486,34 @@ if (!dryRun && !operationalToken) {
   throw new Error('LOCATION_UPDATE_TOKEN é obrigatório quando DRY_RUN=false.');
 }
 
+log(
+  'início',
+  `Modo=${dryRun ? 'DRY-RUN' : 'EXECUÇÃO'}, concorrência=${concurrency}, intervalo=${intervalMs}ms, limite=${maxCalls} chamadas.`,
+);
+if (!dryRun) {
+  log('preflight', 'Validando rota e token antes de chamar o Geoapify.');
+  await validateLocationEndpoint();
+}
+log('API', `Carregando centros de ${apiBaseUrl}.`);
 const centros = await loadCentros();
 if (!Array.isArray(centros)) throw new Error('A API não retornou uma lista de centros.');
+log('centros', `${centros.length} centro(s) carregado(s).`);
 
 const classified = centros.map(classify);
 const results = dryRun
-  ? classified.map((item) => ({
-      centroId: item.centro._id,
-      nomeCentro: item.centro.NOME_CENTRO,
-      statusAnterior: item.centro.LOCALIZACAO?.STATUS || 'PENDENTE',
-      resultado: item.resultado,
-      motivo: item.motivo,
-    }))
+  ? classified.map((item, index) => {
+      log(
+        itemScope(item, index, classified.length),
+        `${item.resultado}: ${item.motivo || 'nenhuma ação necessária'}.`,
+      );
+      return {
+        centroId: item.centro._id,
+        nomeCentro: item.centro.NOME_CENTRO,
+        statusAnterior: item.centro.LOCALIZACAO?.STATUS || 'PENDENTE',
+        resultado: item.resultado,
+        motivo: item.motivo,
+      };
+    })
   : await mapWithConcurrency(classified, concurrency, processItem);
 
 await saveReports(results);
@@ -387,3 +524,4 @@ const summary = results.reduce((counts, item) => {
 console.table(summary);
 console.log(`Chamadas Geoapify: ${geoapifyCalls}/${maxCalls}`);
 console.log(`Relatórios: ${reportPrefix}.json e ${reportPrefix}.csv`);
+log('fim', `${results.length} centro(s) processado(s).`);

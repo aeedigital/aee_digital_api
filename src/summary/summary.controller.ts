@@ -67,6 +67,11 @@ export class SummariesController {
       (q) => ({
         answer: q.ANSWER,
         questionId: extractId((q as any).QUESTION),
+        answerId: q.ANSWER_ID,
+        groupKey: q.GROUP_KEY,
+        groupInstanceId: q.GROUP_INSTANCE_ID,
+        occurrenceOrder: q.OCCURRENCE_ORDER,
+        questionOrder: q.QUESTION_ORDER,
       }),
     );
     return {
@@ -85,6 +90,11 @@ export class SummariesController {
       (q) => ({
         answer: q.ANSWER,
         questionId: extractId((q as any).QUESTION),
+        answerId: q.ANSWER_ID,
+        groupKey: q.GROUP_KEY,
+        groupInstanceId: q.GROUP_INSTANCE_ID,
+        occurrenceOrder: q.OCCURRENCE_ORDER,
+        questionOrder: q.QUESTION_ORDER,
       }),
     );
     return {
@@ -125,13 +135,7 @@ export class SummariesController {
 
   @Patch(':id/validated-by-coord')
   updateValidatedByCoord(@Param('id') id: string) {
-    const validatedByCoordAt = new Date();
-
-    const updatedPass: UpdateSummaryDto = {
-      validatedByCoordAt,
-    }
-
-    return this.service.update(id, this.toUpdateInput(updatedPass)).then(toSummaryResponse);
+    return this.service.validateByCoordinator(id).then(toSummaryResponse);
   }
 
   @Delete(':id')

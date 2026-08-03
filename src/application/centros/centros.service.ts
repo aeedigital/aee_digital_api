@@ -34,6 +34,10 @@ const ADDRESS_FIELDS: (keyof CentroAddress)[] = [
   'pais',
 ];
 
+export type CentroFindOptions = {
+  includeAttendance?: boolean;
+};
+
 @Injectable()
 export class CentrosAppService {
   constructor(
@@ -49,8 +53,14 @@ export class CentrosAppService {
     });
   }
 
-  findAll(filter?: CentroFilter): Promise<Centro[]> {
-    return this.repository.findAll(filter);
+  async findAll(
+    filter?: CentroFilter,
+    options: CentroFindOptions = {},
+  ): Promise<Centro[]> {
+    const centros = await this.repository.findAll(filter);
+    return options.includeAttendance
+      ? this.withLatestAttendance(centros)
+      : centros;
   }
 
   async findOne(id: string): Promise<Centro> {
@@ -58,7 +68,7 @@ export class CentrosAppService {
     if (!centro) {
       throw new NotFoundException('Centro not found');
     }
-    return centro;
+    return (await this.withLatestAttendance([centro]))[0];
   }
 
   async update(id: string, data: UpdateCentroInput): Promise<Centro> {
@@ -110,6 +120,59 @@ export class CentrosAppService {
   findSummaries(id: string, filter: SummaryFilter): Promise<Summary[]> {
     const query: SummaryFilter = { ...filter, centroId: id };
     return this.summariesService.findAll(query);
+  }
+
+  private async withLatestAttendance(centros: Centro[]): Promise<Centro[]> {
+    const ids = centros.map((centro) => centro.id).filter(Boolean);
+    if (!ids.length) return centros;
+    const summaries = await this.summariesService.findLatestByCentroIds({
+      centroIds: ids,
+      fields:
+        'CENTRO_ID,ATENDIMENTOS,DIVULGACAO_AUTORIZADA,createdAt,updatedAt',
+    });
+    const byCentro = new Map(
+      summaries.map((summary) => [summary.centroId, summary]),
+    );
+    return centros.map((centro) => {
+      const summary = byCentro.get(centro.id);
+      if (!summary?.publicationAuthorized || !summary.attendance) return centro;
+      return {
+        ...centro,
+        funcionamento: this.toLegacyFuncionamento(summary),
+        attendanceSummary: summary,
+      };
+    });
+  }
+
+  private toLegacyFuncionamento(summary: Summary): Centro['funcionamento'] {
+    const result: Centro['funcionamento'] = {
+      segunda: [],
+      terca: [],
+      quarta: [],
+      quinta: [],
+      sexta: [],
+      sabado: [],
+      domingo: [],
+    };
+    const keyByDay: Record<string, keyof Centro['funcionamento']> = {
+      'SEGUNDA-FEIRA': 'segunda',
+      'TERCA-FEIRA': 'terca',
+      'QUARTA-FEIRA': 'quarta',
+      'QUINTA-FEIRA': 'quinta',
+      'SEXTA-FEIRA': 'sexta',
+      SABADO: 'sabado',
+      DOMINGO: 'domingo',
+    };
+    summary.attendance?.activities.forEach((activity) =>
+      activity.encounters.forEach((encounter) => {
+        const key = keyByDay[encounter.day];
+        if (key && !result[key].includes(encounter.startTime)) {
+          result[key].push(encounter.startTime);
+        }
+      }),
+    );
+    Object.values(result).forEach((times) => times.sort());
+    return result;
   }
 
   private pendingLocation(source: Partial<Centro>): CentroLocation {

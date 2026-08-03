@@ -81,9 +81,66 @@ describe('CentrosController (e2e)', () => {
       .expect(201);
   });
 
-  it('lists centros', () => {
-    service.findAll.mockResolvedValue([{ id: 'c1' }]);
-    return request(app.getHttpServer()).get('/centros').expect(200);
+  it('lists centros with latitude and longitude', () => {
+    service.findAll.mockResolvedValue([
+      {
+        id: 'c1',
+        location: {
+          status: 'CONFIRMADA',
+          latitude: -23.5505,
+          longitude: -46.6333,
+        },
+      },
+    ]);
+
+    return request(app.getHttpServer())
+      .get('/centros')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toHaveLength(1);
+        expect(body[0].LOCALIZACAO).toEqual({
+          LATITUDE: -23.5505,
+          LONGITUDE: -46.6333,
+          STATUS: 'CONFIRMADA',
+        });
+      });
+  });
+
+  it('shows phone and site only when they are available', async () => {
+    service.findAll.mockResolvedValue([
+      {
+        id: 'c1',
+        telefone: '(11) 99999-9999',
+        site: 'https://centro.example',
+      },
+      { id: 'c2' },
+    ]);
+
+    const { body } = await request(app.getHttpServer()).get('/centros').expect(200);
+    expect(body[0]).toEqual(
+      expect.objectContaining({
+        TELEFONE: '(11) 99999-9999',
+        SITE: 'https://centro.example',
+      }),
+    );
+    expect(body[1]).not.toHaveProperty('TELEFONE');
+    expect(body[1]).not.toHaveProperty('SITE');
+  });
+
+  it('requests attendance only through include=atendimento', async () => {
+    service.findAll.mockResolvedValue([]);
+
+    await request(app.getHttpServer())
+      .get('/centros?include=atendimento')
+      .expect(200);
+
+    expect(service.findAll).toHaveBeenCalledWith({}, { includeAttendance: true });
+  });
+
+  it('rejects an unsupported include value', () => {
+    return request(app.getHttpServer())
+      .get('/centros?include=outro')
+      .expect(400);
   });
 
   it('protects and accepts an operational location update', async () => {

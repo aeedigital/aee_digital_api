@@ -43,7 +43,10 @@ export interface Centro {
   cidade: string;
   estado: string;
   pais: string;
+  telefone?: string;
+  site?: string;
   location?: CentroLocation;
   createdAt?: Date;
   updatedAt?: Date;
+  attendanceSummary?: import('./summary').Summary;
 }

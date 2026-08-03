@@ -38,6 +38,12 @@ variable "lambda_env" {
   default     = {}
 }
 
+variable "answers_write_disabled" {
+  description = "Temporarily block Answer mutations during a maintenance window"
+  type        = bool
+  default     = false
+}
+
 variable "lambda_arch" {
   description = "Lambda architecture (arm64 or x86_64)"
   type        = string

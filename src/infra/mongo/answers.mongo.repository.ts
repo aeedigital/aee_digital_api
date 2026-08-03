@@ -27,6 +27,11 @@ export class AnswersMongoRepository implements AnswerRepository {
         CENTRO_ID: 'centroId',
         ANSWER: 'answer',
         QUIZ_ID: 'quizId',
+        FORM_ID: 'formId',
+        GROUP_KEY: 'groupKey',
+        GROUP_INSTANCE_ID: 'groupInstanceId',
+        GROUP_OCCURRENCE_ORDER: 'groupOccurrenceOrder',
+        QUESTION_ORDER: 'questionOrder',
       },
     );
     return {
@@ -43,6 +48,9 @@ export class AnswersMongoRepository implements AnswerRepository {
       centroId: 'CENTRO_ID',
       quizId: 'QUIZ_ID',
       answer: 'ANSWER',
+      formId: 'FORM_ID',
+      groupKey: 'GROUP_KEY',
+      groupInstanceId: 'GROUP_INSTANCE_ID',
     });
   }
 
@@ -54,6 +62,11 @@ export class AnswersMongoRepository implements AnswerRepository {
           centroId: 'CENTRO_ID',
           answer: 'ANSWER',
           quizId: 'QUIZ_ID',
+          formId: 'FORM_ID',
+          groupKey: 'GROUP_KEY',
+          groupInstanceId: 'GROUP_INSTANCE_ID',
+          groupOccurrenceOrder: 'GROUP_OCCURRENCE_ORDER',
+          questionOrder: 'QUESTION_ORDER',
         }),
       ),
     );
@@ -85,6 +98,11 @@ export class AnswersMongoRepository implements AnswerRepository {
         centroId: 'CENTRO_ID',
         answer: 'ANSWER',
         quizId: 'QUIZ_ID',
+        formId: 'FORM_ID',
+        groupKey: 'GROUP_KEY',
+        groupInstanceId: 'GROUP_INSTANCE_ID',
+        groupOccurrenceOrder: 'GROUP_OCCURRENCE_ORDER',
+        questionOrder: 'QUESTION_ORDER',
       }),
     );
 
@@ -113,6 +131,11 @@ export class AnswersMongoRepository implements AnswerRepository {
         centroId: 'CENTRO_ID',
         answer: 'ANSWER',
         quizId: 'QUIZ_ID',
+        formId: 'FORM_ID',
+        groupKey: 'GROUP_KEY',
+        groupInstanceId: 'GROUP_INSTANCE_ID',
+        groupOccurrenceOrder: 'GROUP_OCCURRENCE_ORDER',
+        questionOrder: 'QUESTION_ORDER',
       }),
     );
 

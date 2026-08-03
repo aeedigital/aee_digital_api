@@ -84,6 +84,10 @@ export class Centro {
   @Prop()
   PAIS: string;
   @Prop()
+  TELEFONE?: string;
+  @Prop()
+  SITE?: string;
+  @Prop()
   STATUS: string;
   @Prop({ type: CentroLocationSchema })
   LOCALIZACAO?: CentroLocation;

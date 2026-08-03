@@ -1,5 +1,6 @@
 import { Centro, CentroLocation } from '../domain/entities/centro';
 import { toBrazilTimestamp } from '../base/date-timezone.helper';
+import { toAttendanceResponse } from '../summary/summary.presenter';
 
 function compactObject(source: Record<string, any>): Record<string, any> {
   return Object.fromEntries(
@@ -36,7 +37,12 @@ export function toCentroResponse(centro: Centro) {
     CIDADE: centro.cidade,
     ESTADO: centro.estado,
     PAIS: centro.pais,
+    ...(centro.telefone ? { TELEFONE: centro.telefone } : {}),
+    ...(centro.site ? { SITE: centro.site } : {}),
     LOCALIZACAO: toLocationResponse(centro.location),
+    ...(centro.attendanceSummary
+      ? { ATENDIMENTOS: toAttendanceResponse(centro.attendanceSummary) }
+      : {}),
     createdAt: toBrazilTimestamp(centro.createdAt),
     updatedAt: toBrazilTimestamp(centro.updatedAt),
   };

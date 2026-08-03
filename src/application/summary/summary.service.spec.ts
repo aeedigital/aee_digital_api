@@ -2,10 +2,14 @@ import { NotFoundException } from '@nestjs/common';
 import { SummaryAppService } from './summary.service';
 import { SummaryRepository } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
+import { FormRepository } from '../../domain/repositories/form.repository';
+import { AnswerRepository } from '../../domain/repositories/answer.repository';
 
 describe('SummaryAppService', () => {
   let service: SummaryAppService;
   let repository: jest.Mocked<SummaryRepository>;
+  let formsRepository: jest.Mocked<FormRepository>;
+  let answersRepository: jest.Mocked<AnswerRepository>;
 
   const summary: Summary = {
     id: 's1',
@@ -26,12 +30,36 @@ describe('SummaryAppService', () => {
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
     } as jest.Mocked<SummaryRepository>;
-    service = new SummaryAppService(repository);
+    formsRepository = {
+      create: jest.fn(),
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      update: jest.fn(),
+      updateOrCreate: jest.fn(),
+      delete: jest.fn(),
+    } as jest.Mocked<FormRepository>;
+    answersRepository = {
+      create: jest.fn(),
+      findAll: jest.fn(),
+      findByCentroIds: jest.fn(),
+      findById: jest.fn(),
+      update: jest.fn(),
+      updateOrCreate: jest.fn(),
+      delete: jest.fn(),
+    } as jest.Mocked<AnswerRepository>;
+    service = new SummaryAppService(repository, formsRepository, answersRepository);
   });
 
   it('creates a summary', async () => {
+    formsRepository.findById.mockResolvedValue({
+      id: 'f1', name: 'Form', version: 1, createdBy: 'u1', pages: [],
+    });
+    answersRepository.findAll.mockResolvedValue([]);
     repository.create.mockResolvedValue(summary);
     await expect(service.create(summary)).resolves.toEqual(summary);
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ schemaVersion: 2, questions: [] }),
+    );
   });
 
   it('finds all summaries', async () => {

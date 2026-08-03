@@ -50,7 +50,9 @@ describe('CentrosAppService', () => {
       update: jest.fn(),
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
+      findLatestByCentroIds: jest.fn(),
     } as any;
+    summaryService.findLatestByCentroIds.mockResolvedValue([]);
 
     service = new CentrosAppService(repository, summaryService);
   });
@@ -70,6 +72,23 @@ describe('CentrosAppService', () => {
   it('finds all centros', async () => {
     repository.findAll.mockResolvedValue([centro]);
     await expect(service.findAll({ regional: 'r1' })).resolves.toEqual([centro]);
+  });
+
+  it('does not load summaries by default', async () => {
+    repository.findAll.mockResolvedValue([centro]);
+    await service.findAll();
+    expect(summaryService.findLatestByCentroIds).not.toHaveBeenCalled();
+  });
+
+  it('loads attendance without summary questions when requested', async () => {
+    repository.findAll.mockResolvedValue([centro]);
+    await service.findAll(undefined, { includeAttendance: true });
+    expect(summaryService.findLatestByCentroIds).toHaveBeenCalledWith(
+      expect.objectContaining({
+        centroIds: ['c1'],
+        fields: expect.not.stringContaining('QUESTIONS'),
+      }),
+    );
   });
 
   it('finds one centro', async () => {

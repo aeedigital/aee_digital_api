@@ -27,6 +27,7 @@ import { mapProps } from '../base/mappers/object.mapper';
 import { toSummaryResponse } from '../summary/summary.presenter';
 import { toCentroResponse } from './centro.presenter';
 import { LocationUpdateTokenGuard } from './location/location-update-token.guard';
+import { parseDateInput } from '../base/date-parse.helper';
 
 const strictBodyValidation = new ValidationPipe({
   whitelist: true,
@@ -108,10 +109,20 @@ export class CentrosController {
   }
 
   private toSummaryFilter(filterDto: SummaryFilterDto) {
+    const sort = filterDto.sort && filterDto.sort.split(',').reduce((acc, part) => {
+      const [field, direction] = part.split(':');
+      if (field) acc[field] = direction === '-1' ? -1 : 1;
+      return acc;
+    }, {} as Record<string, 1 | -1>);
     return {
       formId: filterDto.FORM_ID,
       centroId: filterDto.CENTRO_ID,
       fields: filterDto.fields,
+      dateFrom: parseDateInput(filterDto.dateFrom),
+      dateTo: parseDateInput(filterDto.dateTo),
+      limit: filterDto.limit ? parseInt(filterDto.limit, 10) : undefined,
+      skip: filterDto.skip ? parseInt(filterDto.skip, 10) : undefined,
+      ...(sort && Object.keys(sort).length ? { sort } : {}),
     };
   }
 
@@ -126,7 +137,9 @@ export class CentrosController {
   @Get()
   findAll(@Query(ValidationPipe) filterDto: FilterDto): Promise<any[]> {
     return this.service
-      .findAll(this.toFilter(filterDto))
+      .findAll(this.toFilter(filterDto), {
+        includeAttendance: filterDto.include === 'atendimento',
+      })
       .then((items) => items.map(toCentroResponse));
   }
 
