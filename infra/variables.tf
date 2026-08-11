@@ -55,3 +55,15 @@ variable "api_stage" {
   type        = string
   default     = "prod"
 }
+
+variable "dashboard_projections_function_name" {
+  description = "Lambda function invoked synchronously for dashboard projections"
+  type        = string
+  default     = "dashboard-projections"
+}
+
+variable "dashboard_projections_function_arn" {
+  description = "Exact ARN allowed for dashboard projection invocation"
+  type        = string
+  default     = "arn:aws:lambda:us-east-1:115186094843:function:dashboard-projections"
+}

@@ -16,6 +16,9 @@ export class CadastroInfoSchemaClass {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Forms.name, required: true })
   FORM_ID: Forms;
 
+  @Prop({ required: false, index: true })
+  CYCLE_ID?: string;
+
   @Prop({ required: true, default: true })
   IS_ACTIVE: boolean;
 }

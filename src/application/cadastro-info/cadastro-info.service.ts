@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { FormsAppService } from '../forms/forms.service';
 import {
   CadastroInfoRepository,
@@ -55,13 +56,26 @@ export class CadastroInfoAppService {
   async save(data: CreateCadastroInfoInput): Promise<CadastroInfo> {
     this.validateDateRange(data.startDate, data.endDate);
     await this.formsService.findOne(data.formId);
+    const { startNewCycle, ...persisted } = data;
 
     const active = await this.repository.findActive();
     if (!active) {
-      return this.repository.create(data);
+      return this.repository.create({ ...persisted, cycleId: randomUUID() });
     }
 
-    return this.repository.update(active.id, data);
+    if (startNewCycle) {
+      await this.repository.update(active.id, { isActive: false });
+      return this.repository.create({
+        ...persisted,
+        cycleId: randomUUID(),
+        isActive: true,
+      });
+    }
+
+    return this.repository.update(active.id, {
+      ...persisted,
+      cycleId: active.cycleId || active.id,
+    });
   }
 
   async findActive(): Promise<CadastroInfo> {
@@ -69,6 +83,7 @@ export class CadastroInfoAppService {
     if (!active) {
       throw new NotFoundException('Cadastro info not found');
     }
-    return active;
+    if (active.cycleId) return active;
+    return this.repository.update(active.id, { cycleId: active.id });
   }
 }

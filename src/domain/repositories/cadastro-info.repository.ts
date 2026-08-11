@@ -5,6 +5,7 @@ export type CadastroInfoFilter = {
   startDate?: string;
   endDate?: string;
   formId?: string;
+  cycleId?: string;
   isActive?: boolean;
   fields?: string;
 };
@@ -13,7 +14,9 @@ export interface CreateCadastroInfoInput {
   startDate: string;
   endDate: string;
   formId: string;
+  cycleId?: string;
   isActive: boolean;
+  startNewCycle?: boolean;
 }
 
 export interface UpdateCadastroInfoInput extends Partial<CreateCadastroInfoInput> {}

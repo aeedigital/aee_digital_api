@@ -16,6 +16,7 @@ export class CadastroInfoController {
       END_DATE: 'endDate',
       FORM_ID: 'formId',
       IS_ACTIVE: 'isActive',
+      START_NEW_CYCLE: 'startNewCycle',
     });
   }
 

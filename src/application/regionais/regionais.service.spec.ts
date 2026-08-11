@@ -16,6 +16,8 @@ describe('RegionaisAppService', () => {
   let pessoasService: jest.Mocked<PessoasAppService>;
   let formsService: jest.Mocked<FormsAppService>;
   let answersService: jest.Mocked<AnswersAppService>;
+  let projectionsService: { query: jest.Mock; queryRegions: jest.Mock };
+  let cadastroInfoService: { findActive: jest.Mock };
 
   const regional: Regional = {
     id: 'r1',
@@ -29,6 +31,7 @@ describe('RegionaisAppService', () => {
       create: jest.fn(),
       findAll: jest.fn(),
       overview: jest.fn(),
+      overviewBase: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
       updateOrCreate: jest.fn(),
@@ -80,6 +83,8 @@ describe('RegionaisAppService', () => {
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
     } as any;
+    projectionsService = { query: jest.fn(), queryRegions: jest.fn() };
+    cadastroInfoService = { findActive: jest.fn() };
     service = new RegionaisAppService(
       repository,
       centrosService,
@@ -87,6 +92,8 @@ describe('RegionaisAppService', () => {
       pessoasService,
       formsService,
       answersService,
+      projectionsService as any,
+      cadastroInfoService as any,
     );
   });
 
@@ -145,9 +152,33 @@ describe('RegionaisAppService', () => {
     await expect(service.overview({})).resolves.toEqual([]);
   });
 
+  it('merges one batch projection into the overview for the active cycle', async () => {
+    cadastroInfoService.findActive.mockResolvedValue({
+      cycleId: 'cycle-1',
+      startDate: '01/01/2026',
+      endDate: '31/01/2026',
+    });
+    repository.overviewBase.mockResolvedValue([
+      { id: 'r1', nomeRegional: 'Regional 1', pais: 'BR', centrosCount: 3, finalizadosCount: 0 },
+    ]);
+    projectionsService.queryRegions.mockResolvedValue({
+      schemaVersion: 'projection.query.batch.v1',
+      items: [{ scopeId: 'r1', found: true, totals: { finishedCenters: 2 } }],
+    });
+
+    await expect(service.overview({
+      dateFrom: new Date('2026-01-01T00:00:00Z'),
+      dateTo: new Date('2026-01-31T00:00:00Z'),
+    })).resolves.toEqual([
+      { id: 'r1', nomeRegional: 'Regional 1', pais: 'BR', centrosCount: 3, finalizadosCount: 2 },
+    ]);
+    expect(projectionsService.queryRegions).toHaveBeenCalledTimes(1);
+    expect(repository.overview).not.toHaveBeenCalled();
+  });
+
   it('applies sortBy=updatedAt:desc in centros-with-answers dependencies', async () => {
     centrosService.findAll.mockResolvedValue([{ id: 'c1' } as any]);
-    summaryService.findByCentroIds.mockResolvedValue([{ id: 's1', centroId: 'c1' } as any]);
+    summaryService.findLatestByCentroIds.mockResolvedValue([{ id: 's1', centroId: 'c1' } as any]);
     answersService.findByCentroIds.mockResolvedValue([{ id: 'a1', centroId: 'c1' } as any]);
 
     await expect(
@@ -159,6 +190,7 @@ describe('RegionaisAppService', () => {
       }),
     ).resolves.toEqual({
       regionalId: 'r1',
+      totals: { totalCentros: 1, totalRespostas: 1, updatedAt: undefined },
       centros: [
         {
           centro: { id: 'c1' },
@@ -173,11 +205,11 @@ describe('RegionaisAppService', () => {
       fields: undefined,
       sortBy: 'updatedAt:desc',
     });
-    expect(summaryService.findByCentroIds).toHaveBeenCalledWith({
+    expect(summaryService.findLatestByCentroIds).toHaveBeenCalledWith({
       centroIds: ['c1'],
       dateFrom: undefined,
       dateTo: undefined,
-      sort: { updatedAt: -1 },
+      fields: 'FORM_ID,CENTRO_ID,validatedByCoordAt,createdAt,updatedAt',
     });
     expect(answersService.findByCentroIds).toHaveBeenCalledWith({
       centroIds: ['c1'],

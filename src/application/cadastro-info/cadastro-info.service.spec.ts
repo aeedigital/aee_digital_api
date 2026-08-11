@@ -12,6 +12,7 @@ describe('CadastroInfoAppService', () => {
     startDate: '19/01/2026',
     endDate: '27/02/2026',
     formId: 'f1',
+    cycleId: 'cycle-1',
     isActive: true,
   };
 
@@ -39,7 +40,10 @@ describe('CadastroInfoAppService', () => {
     repository.create.mockResolvedValue(cadastroInfo as any);
 
     await expect(service.save(cadastroInfo as any)).resolves.toEqual(cadastroInfo);
-    expect(repository.create).toHaveBeenCalledWith(cadastroInfo);
+    expect(repository.create).toHaveBeenCalledWith({
+      ...cadastroInfo,
+      cycleId: expect.any(String),
+    });
   });
 
   it('updates active cadastro info when one exists', async () => {

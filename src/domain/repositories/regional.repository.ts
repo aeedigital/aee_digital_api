@@ -36,4 +36,5 @@ export type RegionalOverviewItem = {
 export interface RegionalRepository
   extends CrudRepository<Regional, CreateRegionalInput, UpdateRegionalInput, RegionalFilter> {
   overview(filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]>;
+  overviewBase(): Promise<RegionalOverviewItem[]>;
 }

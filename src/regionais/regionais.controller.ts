@@ -210,6 +210,7 @@ export class RegionaisController {
 
     return {
       regionalId: data.regionalId,
+      totals: data.totals,
       centros: data.centros.map((item) => {
         const base = toCentroResponse(item.centro);
         return {

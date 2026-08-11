@@ -34,6 +34,20 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy" "dashboard_projections_invoke" {
+  name = "${var.project}-dashboard-projections-invoke"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = var.dashboard_projections_function_arn
+    }]
+  })
+}
+
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${var.project}-lambda-artifacts-115186094843-${var.region}"
 }
@@ -82,7 +96,8 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = merge(var.lambda_env, {
-      ANSWERS_WRITE_DISABLED = tostring(var.answers_write_disabled)
+      ANSWERS_WRITE_DISABLED              = tostring(var.answers_write_disabled)
+      DASHBOARD_PROJECTIONS_FUNCTION_NAME = var.dashboard_projections_function_name
     })
   }
 
@@ -108,6 +123,8 @@ locals {
   api_routes = [
     { method = "GET", path = "/" },
     { method = "GET", path = "/clearcache" },
+    { method = "POST", path = "/cadastro-info" },
+    { method = "GET", path = "/cadastro-info/active" },
     { method = "GET", path = "/forms" },
     { method = "POST", path = "/forms" },
     { method = "GET", path = "/forms/{id}" },

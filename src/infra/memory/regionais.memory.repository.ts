@@ -23,4 +23,8 @@ export class RegionaisMemoryRepository
   async overview(_filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]> {
     return [];
   }
+
+  async overviewBase(): Promise<RegionalOverviewItem[]> {
+    return [];
+  }
 }

@@ -3,6 +3,7 @@ export interface CadastroInfo {
   startDate: string;
   endDate: string;
   formId: string;
+  cycleId: string;
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;

@@ -41,6 +41,7 @@ export class CadastroInfoMongoRepository
       startDate: doc.START_DATE,
       endDate: doc.END_DATE,
       formId: extractId(doc.FORM_ID),
+      cycleId: doc.CYCLE_ID || '',
       isActive: doc.IS_ACTIVE,
       createdAt: doc.createdAt ? new Date(doc.createdAt) : undefined,
       updatedAt: doc.updatedAt ? new Date(doc.updatedAt) : undefined,
@@ -52,6 +53,7 @@ export class CadastroInfoMongoRepository
       startDate: 'START_DATE',
       endDate: 'END_DATE',
       formId: 'FORM_ID',
+      cycleId: 'CYCLE_ID',
       isActive: 'IS_ACTIVE',
       fields: 'fields',
     });
@@ -62,6 +64,7 @@ export class CadastroInfoMongoRepository
       startDate: 'START_DATE',
       endDate: 'END_DATE',
       formId: 'FORM_ID',
+      cycleId: 'CYCLE_ID',
       isActive: 'IS_ACTIVE',
     });
   }
