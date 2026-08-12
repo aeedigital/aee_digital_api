@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsArray, IsInt, IsOptional, Min } from 'class-validator';
 
 export class SummaryQuestion {
   @ApiProperty()
@@ -10,6 +10,24 @@ export class SummaryQuestion {
   @ApiProperty()
   @IsNotEmpty()
   QUESTION: string;
+
+  @IsOptional()
+  @IsString()
+  ANSWER_ID?: string;
+  @IsOptional()
+  @IsString()
+  GROUP_KEY?: string;
+  @IsOptional()
+  @IsString()
+  GROUP_INSTANCE_ID?: string;
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  OCCURRENCE_ORDER?: number;
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  QUESTION_ORDER?: number;
 }
 
 export class CreateSummariesDto {
@@ -22,9 +40,9 @@ export class CreateSummariesDto {
   CENTRO_ID: string;
 
   @ApiProperty({ type: [SummaryQuestion] })
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
-  QUESTIONS: [SummaryQuestion];
+  QUESTIONS?: SummaryQuestion[];
 
   @ApiProperty()
   validatedByCoordAt?: Date;

@@ -3,9 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { CentrosController } from '../src/centros/centros.controller';
 import { CentrosAppService } from '../src/application/centros/centros.service';
+import { LocationUpdateTokenGuard } from '../src/centros/location/location-update-token.guard';
 
 describe('CentrosController (e2e)', () => {
   let app: INestApplication;
+  const originalLocationToken = process.env.LOCATION_UPDATE_TOKEN;
   const service = {
     create: jest.fn(),
     findAll: jest.fn(),
@@ -14,12 +16,17 @@ describe('CentrosController (e2e)', () => {
     updateOrCreate: jest.fn(),
     delete: jest.fn(),
     findSummaries: jest.fn(),
+    saveLocation: jest.fn(),
   };
 
   beforeAll(async () => {
+    process.env.LOCATION_UPDATE_TOKEN = 'test-location-token';
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [CentrosController],
-      providers: [{ provide: CentrosAppService, useValue: service }],
+      providers: [
+        { provide: CentrosAppService, useValue: service },
+        LocationUpdateTokenGuard,
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -29,6 +36,11 @@ describe('CentrosController (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    if (originalLocationToken === undefined) {
+      delete process.env.LOCATION_UPDATE_TOKEN;
+    } else {
+      process.env.LOCATION_UPDATE_TOKEN = originalLocationToken;
+    }
   });
 
   beforeEach(() => {
@@ -64,12 +76,105 @@ describe('CentrosController (e2e)', () => {
         CIDADE: 'C',
         ESTADO: 'E',
         PAIS: 'BR',
+        STATUS: 'ATIVO',
       })
       .expect(201);
   });
 
-  it('lists centros', () => {
-    service.findAll.mockResolvedValue([{ id: 'c1' }]);
-    return request(app.getHttpServer()).get('/centros').expect(200);
+  it('lists centros with latitude and longitude', () => {
+    service.findAll.mockResolvedValue([
+      {
+        id: 'c1',
+        location: {
+          status: 'CONFIRMADA',
+          latitude: -23.5505,
+          longitude: -46.6333,
+        },
+      },
+    ]);
+
+    return request(app.getHttpServer())
+      .get('/centros')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toHaveLength(1);
+        expect(body[0].LOCALIZACAO).toEqual({
+          LATITUDE: -23.5505,
+          LONGITUDE: -46.6333,
+          STATUS: 'CONFIRMADA',
+        });
+      });
+  });
+
+  it('shows phone and site only when they are available', async () => {
+    service.findAll.mockResolvedValue([
+      {
+        id: 'c1',
+        telefone: '(11) 99999-9999',
+        site: 'https://centro.example',
+      },
+      { id: 'c2' },
+    ]);
+
+    const { body } = await request(app.getHttpServer()).get('/centros').expect(200);
+    expect(body[0]).toEqual(
+      expect.objectContaining({
+        TELEFONE: '(11) 99999-9999',
+        SITE: 'https://centro.example',
+      }),
+    );
+    expect(body[1]).not.toHaveProperty('TELEFONE');
+    expect(body[1]).not.toHaveProperty('SITE');
+  });
+
+  it('requests attendance only through include=atendimento', async () => {
+    service.findAll.mockResolvedValue([]);
+
+    await request(app.getHttpServer())
+      .get('/centros?include=atendimento')
+      .expect(200);
+
+    expect(service.findAll).toHaveBeenCalledWith({}, { includeAttendance: true });
+  });
+
+  it('rejects an unsupported include value', () => {
+    return request(app.getHttpServer())
+      .get('/centros?include=outro')
+      .expect(400);
+  });
+
+  it('protects and accepts an operational location update', async () => {
+    const payload = {
+      ENDERECO_HASH: 'a'.repeat(64),
+      STATUS: 'CONFIRMADA',
+      LATITUDE: -23,
+      LONGITUDE: -46,
+    };
+
+    await request(app.getHttpServer())
+      .put('/centros/c1/localizacao')
+      .send(payload)
+      .expect(401);
+
+    service.saveLocation.mockResolvedValue({
+      id: 'c1',
+      location: {
+        status: 'CONFIRMADA',
+        latitude: -23,
+        longitude: -46,
+      },
+    });
+    await request(app.getHttpServer())
+      .put('/centros/c1/localizacao')
+      .set('x-location-update-token', 'test-location-token')
+      .send(payload)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.LOCALIZACAO).toEqual({
+          LATITUDE: -23,
+          LONGITUDE: -46,
+          STATUS: 'CONFIRMADA',
+        });
+      });
   });
 });

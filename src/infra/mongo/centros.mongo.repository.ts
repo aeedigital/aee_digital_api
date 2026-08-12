@@ -1,13 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
+  CentroAddress,
   CentroFilter,
   CentroRepository,
   CreateCentroInput,
   UpdateCentroInput,
 } from '../../domain/repositories/centro.repository';
-import { Centro } from '../../domain/entities/centro';
+import { Centro, CentroLocation } from '../../domain/entities/centro';
 import { CentroDocument } from '../../centros/schemas/centro.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
@@ -41,8 +46,14 @@ export class CentrosMongoRepository
       CIDADE: 'cidade',
       ESTADO: 'estado',
       PAIS: 'pais',
+      TELEFONE: 'telefone',
+      SITE: 'site',
+      LOCALIZACAO: 'location',
       },
     );
+    if (core.location) {
+      core.location = this.locationToDomain((doc as any).LOCALIZACAO);
+    }
     return {
       id: doc._id?.toString(),
       ...core,
@@ -65,6 +76,8 @@ export class CentrosMongoRepository
       cidade: 'CIDADE',
       estado: 'ESTADO',
       pais: 'PAIS',
+      telefone: 'TELEFONE',
+      site: 'SITE',
       fields: 'fields',
       sortBy: 'sortBy',
     });
@@ -86,8 +99,22 @@ export class CentrosMongoRepository
       cidade: 'CIDADE',
       estado: 'ESTADO',
       pais: 'PAIS',
+      telefone: 'TELEFONE',
+      site: 'SITE',
+      location: 'LOCALIZACAO',
     });
+    if (payload.LOCALIZACAO) {
+      payload.LOCALIZACAO = this.locationToPersistence(payload.LOCALIZACAO);
+    }
     return omitUndefined(payload);
+  }
+
+  async findById(id: string): Promise<Centro | null> {
+    const doc = await this.model
+      .findById(id)
+      .select('+LOCALIZACAO.ENDERECO_HASH +LOCALIZACAO.ERRO_CODIGO')
+      .lean();
+    return doc ? this.toDomain(doc) : null;
   }
 
   async update(id: string, data: UpdateCentroInput): Promise<Centro> {
@@ -97,6 +124,80 @@ export class CentrosMongoRepository
     if (!updated) {
       throw new NotFoundException('Centro not found');
     }
+    await this.cacheService.invalidateModelCache(this.model.modelName);
     return this.toDomain(updated);
+  }
+
+  async saveLocation(
+    id: string,
+    expectedAddress: CentroAddress,
+    location: CentroLocation,
+  ): Promise<Centro> {
+    const updated = await this.model
+      .findOneAndUpdate(
+        {
+          _id: id,
+          ENDERECO: expectedAddress.endereco,
+          CEP: expectedAddress.cep,
+          BAIRRO: expectedAddress.bairro,
+          CIDADE: expectedAddress.cidade,
+          ESTADO: expectedAddress.estado,
+          PAIS: expectedAddress.pais,
+        },
+        { $set: { LOCALIZACAO: this.locationToPersistence(location) } },
+        { new: true, lean: true },
+      )
+      .exec();
+
+    if (!updated) {
+      throw new ConflictException(
+        'O centro não existe ou seu endereço foi alterado durante a atualização',
+      );
+    }
+    await this.cacheService.invalidateModelCache(this.model.modelName);
+    return this.toDomain(updated);
+  }
+
+  private locationToDomain(location: any): CentroLocation | undefined {
+    if (!location) return undefined;
+    return omitUndefined({
+      latitude: location.PONTO?.coordinates?.[1],
+      longitude: location.PONTO?.coordinates?.[0],
+      status: location.STATUS,
+      precision: location.PRECISAO,
+      confidence: location.CONFIANCA,
+      origin: location.ORIGEM,
+      placeId: location.PLACE_ID,
+      formattedAddress: location.ENDERECO_FORMATADO,
+      updatedAt: location.ATUALIZADA_EM
+        ? new Date(location.ATUALIZADA_EM)
+        : undefined,
+      addressHash: location.ENDERECO_HASH,
+      errorCode: location.ERRO_CODIGO,
+    }) as CentroLocation;
+  }
+
+  private locationToPersistence(location: CentroLocation): Record<string, any> {
+    const hasPoint =
+      location.latitude !== undefined && location.longitude !== undefined;
+    return omitUndefined({
+      ...(hasPoint
+        ? {
+            PONTO: {
+              type: 'Point',
+              coordinates: [location.longitude, location.latitude],
+            },
+          }
+        : {}),
+      STATUS: location.status,
+      PRECISAO: location.precision,
+      CONFIANCA: location.confidence,
+      ORIGEM: location.origin,
+      PLACE_ID: location.placeId,
+      ENDERECO_FORMATADO: location.formattedAddress,
+      ATUALIZADA_EM: location.updatedAt,
+      ENDERECO_HASH: location.addressHash,
+      ERRO_CODIGO: location.errorCode,
+    });
   }
 }

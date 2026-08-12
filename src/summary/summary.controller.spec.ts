@@ -9,6 +9,7 @@ describe('SummariesController', () => {
     findAll: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
+    validateByCoordinator: jest.fn(),
     updateOrCreate: jest.fn(),
     delete: jest.fn(),
   };
@@ -45,8 +46,8 @@ describe('SummariesController', () => {
   });
 
   it('updates validatedByCoord', async () => {
-    service.update.mockResolvedValue({ id: 's1' });
+    service.validateByCoordinator.mockResolvedValue({ id: 's1' });
     await controller.updateValidatedByCoord('s1');
-    expect(service.update).toHaveBeenCalledWith('s1', { validatedByCoordAt: expect.any(Date) });
+    expect(service.validateByCoordinator).toHaveBeenCalledWith('s1');
   });
 });

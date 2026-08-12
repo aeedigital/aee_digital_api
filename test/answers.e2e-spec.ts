@@ -70,11 +70,11 @@ describe('AnswersController (e2e)', () => {
       })
       .expect(201)
       .expect({
-        id: 'a1',
-        questionId: 'q1',
-        centroId: 'c1',
-        answer: 'yes',
-        quizId: 'quiz1',
+        _id: 'a1',
+        QUESTION_ID: 'q1',
+        CENTRO_ID: 'c1',
+        ANSWER: 'yes',
+        QUIZ_ID: 'quiz1',
       });
   });
 
@@ -94,10 +94,10 @@ describe('AnswersController (e2e)', () => {
       .expect(200)
       .expect([
         {
-          id: 'a1',
-          questionId: 'q1',
-          centroId: 'c1',
-          answer: 'yes',
+          _id: 'a1',
+          QUESTION_ID: 'q1',
+          CENTRO_ID: 'c1',
+          ANSWER: 'yes',
         },
       ]);
   });

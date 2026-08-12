@@ -42,6 +42,13 @@ export class SummariesMongoRepository
     const mapQuestion = (item: any) => ({
       answer: item.ANSWER,
       questionId: extractId(item.QUESTION),
+      answerId: item.ANSWER_ID,
+      groupKey: item.GROUP_KEY,
+      groupInstanceId: item.GROUP_INSTANCE_ID,
+      occurrenceOrder: item.OCCURRENCE_ORDER,
+      questionOrder: item.QUESTION_ORDER,
+      questionLabel: item.QUESTION_LABEL,
+      answerType: item.ANSWER_TYPE,
     });
 
     return {
@@ -49,6 +56,12 @@ export class SummariesMongoRepository
       formId: extractId(doc.FORM_ID),
       centroId: extractId(doc.CENTRO_ID),
       questions: (doc.QUESTIONS || []).map(mapQuestion),
+      schemaVersion: doc.schemaVersion,
+      formSnapshot: doc.FORM_SNAPSHOT,
+      coordinationSnapshot: doc.COORDINATION_SNAPSHOT,
+      attendance: doc.ATENDIMENTOS,
+      publicationAuthorized: doc.DIVULGACAO_AUTORIZADA,
+      reconstruction: doc.reconstruction,
       validatedByCoordAt: doc.validatedByCoordAt
         ? new Date(doc.validatedByCoordAt)
         : undefined,
@@ -77,10 +90,23 @@ export class SummariesMongoRepository
       formId: 'FORM_ID',
       centroId: 'CENTRO_ID',
       validatedByCoordAt: 'validatedByCoordAt',
+      schemaVersion: 'schemaVersion',
+      formSnapshot: 'FORM_SNAPSHOT',
+      coordinationSnapshot: 'COORDINATION_SNAPSHOT',
+      attendance: 'ATENDIMENTOS',
+      publicationAuthorized: 'DIVULGACAO_AUTORIZADA',
+      reconstruction: 'reconstruction',
     });
     const questions = data.questions?.map((q) => ({
       ANSWER: q.answer,
       QUESTION: q.questionId,
+      ANSWER_ID: q.answerId,
+      GROUP_KEY: q.groupKey,
+      GROUP_INSTANCE_ID: q.groupInstanceId,
+      OCCURRENCE_ORDER: q.occurrenceOrder,
+      QUESTION_ORDER: q.questionOrder,
+      QUESTION_LABEL: q.questionLabel,
+      ANSWER_TYPE: q.answerType,
     }));
     return omitUndefined({
       ...payload,
@@ -181,9 +207,20 @@ export class SummariesMongoRepository
       if (dateTo) match.createdAt['$lte'] = dateTo;
     }
 
+    const projection = fields
+      ? fields.split(',').reduce(
+          (acc, field) => {
+            acc[field.trim()] = 1;
+            return acc;
+          },
+          { _id: 1 } as Record<string, 1>,
+        )
+      : undefined;
+
     const pipeline: any[] = [
       { $match: match },
       { $sort: { updatedAt: -1, createdAt: -1 } },
+      ...(projection ? [{ $project: projection }] : []),
       {
         $group: {
           _id: '$CENTRO_ID',
@@ -192,17 +229,6 @@ export class SummariesMongoRepository
       },
       { $replaceRoot: { newRoot: '$doc' } },
     ];
-
-    if (fields) {
-      const projection = fields.split(',').reduce(
-        (acc, field) => {
-          acc[field.trim()] = 1;
-          return acc;
-        },
-        { _id: 1 } as Record<string, 1>,
-      );
-      pipeline.push({ $project: projection });
-    }
 
     const docs = await this.model.aggregate(pipeline).exec();
     return docs.map((doc: any) => this.toDomain(doc));

@@ -34,6 +34,20 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy" "dashboard_projections_invoke" {
+  name = "${var.project}-dashboard-projections-invoke"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = var.dashboard_projections_function_arn
+    }]
+  })
+}
+
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${var.project}-lambda-artifacts-115186094843-${var.region}"
 }
@@ -78,13 +92,24 @@ resource "aws_lambda_function" "api" {
 
   memory_size = var.lambda_memory_mb
   timeout     = var.lambda_timeout_seconds
+  publish     = true
 
   environment {
-    variables = var.lambda_env
+    variables = merge(var.lambda_env, {
+      ANSWERS_WRITE_DISABLED              = tostring(var.answers_write_disabled)
+      DASHBOARD_PROJECTIONS_FUNCTION_NAME = var.dashboard_projections_function_name
+    })
   }
 
   # Keep log retention lean; adjust if needed.
   depends_on = [aws_iam_role_policy_attachment.lambda_basic]
+}
+
+resource "aws_lambda_alias" "live" {
+  name             = "live"
+  description      = "Versao imutavel atualmente exposta em producao"
+  function_name    = aws_lambda_function.api.function_name
+  function_version = aws_lambda_function.api.version
 }
 
 # API Gateway REST
@@ -98,6 +123,8 @@ locals {
   api_routes = [
     { method = "GET", path = "/" },
     { method = "GET", path = "/clearcache" },
+    { method = "POST", path = "/cadastro-info" },
+    { method = "GET", path = "/cadastro-info/active" },
     { method = "GET", path = "/forms" },
     { method = "POST", path = "/forms" },
     { method = "GET", path = "/forms/{id}" },
@@ -114,6 +141,7 @@ locals {
     { method = "GET", path = "/centros/{id}" },
     { method = "PATCH", path = "/centros/{id}" },
     { method = "DELETE", path = "/centros/{id}" },
+    { method = "PUT", path = "/centros/{id}/localizacao" },
     { method = "GET", path = "/centros/{id}/summaries" },
     { method = "GET", path = "/pessoas" },
     { method = "POST", path = "/pessoas" },
@@ -167,7 +195,7 @@ locals {
         for r in routes : {
           (r.method == "ANY" ? "x-amazon-apigateway-any-method" : lower(r.method)) = {
             "x-amazon-apigateway-integration" = {
-              uri        = aws_lambda_function.api.invoke_arn
+              uri        = aws_lambda_alias.live.invoke_arn
               httpMethod = "POST"
               type       = "aws_proxy"
             }
@@ -177,7 +205,7 @@ locals {
       {
         options = {
           "x-amazon-apigateway-integration" = {
-            uri        = aws_lambda_function.api.invoke_arn
+            uri        = aws_lambda_alias.live.invoke_arn
             httpMethod = "POST"
             type       = "aws_proxy"
           }
@@ -219,6 +247,7 @@ resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.api.function_name
+  qualifier     = aws_lambda_alias.live.name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }

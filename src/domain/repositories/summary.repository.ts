@@ -1,4 +1,10 @@
-import { Summary } from '../entities/summary';
+import {
+  Summary,
+  SummaryAttendance,
+  SummaryFormSnapshot,
+  SummaryQuestion,
+  SummaryReconstruction,
+} from '../entities/summary';
 import { CrudRepository } from './crud.repository';
 
 export type SummaryFilter = {
@@ -35,6 +41,13 @@ export type SummaryManyFilter = {
 export interface SummaryQuestionInput {
   answer: string;
   questionId: string;
+  answerId?: string;
+  groupKey?: string;
+  groupInstanceId?: string;
+  occurrenceOrder?: number;
+  questionOrder?: number;
+  questionLabel?: string;
+  answerType?: string;
 }
 
 export interface CreateSummaryInput {
@@ -42,6 +55,12 @@ export interface CreateSummaryInput {
   centroId: string;
   questions: SummaryQuestionInput[];
   validatedByCoordAt?: Date;
+  schemaVersion?: number;
+  formSnapshot?: SummaryFormSnapshot;
+  coordinationSnapshot?: SummaryFormSnapshot;
+  attendance?: SummaryAttendance;
+  publicationAuthorized?: boolean;
+  reconstruction?: SummaryReconstruction;
 }
 
 export interface UpdateSummaryInput extends Partial<CreateSummaryInput> {}

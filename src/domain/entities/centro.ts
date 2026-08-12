@@ -8,6 +8,27 @@ export interface Funcionamento {
   domingo: string[];
 }
 
+export type CentroLocationStatus =
+  | 'CONFIRMADA'
+  | 'APROXIMADA'
+  | 'PENDENTE'
+  | 'NAO_ENCONTRADA'
+  | 'ERRO';
+
+export interface CentroLocation {
+  latitude?: number;
+  longitude?: number;
+  status: CentroLocationStatus;
+  precision?: string;
+  confidence?: number;
+  origin?: string;
+  placeId?: string;
+  formattedAddress?: string;
+  updatedAt?: Date;
+  addressHash?: string;
+  errorCode?: string;
+}
+
 export interface Centro {
   id: string;
   funcionamento: Funcionamento;
@@ -22,6 +43,10 @@ export interface Centro {
   cidade: string;
   estado: string;
   pais: string;
+  telefone?: string;
+  site?: string;
+  location?: CentroLocation;
   createdAt?: Date;
   updatedAt?: Date;
+  attendanceSummary?: import('./summary').Summary;
 }

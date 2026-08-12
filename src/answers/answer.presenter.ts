@@ -8,6 +8,11 @@ export function toAnswerResponse(answer: Answer) {
     CENTRO_ID: answer.centroId,
     ANSWER: answer.answer,
     QUIZ_ID: answer.quizId,
+    FORM_ID: answer.formId,
+    GROUP_KEY: answer.groupKey,
+    GROUP_INSTANCE_ID: answer.groupInstanceId,
+    GROUP_OCCURRENCE_ORDER: answer.groupOccurrenceOrder,
+    QUESTION_ORDER: answer.questionOrder,
     createdAt: toBrazilTimestamp(answer.createdAt),
     updatedAt: toBrazilTimestamp(answer.updatedAt),
   };

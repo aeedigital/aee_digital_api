@@ -27,6 +27,39 @@ export class RegionaisMongoRepository
   >
   implements RegionalRepository
 {
+
+  async overviewBase(): Promise<RegionalOverviewItem[]> {
+    const result = await this.model.aggregate([
+      {
+        $lookup: {
+          from: 'centros',
+          let: { regionalId: { $toString: '$_id' } },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$REGIONAL', '$$regionalId'] } } },
+            { $count: 'total' },
+          ],
+          as: 'centros',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          NOME_REGIONAL: 1,
+          PAIS: 1,
+          centrosCount: { $ifNull: [{ $first: '$centros.total' }, 0] },
+        },
+      },
+      { $sort: { NOME_REGIONAL: 1 } },
+    ]).exec();
+    return result.map((doc: any) => ({
+      id: doc._id?.toString(),
+      nomeRegional: doc.NOME_REGIONAL,
+      pais: doc.PAIS,
+      centrosCount: doc.centrosCount || 0,
+      finalizadosCount: 0,
+    }));
+  }
+
   constructor(
     @InjectModel('Regional') protected readonly model: Model<RegionalDocument>,
     @InjectModel('Centro') private readonly centroModel: Model<CentroDocument>,

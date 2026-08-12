@@ -20,6 +20,7 @@ const createModelStub = (doc: any) => {
     modelName: 'Test',
     watch: jest.fn(() => ({ on: jest.fn() })),
     findByIdAndUpdate: jest.fn(() => chain),
+    findOneAndUpdate: jest.fn(() => chain),
     findById: jest.fn(() => chain),
     find: jest.fn(() => chain),
     aggregate: jest.fn(() => ({ exec: jest.fn().mockResolvedValue([]) })),
@@ -172,7 +173,14 @@ describe('Mongo repositories mappings', () => {
   });
 
   it('maps centros repository', async () => {
-    const model = createModelStub({ _id: 'c1', NOME_CENTRO: 'C' });
+    const model = createModelStub({
+      _id: 'c1',
+      NOME_CENTRO: 'C',
+      LOCALIZACAO: {
+        PONTO: { type: 'Point', coordinates: [-46, -23] },
+        STATUS: 'CONFIRMADA',
+      },
+    });
     class TestRepo extends CentrosMongoRepository {
       mapDomain(doc: any) {
         return this.toDomain(doc);
@@ -185,13 +193,77 @@ describe('Mongo repositories mappings', () => {
       }
     }
     const repo = new TestRepo(model as any, createCacheStub());
-    expect(repo.mapDomain({ _id: 'c1', NOME_CENTRO: 'C', REGIONAL: 'r1' })).toEqual(
-      expect.objectContaining({ id: 'c1', nomeCentro: 'C', regional: 'r1' }),
+    expect(
+      repo.mapDomain({
+        _id: 'c1',
+        NOME_CENTRO: 'C',
+        REGIONAL: 'r1',
+        LOCALIZACAO: {
+          PONTO: { type: 'Point', coordinates: [-46, -23] },
+          STATUS: 'CONFIRMADA',
+        },
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        id: 'c1',
+        nomeCentro: 'C',
+        regional: 'r1',
+        location: expect.objectContaining({
+          latitude: -23,
+          longitude: -46,
+          status: 'CONFIRMADA',
+        }),
+      }),
     );
     expect(repo.mapFilter({ nomeCentro: 'C' })).toEqual({ NOME_CENTRO: 'C' });
     expect(repo.mapPersist({ nomeCentro: 'C' })).toEqual({ NOME_CENTRO: 'C' });
+    expect(
+      repo.mapPersist({
+        location: {
+          latitude: -23,
+          longitude: -46,
+          status: 'CONFIRMADA',
+          addressHash: 'hash',
+        },
+      }),
+    ).toEqual({
+      LOCALIZACAO: {
+        PONTO: { type: 'Point', coordinates: [-46, -23] },
+        STATUS: 'CONFIRMADA',
+        ENDERECO_HASH: 'hash',
+      },
+    });
     await repo.update('c1', { nomeCentro: 'C2' });
     expect(model.findByIdAndUpdate).toHaveBeenCalled();
+
+    await repo.saveLocation(
+      'c1',
+      {
+        endereco: 'Rua',
+        cep: '000',
+        bairro: 'B',
+        cidade: 'C',
+        estado: 'E',
+        pais: 'BR',
+      },
+      {
+        latitude: -23,
+        longitude: -46,
+        status: 'CONFIRMADA',
+        addressHash: 'hash',
+      },
+    );
+    expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: 'c1', ENDERECO: 'Rua' }),
+      {
+        $set: {
+          LOCALIZACAO: expect.objectContaining({
+            PONTO: { type: 'Point', coordinates: [-46, -23] },
+          }),
+        },
+      },
+      { new: true, lean: true },
+    );
   });
 
   it('maps forms repository', async () => {

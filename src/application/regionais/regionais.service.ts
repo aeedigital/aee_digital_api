@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   CreateRegionalInput,
   RegionalFilter,
@@ -18,6 +18,8 @@ import { CentroFilter } from '../../domain/repositories/centro.repository';
 import { Centro } from '../../domain/entities/centro';
 import { SummaryFilter, SummaryManyFilter } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
+import { DashboardProjectionsService } from '../../dashboard-projections/dashboard-projections.service';
+import { CadastroInfoAppService } from '../cadastro-info/cadastro-info.service';
 
 export interface CoordSummaryParams {
   dateFrom?: Date;
@@ -57,6 +59,8 @@ function parseSortBy(
 
 @Injectable()
 export class RegionaisAppService {
+  private readonly logger = new Logger(RegionaisAppService.name);
+
   constructor(
     @Inject(REGIONAL_REPOSITORY)
     private readonly repository: RegionalRepository,
@@ -65,6 +69,8 @@ export class RegionaisAppService {
     private readonly pessoasService: PessoasAppService,
     private readonly formsService: FormsAppService,
     private readonly answersService: AnswersAppService,
+    private readonly projectionsService: DashboardProjectionsService,
+    private readonly cadastroInfoService: CadastroInfoAppService,
   ) {}
 
   create(data: CreateRegionalInput): Promise<Regional> {
@@ -116,8 +122,33 @@ export class RegionaisAppService {
     return summariesArray.flat();
   }
 
-  overview(filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]> {
-    return this.repository.overview(filter);
+  async overview(filter: RegionalOverviewFilter): Promise<RegionalOverviewItem[]> {
+    if (filter.excludeRule || filter.status?.length) {
+      return this.repository.overview(filter);
+    }
+    const cycle = await this.activeCycleForRange(filter.dateFrom, filter.dateTo);
+    if (!cycle) return this.repository.overview(filter);
+    try {
+      const base = await this.repository.overviewBase();
+      if (!base.length) return base;
+      const response = await this.projectionsService.queryRegions({
+        scopeIds: base.map((item) => item.id),
+        cycleId: cycle.cycleId,
+        from: this.dateISO(filter.dateFrom!),
+        to: this.dateISO(filter.dateTo!),
+      });
+      if (response.items.length && response.items.every((item) => !item.found)) {
+        return this.repository.overview(filter);
+      }
+      const byRegional = new Map(response.items.map((item) => [item.scopeId, item]));
+      return base.map((item) => ({
+        ...item,
+        finalizadosCount: byRegional.get(item.id)?.totals.finishedCenters || 0,
+      }));
+    } catch (error) {
+      this.logger.warn(`Projection overview unavailable; using Mongo fallback: ${String(error)}`);
+      return this.repository.overview(filter);
+    }
   }
 
   async coordSummary(id: string, params: CoordSummaryParams) {
@@ -184,12 +215,19 @@ export class RegionaisAppService {
 
     const summariesPromise =
       params.includeSummaries && centroIds.length
-        ? this.summariesService.findByCentroIds({
-            centroIds,
-            dateFrom: params.dateFrom,
-            dateTo: params.dateTo,
-            sort: sort || { updatedAt: -1 },
-          })
+        ? params.limitSummaries === 1
+          ? this.summariesService.findLatestByCentroIds({
+              centroIds,
+              dateFrom: params.dateFrom,
+              dateTo: params.dateTo,
+              fields: 'FORM_ID,CENTRO_ID,validatedByCoordAt,createdAt,updatedAt',
+            })
+          : this.summariesService.findByCentroIds({
+              centroIds,
+              dateFrom: params.dateFrom,
+              dateTo: params.dateTo,
+              sort: sort || { updatedAt: -1 },
+            })
         : Promise.resolve([]);
 
     const answersPromise =
@@ -200,7 +238,12 @@ export class RegionaisAppService {
           })
         : Promise.resolve([]);
 
-    const [summaries, answers] = await Promise.all([summariesPromise, answersPromise]);
+    const projectionPromise = this.regionProjection(id, params.dateFrom, params.dateTo);
+    const [summaries, answers, projection] = await Promise.all([
+      summariesPromise,
+      answersPromise,
+      projectionPromise,
+    ]);
 
     const summariesByCentro = new Map<string, Summary[]>();
     summaries.forEach((s: any) => {
@@ -224,9 +267,66 @@ export class RegionaisAppService {
         : undefined,
     }));
 
+    let totalRespostas = projection?.totals.finishedCenters;
+    let fallbackSummaries = summaries;
+    if (totalRespostas === undefined) {
+      if (!params.includeSummaries && centroIds.length) {
+        fallbackSummaries = await this.summariesService.findLatestByCentroIds({
+          centroIds,
+          dateFrom: params.dateFrom,
+          dateTo: params.dateTo,
+          fields: 'CENTRO_ID',
+        });
+      }
+      totalRespostas = new Set(fallbackSummaries.map((summary) => summary.centroId)).size;
+    }
+
     return {
       regionalId: id,
       centros: centrosEnriched,
+      totals: {
+        totalCentros: centros.length,
+        totalRespostas,
+        updatedAt: projection?.updatedAt,
+      },
     };
+  }
+
+  private async regionProjection(id: string, from?: Date, to?: Date) {
+    const cycle = await this.activeCycleForRange(from, to);
+    if (!cycle) return null;
+    try {
+      const result = await this.projectionsService.query({
+        scopeType: 'region',
+        scopeId: id,
+        cycleId: cycle.cycleId,
+        from: this.dateISO(from!),
+        to: this.dateISO(to!),
+      });
+      return result.found ? result : null;
+    } catch (error) {
+      this.logger.warn(`Regional projection unavailable; using summaries fallback: ${String(error)}`);
+      return null;
+    }
+  }
+
+  private async activeCycleForRange(from?: Date, to?: Date) {
+    if (!from || !to) return null;
+    try {
+      const active = await this.cadastroInfoService.findActive();
+      const [day, month, year] = active.startDate.split('/');
+      const activeFrom = `${year}-${month}-${day}`;
+      const [endDay, endMonth, endYear] = active.endDate.split('/');
+      const activeTo = `${endYear}-${endMonth}-${endDay}`;
+      return active.cycleId && this.dateISO(from) === activeFrom && this.dateISO(to) === activeTo
+        ? active
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private dateISO(value: Date): string {
+    return value.toISOString().slice(0, 10);
   }
 }

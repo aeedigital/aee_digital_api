@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsString, Matches } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class SaveCadastroInfoDto {
   @IsString()
@@ -21,4 +21,11 @@ export class SaveCadastroInfoDto {
     typeof value === 'string' ? value.toLowerCase() === 'true' : value,
   )
   IS_ACTIVE: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toLowerCase() === 'true' : value,
+  )
+  START_NEW_CYCLE?: boolean;
 }

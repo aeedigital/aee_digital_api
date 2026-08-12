@@ -7,6 +7,7 @@ export function toCadastroInfoResponse(item: CadastroInfo) {
     START_DATE: item.startDate,
     END_DATE: item.endDate,
     FORM_ID: item.formId,
+    CYCLE_ID: item.cycleId,
     IS_ACTIVE: item.isActive,
     createdAt: toBrazilTimestamp(item.createdAt),
     updatedAt: toBrazilTimestamp(item.updatedAt),
