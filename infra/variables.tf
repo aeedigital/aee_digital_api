@@ -49,6 +49,28 @@ variable "summary_center_refresh_enabled" {
   default     = false
 }
 
+variable "api_live_version" {
+  description = "Currently served API Lambda version; required to keep live pinned during plans"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[1-9][0-9]*$", var.api_live_version))
+    error_message = "api_live_version must be a published numeric Lambda version."
+  }
+}
+
+variable "worker_live_version" {
+  description = "Currently served worker version; null only before its first deployment"
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition     = var.worker_live_version == null || can(regex("^[1-9][0-9]*$", var.worker_live_version))
+    error_message = "worker_live_version must be null or a published numeric Lambda version."
+  }
+}
+
 variable "lambda_nonsecret_env" {
   description = "Non-sensitive environment variables for the Lambda function"
   type        = map(string)

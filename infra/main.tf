@@ -128,6 +128,13 @@ resource "aws_lambda_alias" "live" {
   name             = "live"
   description      = "Versao imutavel atualmente exposta em producao"
   function_name    = aws_lambda_function.api.function_name
+  function_version = var.api_live_version
+}
+
+resource "aws_lambda_alias" "candidate" {
+  name             = "candidate"
+  description      = "Versao candidata da API ainda nao promovida"
+  function_name    = aws_lambda_function.api.function_name
   function_version = aws_lambda_function.api.version
 }
 

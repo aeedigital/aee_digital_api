@@ -50,8 +50,13 @@ function createHarness(t, accountId = expectedAccount) {
   writeExecutable(
     'aws',
     `printf 'aws %s\\n' "$*" >> "$DEPLOY_TEST_LOG"
+if [[ "$*" == *"get-alias"*"$DEPLOY_TEST_WORKER_FUNCTION_NAME"* && "\${DEPLOY_TEST_NO_WORKER_ALIAS:-false}" == "true" ]]; then
+  echo "An error occurred (ResourceNotFoundException) while reading worker alias" >&2
+  exit 255
+fi
 case "$*" in
   *"sts get-caller-identity"*) printf '%s\\n' "$DEPLOY_TEST_ACCOUNT_ID" ;;
+  *"get-alias"*"--name candidate"*) printf '2\\n' ;;
   *"get-alias"*) printf '1\\n' ;;
   *"get-function-configuration"*) printf 'false\\n' ;;
   *"publish-version"*) printf '1\\n' ;;
@@ -88,6 +93,8 @@ fi`,
         PATH: `${bin}${path.delimiter}${process.env.PATH}`,
         DEPLOY_TEST_LOG: logPath,
         DEPLOY_TEST_ACCOUNT_ID: accountId,
+        DEPLOY_TEST_WORKER_FUNCTION_NAME:
+          'aee-digital-summary-center-refresh-worker',
         AWS_PROFILE: 'test-profile',
         ...env,
       },
@@ -126,10 +133,48 @@ test('plan mode uses Terraform plan without resource mutations', (t) => {
     commands.some((command) => command.startsWith('terraform apply')),
     false,
   );
+  const planCommand = commands.find((command) =>
+    command.startsWith('terraform plan'),
+  );
+  assert.match(planCommand, /-var=api_live_version=1/);
+  assert.match(planCommand, /-var=worker_live_version=1/);
+  assert.match(planCommand, /-var=summary_center_refresh_enabled=false/);
   assert.equal(
     commands.some((command) => /aws .*lambda (publish-version|update-alias)/.test(command)),
     false,
   );
+});
+
+test('first worker plan allows no existing worker alias but pins the live API', (t) => {
+  const harness = createHarness(t);
+  const result = harness.run(['plan'], {
+    DEPLOY_TEST_NO_WORKER_ALIAS: 'true',
+  });
+  const planCommand = harness
+    .log()
+    .find((command) => command.startsWith('terraform plan'));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(planCommand, /-var=api_live_version=1/);
+  assert.doesNotMatch(planCommand, /-var=worker_live_version=/);
+});
+
+test('promotion plans pin both live aliases to candidate versions', (t) => {
+  const harness = createHarness(t);
+  const result = harness.run([
+    'plan',
+    '--target',
+    'promotion',
+    '--enable-refresh',
+  ]);
+  const planCommand = harness
+    .log()
+    .find((command) => command.startsWith('terraform plan'));
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(planCommand, /-var=api_live_version=2/);
+  assert.match(planCommand, /-var=worker_live_version=2/);
+  assert.match(planCommand, /-var=summary_center_refresh_enabled=true/);
 });
 
 test('apply requires explicit confirmation and the approved AWS account', (t) => {

@@ -8,6 +8,8 @@ INFRA_DIR="$ROOT_DIR/infra"
 EXPECTED_AWS_ACCOUNT_ID="115186094843"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 DEFAULT_AWS_PROFILE="bruno"
+API_FUNCTION_NAME="${DEPLOY_API_FUNCTION_NAME:-aee-digital-api}"
+WORKER_FUNCTION_NAME="${DEPLOY_WORKER_FUNCTION_NAME:-aee-digital-summary-center-refresh-worker}"
 MODE="${1:-plan}"
 TARGET="infrastructure"
 PLAN_FILE=""
@@ -160,7 +162,8 @@ build_artifact() {
 }
 
 create_plan() {
-  local plan_dir plan_timestamp refresh_value
+  local plan_dir plan_timestamp refresh_value api_version_alias worker_version_alias api_plan_version worker_plan_version
+  local -a version_args
   plan_dir="$(mktemp -d "${TMPDIR:-/tmp}/aee-digital-api-plan.XXXXXX")"
   chmod 700 "$plan_dir"
   plan_timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -168,11 +171,53 @@ create_plan() {
   refresh_value="false"
   [[ "$ENABLE_REFRESH" == "true" ]] && refresh_value="true"
 
+  api_version_alias="live"
+  worker_version_alias="live"
+  if [[ "$TARGET" == "promotion" ]]; then
+    api_version_alias="candidate"
+    worker_version_alias="candidate"
+  fi
+
+  api_plan_version="$(aws lambda get-alias \
+    --function-name "$API_FUNCTION_NAME" \
+    --name "$api_version_alias" \
+    --region "$AWS_REGION" \
+    --query FunctionVersion \
+    --output text)"
+  if [[ ! "$api_plan_version" =~ ^[1-9][0-9]*$ ]]; then
+    echo "AWS returned an invalid $api_version_alias API alias version." >&2
+    exit 1
+  fi
+
+  worker_plan_version=""
+  if worker_plan_version="$(aws lambda get-alias \
+    --function-name "$WORKER_FUNCTION_NAME" \
+    --name "$worker_version_alias" \
+    --region "$AWS_REGION" \
+    --query FunctionVersion \
+    --output text 2>&1)"; then
+    if [[ ! "$worker_plan_version" =~ ^[1-9][0-9]*$ ]]; then
+      echo "AWS returned an invalid $worker_version_alias worker alias version." >&2
+      exit 1
+    fi
+  elif [[ "$TARGET" == "promotion" || "$worker_plan_version" != *"ResourceNotFoundException"* ]]; then
+    echo "Unable to read the $worker_version_alias worker alias: $worker_plan_version" >&2
+    exit 1
+  else
+    worker_plan_version=""
+  fi
+
+  version_args=(-var="api_live_version=$api_plan_version")
+  if [[ -n "$worker_plan_version" ]]; then
+    version_args+=(-var="worker_live_version=$worker_plan_version")
+  fi
+
   cd "$INFRA_DIR"
   terraform init -input=false
   terraform plan \
     -input=false \
     -var-file="terraform.tfvars" \
+    "${version_args[@]}" \
     -var="summary_center_refresh_enabled=$refresh_value" \
     -out="$PLAN_FILE"
 
@@ -240,9 +285,9 @@ case "$MODE" in
     require_account_confirmation
     check_aws_account
     if [[ "$ROLLBACK_TARGET" == "api" ]]; then
-      function_name="${DEPLOY_API_FUNCTION_NAME:-aee-digital-api}"
+      function_name="$API_FUNCTION_NAME"
     else
-      function_name="${DEPLOY_WORKER_FUNCTION_NAME:-aee-digital-summary-center-refresh-worker}"
+      function_name="$WORKER_FUNCTION_NAME"
     fi
     aws lambda update-alias \
       --function-name "$function_name" \

@@ -98,9 +98,23 @@ resource "aws_lambda_function" "summary_center_refresh_worker" {
   ]
 }
 
+resource "aws_lambda_alias" "summary_center_refresh_worker_live" {
+  name             = "live"
+  description      = "Versao aprovada do worker de sincronizacao"
+  function_name    = aws_lambda_function.summary_center_refresh_worker.function_name
+  function_version = var.worker_live_version == null ? aws_lambda_function.summary_center_refresh_worker.version : var.worker_live_version
+}
+
+resource "aws_lambda_alias" "summary_center_refresh_worker_candidate" {
+  name             = "candidate"
+  description      = "Versao candidata do worker de sincronizacao"
+  function_name    = aws_lambda_function.summary_center_refresh_worker.function_name
+  function_version = aws_lambda_function.summary_center_refresh_worker.version
+}
+
 resource "aws_lambda_event_source_mapping" "summary_center_refresh_worker" {
   event_source_arn = aws_sqs_queue.center_summary_refresh.arn
-  function_name    = aws_lambda_function.summary_center_refresh_worker.arn
+  function_name    = aws_lambda_alias.summary_center_refresh_worker_live.arn
   enabled          = var.summary_center_refresh_enabled
   batch_size       = 10
 
