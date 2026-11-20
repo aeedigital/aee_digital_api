@@ -33,6 +33,10 @@ account confirmation and a plan produced by this script.
 EOF
 }
 
+redact_sensitive_values() {
+  sed -E '/^[[:space:]]*[-+~]?[[:space:]]*"[^"]*(PASSWORD|TOKEN|SECRET|KEY|URI|CREDENTIAL)[^"]*" =/s/ = .*/ = "<redacted>"/'
+}
+
 if [[ "$MODE" == --help || "$MODE" == -h ]]; then
   usage
   exit 0
@@ -219,11 +223,14 @@ create_plan() {
     -var-file="terraform.tfvars" \
     "${version_args[@]}" \
     -var="summary_center_refresh_enabled=$refresh_value" \
-    -out="$PLAN_FILE"
+    -out="$PLAN_FILE" |
+    redact_sensitive_values
 
+  chmod 600 "$PLAN_FILE"
   shasum -a 256 "$PLAN_FILE" | awk '{print $1}' > "$PLAN_FILE.sha256"
   shasum -a 256 "$ZIP_PATH" | awk '{print $1}' > "$PLAN_FILE.artifact.sha256"
   printf '%s\n' "$TARGET" > "$PLAN_FILE.target"
+  chmod 600 "$PLAN_FILE.sha256" "$PLAN_FILE.artifact.sha256" "$PLAN_FILE.target"
   echo "==> Reviewed-plan artifact: $PLAN_FILE"
   echo "==> Target: $TARGET; summary refresh enabled: $refresh_value"
 }
@@ -263,7 +270,7 @@ apply_reviewed_plan() {
   validate_plan "$expected_target"
   cd "$INFRA_DIR"
   terraform init -input=false
-  terraform apply -input=false "$PLAN_FILE"
+  terraform apply -input=false "$PLAN_FILE" | redact_sensitive_values
 }
 
 case "$MODE" in

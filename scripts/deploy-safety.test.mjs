@@ -65,6 +65,9 @@ esac`,
   writeExecutable(
     'terraform',
     `printf 'terraform %s\\n' "$*" >> "$DEPLOY_TEST_LOG"
+if [[ "$1" == "plan" || "$1" == "apply" ]]; then
+  printf '  - "LOCATION_UPDATE_TOKEN" = "redaction-canary-value"\\n'
+fi
 if [[ "$1" == "plan" ]]; then
   for arg in "$@"; do
     case "$arg" in
@@ -113,6 +116,8 @@ test('default deploy never applies Terraform changes', (t) => {
   const result = harness.run();
 
   assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /redaction-canary-value/);
+  assert.match(result.stdout, /LOCATION_UPDATE_TOKEN.*<redacted>/);
   assert.equal(
     harness.log().some((command) => command.startsWith('terraform apply')),
     false,
@@ -243,6 +248,8 @@ test('confirmed apply applies only the reviewed plan for the approved account', 
   ]);
 
   assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /redaction-canary-value/);
+  assert.match(result.stdout, /LOCATION_UPDATE_TOKEN.*<redacted>/);
   assert.equal(
     harness
       .log()

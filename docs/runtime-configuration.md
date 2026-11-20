@@ -36,7 +36,7 @@ After rotation, recycle or redeploy the affected Lambda execution environments s
 
 The existing AWS environment uses separate `candidate` and `live` aliases for the API and summary refresh worker. Terraform plans pin the API `live` alias to the version currently served; the worker's existing `live` version is pinned when present. Its initial alias is created with the first worker version while the SQS event source mapping is disabled.
 
-Use `scripts/deploy.sh plan --target infrastructure` to build the artifact and create a reviewed plan outside the repository. The plan mode checks the fixed target account and reads current aliases but does not apply changes. Apply an inspected plan only with its printed path and explicit account confirmation:
+Use `scripts/deploy.sh plan --target infrastructure` to build the artifact and create a reviewed plan outside the repository. The plan mode checks the fixed target account and reads current aliases but does not apply changes. Saved plans may retain prior state values, so treat them as sensitive, keep their restrictive temporary-directory permissions, and do not share or commit them. Displayed plan output redacts sensitive-looking values. Apply an inspected plan only with its printed path and explicit account confirmation:
 
 ```bash
 ./scripts/deploy.sh apply <plan-file> --confirm-account 115186094843

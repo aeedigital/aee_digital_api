@@ -82,7 +82,7 @@ No separate AWS environment is created. Set the approved AWS profile and region,
    AWS_PROFILE=<approved-profile> AWS_REGION=us-east-1 ./scripts/deploy.sh plan --target infrastructure
    ```
 
-   The script builds the Lambda artifact, reads the current API `live` version, and pins it in the plan. On the first worker deployment, no worker `live` alias exists yet; its initial alias is created from the new version while consumption remains disabled. Terraform plan files and integrity metadata are written outside the repository.
+   The script builds the Lambda artifact, reads the current API `live` version, and pins it in the plan. On the first worker deployment, no worker `live` alias exists yet; its initial alias is created from the new version while consumption remains disabled. Terraform plan files and integrity metadata are written outside the repository with restrictive permissions. Treat them as sensitive because Terraform can retain prior state values; do not share or commit them. The script redacts sensitive-looking values from displayed plan output.
 3. Inspect the complete plan. Apply only after approval, using the exact plan path printed by the script:
 
    ```bash
