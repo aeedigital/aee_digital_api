@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUILD_DIR="$ROOT_DIR/.lambda_build"
+BUILD_DIR=""
 ZIP_PATH="$ROOT_DIR/dist.zip"
 INFRA_DIR="$ROOT_DIR/infra"
 EXPECTED_AWS_ACCOUNT_ID="115186094843"
@@ -19,6 +19,14 @@ ENABLE_REFRESH="false"
 ROLLBACK_TARGET=""
 ROLLBACK_VERSION=""
 
+cleanup_build_dir() {
+  if [[ -n "$BUILD_DIR" ]]; then
+    rm -rf -- "$BUILD_DIR"
+  fi
+}
+
+trap cleanup_build_dir EXIT
+
 usage() {
   cat <<EOF
 Usage:
@@ -34,7 +42,7 @@ EOF
 }
 
 redact_sensitive_values() {
-  sed -E '/^[[:space:]]*[-+~]?[[:space:]]*"[^"]*(PASSWORD|TOKEN|SECRET|KEY|URI|CREDENTIAL)[^"]*" =/s/ = .*/ = "<redacted>"/'
+  sed -E '/^[[:space:]]*[-+~]?[[:space:]]*"[^"]*(PASSWORD|TOKEN|SECRET|KEY|URI|CREDENTIAL)[^"]*"[[:space:]]*=/s/[[:space:]]*=[[:space:]]*.*/ = "<redacted>"/'
 }
 
 if [[ "$MODE" == --help || "$MODE" == -h ]]; then
@@ -151,9 +159,9 @@ build_artifact() {
   npm ci
   npm run build
 
-  echo "==> Prepare Lambda staging directory"
-  rm -rf "$BUILD_DIR"
-  mkdir -p "$BUILD_DIR"
+  echo "==> Prepare private Lambda staging directory"
+  BUILD_DIR="$(mktemp -d "${TMPDIR:-/tmp}/aee-digital-lambda-build.XXXXXX")"
+  chmod 700 "$BUILD_DIR"
   cp "$ROOT_DIR/package.json" "$ROOT_DIR/package-lock.json" "$BUILD_DIR/"
   cp -R "$ROOT_DIR/dist" "$BUILD_DIR/dist"
 

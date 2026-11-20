@@ -66,7 +66,7 @@ esac`,
     'terraform',
     `printf 'terraform %s\\n' "$*" >> "$DEPLOY_TEST_LOG"
 if [[ "$1" == "plan" || "$1" == "apply" ]]; then
-  printf '  - "LOCATION_UPDATE_TOKEN" = "redaction-canary-value"\\n'
+  printf '  - "LOCATION_UPDATE_TOKEN"               = "redaction-canary-value"\\n'
 fi
 if [[ "$1" == "plan" ]]; then
   for arg in "$@"; do
@@ -126,10 +126,25 @@ test('default deploy never applies Terraform changes', (t) => {
 
 test('plan mode uses Terraform plan without resource mutations', (t) => {
   const harness = createHarness(t);
+  const buildDirectory = path.join(harness.root, '.lambda_build');
+  mkdirSync(buildDirectory);
+  writeFileSync(path.join(buildDirectory, 'package.json'), 'tracked-package');
+  writeFileSync(
+    path.join(buildDirectory, 'package-lock.json'),
+    'tracked-lockfile',
+  );
   const result = harness.run(['plan']);
   const commands = harness.log();
 
   assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    readFileSync(path.join(buildDirectory, 'package.json'), 'utf8'),
+    'tracked-package',
+  );
+  assert.equal(
+    readFileSync(path.join(buildDirectory, 'package-lock.json'), 'utf8'),
+    'tracked-lockfile',
+  );
   assert.equal(
     commands.some((command) => command.startsWith('terraform plan')),
     true,
