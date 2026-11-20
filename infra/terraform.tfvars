@@ -4,8 +4,8 @@ lambda_package         = "../dist.zip" # ajuste para o caminho real do zip
 lambda_handler         = "dist/lambda.handler"
 lambda_memory_mb       = 256
 lambda_timeout_seconds = 15
-lambda_env = {
+lambda_nonsecret_env = {
   NODE_ENV = "production"
 }
-api_stage = "prod"
+api_stage   = "prod"
 lambda_arch = "arm64"

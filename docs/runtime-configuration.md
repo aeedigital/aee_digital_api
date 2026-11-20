@@ -18,7 +18,7 @@ Use the AWS-managed `alias/aws/ssm` KMS key unless a separately approved key is 
 | Summary refresh worker Lambda | `MONGODB_URI`, `GEOAPIFY_API_KEY` |
 | Local geocoding maintenance script | `GEOAPIFY_API_KEY`, `LOCATION_UPDATE_TOKEN` |
 
-`NODE_ENV`, `PORT`, `AWS_REGION`, MongoDB pool/timeouts, Lambda function names, queue URLs, topic ARNs, and API stage names are configuration rather than credentials. Review any new runtime consumer before adding parameters; grant each Lambda access only to the names it needs.
+`NODE_ENV`, `PORT`, `AWS_REGION`, MongoDB pool/timeouts, Lambda function names, queue URLs, topic ARNs, and API stage names are configuration rather than credentials. Terraform accepts these through `lambda_nonsecret_env`; do not put credentials in that map. Review any new runtime consumer before adding parameters; grant each Lambda access only to the names it needs.
 
 ## Runtime loading
 

@@ -109,7 +109,7 @@ resource "aws_lambda_function" "api" {
   publish     = true
 
   environment {
-    variables = merge(var.lambda_env, {
+    variables = merge(var.lambda_nonsecret_env, {
       ANSWERS_WRITE_DISABLED              = tostring(var.answers_write_disabled)
       DASHBOARD_PROJECTIONS_FUNCTION_NAME = var.dashboard_projections_function_name
       DASHBOARD_PROJECTIONS_QUEUE_URL     = var.dashboard_projections_queue_url

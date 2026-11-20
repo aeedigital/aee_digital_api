@@ -32,8 +32,8 @@ variable "lambda_timeout_seconds" {
   default     = 15
 }
 
-variable "lambda_env" {
-  description = "Environment variables for the Lambda function"
+variable "lambda_nonsecret_env" {
+  description = "Non-sensitive environment variables for the Lambda function"
   type        = map(string)
   default     = {}
 }

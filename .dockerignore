@@ -5,7 +5,11 @@ coverage
 .git
 .gitignore
 README.md
-.env
+.env*
+*.tfvars
+*.tfstate*
+*.tfplan
+.terraform
 .vscode
 .DS_Store
 *.log
