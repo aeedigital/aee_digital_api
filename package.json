@@ -24,11 +24,13 @@
     "docker:clean": "docker-compose down -v",
     "pre-deploy": "npm run lint && npm run test:cov && npm run build && npm run test:e2e",
     "geocode:centros": "node scripts/geocode-centros.mjs",
+    "dashboard-projections:backfill": "node scripts/backfill-dashboard-projections.mjs",
     "summary-v2:backfill": "node -r ts-node/register scripts/summary-v2-backfill.ts",
     "centros:backfill-contacts": "node -r ts-node/register scripts/backfill-centro-public-contacts.ts"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.1107.0",
+    "@aws-sdk/client-sqs": "^3.1108.0",
     "@fastify/aws-lambda": "^6.4.0",
     "@fastify/cors": "^11.3.0",
     "@nestjs/cache-manager": "^3.1.3",

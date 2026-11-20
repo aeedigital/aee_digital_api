@@ -3,11 +3,13 @@ import { CentrosAppService } from './centros.service';
 import { CentroRepository } from '../../domain/repositories/centro.repository';
 import { SummaryAppService } from '../summary/summary.service';
 import { Centro } from '../../domain/entities/centro';
+import { AnswersAppService } from '../answers/answers.service';
 
 describe('CentrosAppService', () => {
   let service: CentrosAppService;
   let repository: jest.Mocked<CentroRepository>;
   let summaryService: jest.Mocked<SummaryAppService>;
+  let answersService: jest.Mocked<AnswersAppService>;
 
   const centro: Centro = {
     id: 'c1',
@@ -53,8 +55,11 @@ describe('CentrosAppService', () => {
       findLatestByCentroIds: jest.fn(),
     } as any;
     summaryService.findLatestByCentroIds.mockResolvedValue([]);
+    answersService = {
+      findAll: jest.fn(),
+    } as any;
 
-    service = new CentrosAppService(repository, summaryService);
+    service = new CentrosAppService(repository, summaryService, answersService);
   });
 
   it('creates a centro', async () => {
@@ -94,6 +99,13 @@ describe('CentrosAppService', () => {
   it('finds one centro', async () => {
     repository.findById.mockResolvedValue(centro);
     await expect(service.findOne('c1')).resolves.toEqual(centro);
+  });
+
+  it('loads answers for one existing centro', async () => {
+    repository.findById.mockResolvedValue(centro);
+    answersService.findAll.mockResolvedValue([]);
+    await expect(service.findAnswers('c1')).resolves.toEqual([]);
+    expect(answersService.findAll).toHaveBeenCalledWith({ centroId: 'c1' });
   });
 
   it('throws when centro not found', async () => {

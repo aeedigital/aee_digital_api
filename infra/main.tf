@@ -48,6 +48,20 @@ resource "aws_iam_role_policy" "dashboard_projections_invoke" {
   })
 }
 
+resource "aws_iam_role_policy" "dashboard_projections_queue" {
+  name = "${var.project}-dashboard-projections-queue"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sqs:SendMessage"
+      Resource = var.dashboard_projections_queue_arn
+    }]
+  })
+}
+
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${var.project}-lambda-artifacts-115186094843-${var.region}"
 }
@@ -98,6 +112,7 @@ resource "aws_lambda_function" "api" {
     variables = merge(var.lambda_env, {
       ANSWERS_WRITE_DISABLED              = tostring(var.answers_write_disabled)
       DASHBOARD_PROJECTIONS_FUNCTION_NAME = var.dashboard_projections_function_name
+      DASHBOARD_PROJECTIONS_QUEUE_URL     = var.dashboard_projections_queue_url
     })
   }
 
@@ -143,6 +158,9 @@ locals {
     { method = "DELETE", path = "/centros/{id}" },
     { method = "PUT", path = "/centros/{id}/localizacao" },
     { method = "GET", path = "/centros/{id}/summaries" },
+    { method = "GET", path = "/centros/{id}/answers" },
+    { method = "GET", path = "/dashboard-projections/global" },
+    { method = "GET", path = "/dashboard-projections/regions/{id}" },
     { method = "GET", path = "/pessoas" },
     { method = "POST", path = "/pessoas" },
     { method = "GET", path = "/pessoas/{id}" },

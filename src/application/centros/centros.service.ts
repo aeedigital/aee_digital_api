@@ -18,6 +18,8 @@ import { CENTRO_REPOSITORY } from '../../domain/repositories/repository.tokens';
 import { SummaryAppService } from '../summary/summary.service';
 import { SummaryFilter } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
+import { AnswersAppService } from '../answers/answers.service';
+import { Answer } from '../../domain/entities/answer';
 import {
   hasSufficientAddress,
   hashAddress,
@@ -44,6 +46,7 @@ export class CentrosAppService {
     @Inject(CENTRO_REPOSITORY)
     private readonly repository: CentroRepository,
     private readonly summariesService: SummaryAppService,
+    private readonly answersService: AnswersAppService,
   ) {}
 
   create(data: CreateCentroInput): Promise<Centro> {
@@ -120,6 +123,11 @@ export class CentrosAppService {
   findSummaries(id: string, filter: SummaryFilter): Promise<Summary[]> {
     const query: SummaryFilter = { ...filter, centroId: id };
     return this.summariesService.findAll(query);
+  }
+
+  async findAnswers(id: string): Promise<Answer[]> {
+    await this.findOne(id);
+    return this.answersService.findAll({ centroId: id });
   }
 
   private async withLatestAttendance(centros: Centro[]): Promise<Centro[]> {

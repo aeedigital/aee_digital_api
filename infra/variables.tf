@@ -67,3 +67,15 @@ variable "dashboard_projections_function_arn" {
   type        = string
   default     = "arn:aws:lambda:us-east-1:115186094843:function:dashboard-projections"
 }
+
+variable "dashboard_projections_queue_url" {
+  description = "SQS queue URL that receives center.finished.v1 events"
+  type        = string
+  default     = "https://sqs.us-east-1.amazonaws.com/115186094843/dashboard-projections-queue"
+}
+
+variable "dashboard_projections_queue_arn" {
+  description = "Exact SQS ARN allowed for dashboard projection events"
+  type        = string
+  default     = "arn:aws:sqs:us-east-1:115186094843:dashboard-projections-queue"
+}

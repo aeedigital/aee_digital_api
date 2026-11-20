@@ -5,9 +5,10 @@ import { SummaryModule } from '../summary/summary.module';
 import { CentrosAppService } from '../application/centros/centros.service';
 import { PersistenceModule } from '../infra/persistence/persistence.module';
 import { LocationUpdateTokenGuard } from './location/location-update-token.guard';
+import { AnswersModule } from '../answers/answers.module';
 
 @Module({
-  imports: [SummaryModule, PersistenceModule.forRoot()],
+  imports: [SummaryModule, AnswersModule, PersistenceModule.forRoot()],
   controllers: [CentrosController],
   providers: [CentrosAppService, CacheService, LocationUpdateTokenGuard],
   exports: [CentrosAppService],

@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   CreateSummaryInput,
   SummaryFilter,
@@ -12,19 +12,25 @@ import { Summary } from '../../domain/entities/summary';
 import { SUMMARY_REPOSITORY } from '../../domain/repositories/repository.tokens';
 import {
   ANSWER_REPOSITORY,
+  CENTRO_REPOSITORY,
   FORM_REPOSITORY,
 } from '../../domain/repositories/repository.tokens';
 import { AnswerRepository } from '../../domain/repositories/answer.repository';
 import { FormRepository } from '../../domain/repositories/form.repository';
+import { CentroRepository } from '../../domain/repositories/centro.repository';
 import {
   buildFormSnapshot,
   deriveAttendance,
   derivePublicationAuthorization,
   flattenSnapshot,
 } from './summary.snapshot';
+import { CadastroInfoAppService } from '../cadastro-info/cadastro-info.service';
+import { DashboardProjectionEventsService } from '../../dashboard-projections/dashboard-projection-events.service';
 
 @Injectable()
 export class SummaryAppService {
+  private readonly logger = new Logger(SummaryAppService.name);
+
   constructor(
     @Inject(SUMMARY_REPOSITORY)
     private readonly repository: SummaryRepository,
@@ -32,6 +38,10 @@ export class SummaryAppService {
     private readonly formsRepository: FormRepository,
     @Inject(ANSWER_REPOSITORY)
     private readonly answersRepository: AnswerRepository,
+    @Inject(CENTRO_REPOSITORY)
+    private readonly centrosRepository: CentroRepository,
+    private readonly cadastroInfo: CadastroInfoAppService,
+    private readonly projectionEvents: DashboardProjectionEventsService,
   ) {}
 
   async create(data: CreateSummaryInput): Promise<Summary> {
@@ -41,7 +51,7 @@ export class SummaryAppService {
     }
     const answers = await this.answersRepository.findAll({ centroId: data.centroId });
     const formSnapshot = buildFormSnapshot(form, answers);
-    return this.repository.create({
+    const created = await this.repository.create({
       ...data,
       schemaVersion: 2,
       formSnapshot,
@@ -49,6 +59,41 @@ export class SummaryAppService {
       attendance: deriveAttendance(formSnapshot),
       publicationAuthorized: derivePublicationAuthorization(formSnapshot),
     });
+
+    await this.publishCenterFinished(created);
+    return created;
+  }
+
+  private async publishCenterFinished(summary: Summary): Promise<void> {
+    try {
+      const [centro, activeCycle] = await Promise.all([
+        this.centrosRepository.findById(summary.centroId),
+        this.cadastroInfo.findActive(),
+      ]);
+      if (!centro) {
+        throw new Error(`Center ${summary.centroId} not found`);
+      }
+
+      const occurredAt = summary.updatedAt || summary.createdAt || new Date();
+      await this.projectionEvents.publishCenterFinished({
+        schemaVersion: 'center.finished.v1',
+        eventId: `summary-${summary.id}`,
+        centerId: summary.centroId,
+        regionId: centro.regional,
+        cycleId: activeCycle.cycleId,
+        logicalVersion: Math.max(1, occurredAt.getTime()),
+        occurredAt: occurredAt.toISOString(),
+        responded: true,
+        finished: true,
+        activityDate: occurredAt.toISOString().slice(0, 10),
+        activityCount: 1,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Summary ${summary.id} was saved, but its projection event could not be queued`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
   }
 
   findAll(filter?: SummaryFilter): Promise<Summary[]> {
