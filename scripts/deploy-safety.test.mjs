@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -92,9 +94,9 @@ fi`,
     });
 
   const log = () =>
-    readFileSync(logPath, 'utf8')
-      .split('\n')
-      .filter(Boolean);
+    existsSync(logPath)
+      ? readFileSync(logPath, 'utf8').split('\n').filter(Boolean)
+      : [];
 
   return { root, run, log };
 }
@@ -172,8 +174,22 @@ test('promotion requires confirmation before changing aliases', (t) => {
 test('confirmed apply applies only the reviewed plan for the approved account', (t) => {
   const harness = createHarness(t);
   const planPath = path.join(os.tmpdir(), 'reviewed-deploy.tfplan');
-  writeFileSync(planPath, 'fake-plan');
-  t.after(() => rmSync(planPath, { force: true }));
+  const planContents = 'fake-plan';
+  const artifactContents = 'fake-artifact';
+  writeFileSync(planPath, planContents);
+  writeFileSync(`${planPath}.sha256`, `${createHash('sha256').update(planContents).digest('hex')}\n`);
+  writeFileSync(
+    `${planPath}.artifact.sha256`,
+    `${createHash('sha256').update(artifactContents).digest('hex')}\n`,
+  );
+  writeFileSync(`${planPath}.target`, 'infrastructure\n');
+  writeFileSync(path.join(harness.root, 'dist.zip'), artifactContents);
+  t.after(() => {
+    rmSync(planPath, { force: true });
+    rmSync(`${planPath}.sha256`, { force: true });
+    rmSync(`${planPath}.artifact.sha256`, { force: true });
+    rmSync(`${planPath}.target`, { force: true });
+  });
   const result = harness.run([
     'apply',
     planPath,
@@ -183,7 +199,9 @@ test('confirmed apply applies only the reviewed plan for the approved account', 
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
-    harness.log().some((command) => command === `terraform apply ${planPath}`),
+    harness
+      .log()
+      .some((command) => command === `terraform apply -input=false ${planPath}`),
     true,
   );
 });

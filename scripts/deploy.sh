@@ -5,87 +5,249 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$ROOT_DIR/.lambda_build"
 ZIP_PATH="$ROOT_DIR/dist.zip"
 INFRA_DIR="$ROOT_DIR/infra"
-RELEASE_DIR="$ROOT_DIR/.deploy-releases"
-DEFAULT_AWS_PROFILE="bruno"
 EXPECTED_AWS_ACCOUNT_ID="115186094843"
-DEPLOY_AWS_PROFILE="${1:-${AWS_PROFILE:-$DEFAULT_AWS_PROFILE}}"
+AWS_REGION="${AWS_REGION:-us-east-1}"
+DEFAULT_AWS_PROFILE="bruno"
+MODE="${1:-plan}"
+TARGET="infrastructure"
+PLAN_FILE=""
+CONFIRM_ACCOUNT=""
+PROFILE="${AWS_PROFILE:-$DEFAULT_AWS_PROFILE}"
+ENABLE_REFRESH="false"
+ROLLBACK_TARGET=""
+ROLLBACK_VERSION=""
 
-if [[ $# -gt 1 ]]; then
-  echo "Usage: $0 [aws-profile]" >&2
-  exit 2
-fi
+usage() {
+  cat <<EOF
+Usage:
+  $0 [plan] [--target infrastructure|candidate|promotion] [--enable-refresh] [--profile NAME]
+  $0 apply PLAN_FILE --confirm-account ACCOUNT_ID [--profile NAME]
+  $0 candidate PLAN_FILE --confirm-account ACCOUNT_ID [--profile NAME]
+  $0 promote PLAN_FILE --confirm-account ACCOUNT_ID [--profile NAME]
+  $0 rollback api|worker VERSION --confirm-account ACCOUNT_ID [--profile NAME]
 
-export AWS_PROFILE="$DEPLOY_AWS_PROFILE"
-
-echo "==> Validate AWS credentials"
-if ! CURRENT_AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"; then
-  echo "Unable to authenticate with AWS profile '$DEPLOY_AWS_PROFILE'." >&2
-  echo "Check the profile credentials and the system clock before retrying." >&2
-  exit 1
-fi
-
-if [[ "$CURRENT_AWS_ACCOUNT_ID" != "$EXPECTED_AWS_ACCOUNT_ID" ]]; then
-  echo "Refusing deploy to AWS account '$CURRENT_AWS_ACCOUNT_ID'." >&2
-  echo "Expected account: '$EXPECTED_AWS_ACCOUNT_ID'." >&2
-  exit 1
-fi
-
-echo "==> AWS profile '$DEPLOY_AWS_PROFILE' authenticated in account '$CURRENT_AWS_ACCOUNT_ID'"
-
-mkdir -p "$RELEASE_DIR"
-RELEASE_ID="$(date -u +%Y%m%dT%H%M%SZ)"
-PREVIOUS_VERSION="$(aws lambda get-alias --function-name aee-digital-api --name live --region us-east-1 --query FunctionVersion --output text 2>/dev/null || true)"
-if [[ -z "$PREVIOUS_VERSION" ]]; then
-  echo "==> Publish current production code as the initial rollback version"
-  PREVIOUS_VERSION="$(aws lambda publish-version --function-name aee-digital-api --region us-east-1 --description "Pre-alias rollback $RELEASE_ID" --query Version --output text)"
-fi
-ANSWERS_WRITE_DISABLED="$(aws lambda get-function-configuration --function-name aee-digital-api \
-  --qualifier "$PREVIOUS_VERSION" --region us-east-1 --query 'Environment.Variables.ANSWERS_WRITE_DISABLED' --output text 2>/dev/null || true)"
-[[ "$ANSWERS_WRITE_DISABLED" == "true" ]] || ANSWERS_WRITE_DISABLED="false"
-echo "==> Answers maintenance flag preserved as '$ANSWERS_WRITE_DISABLED'"
-
-echo "==> Build Nest project"
-cd "$ROOT_DIR"
-npm ci
-npm run build
-
-echo "==> Prepare staging dir $BUILD_DIR"
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-
-cp "$ROOT_DIR/package.json" "$ROOT_DIR/package-lock.json" "$BUILD_DIR/"
-cp -R "$ROOT_DIR/dist" "$BUILD_DIR/dist"
-
-echo "==> Install production deps for Lambda"
-npm ci --omit=dev --prefix "$BUILD_DIR"
-
-echo "==> Zip artifact to $ZIP_PATH"
-rm -f "$ZIP_PATH"
-(cd "$BUILD_DIR" && zip -r "$ZIP_PATH" dist node_modules package.json package-lock.json > /dev/null)
-
-echo "==> Run Terraform"
-cd "$INFRA_DIR"
-terraform init -input=false
-terraform apply -input=false -auto-approve -var-file="terraform.tfvars" \
-  -var="answers_write_disabled=$ANSWERS_WRITE_DISABLED"
-
-CURRENT_VERSION="$(aws lambda get-alias --function-name aee-digital-api --name live --region us-east-1 --query FunctionVersion --output text)"
-ARTIFACT_SHA256="$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')"
-MANIFEST_PATH="$RELEASE_DIR/api-$RELEASE_ID.json"
-cat > "$MANIFEST_PATH" <<EOF
-{
-  "releaseId": "$RELEASE_ID",
-  "accountId": "$CURRENT_AWS_ACCOUNT_ID",
-  "profile": "$DEPLOY_AWS_PROFILE",
-  "function": "aee-digital-api",
-  "alias": "live",
-  "previousVersion": "$PREVIOUS_VERSION",
-  "currentVersion": "$CURRENT_VERSION",
-  "artifactSha256": "$ARTIFACT_SHA256",
-  "rollback": "aws --profile $DEPLOY_AWS_PROFILE lambda update-alias --function-name aee-digital-api --name live --function-version $PREVIOUS_VERSION --region us-east-1"
-}
+Plans are written outside the repository. Mutating modes require an approved
+account confirmation and a plan produced by this script.
 EOF
+}
 
-echo "==> Release manifest: $MANIFEST_PATH"
+if [[ "$MODE" == --help || "$MODE" == -h ]]; then
+  usage
+  exit 0
+fi
 
-echo "Done."
+case "$MODE" in
+  plan|apply|candidate|promote|rollback) shift || true ;;
+  *)
+    echo "Unknown deployment mode: $MODE" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+if [[ "$MODE" == apply || "$MODE" == candidate || "$MODE" == promote ]]; then
+  if [[ $# -lt 1 ]]; then
+    echo "$MODE requires a Terraform plan file." >&2
+    usage >&2
+    exit 2
+  fi
+  PLAN_FILE="$1"
+  shift
+elif [[ "$MODE" == rollback ]]; then
+  if [[ $# -lt 2 ]]; then
+    echo "rollback requires a target and version." >&2
+    usage >&2
+    exit 2
+  fi
+  ROLLBACK_TARGET="$1"
+  ROLLBACK_VERSION="$2"
+  shift 2
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile)
+      [[ $# -ge 2 ]] || { echo "--profile requires a value." >&2; exit 2; }
+      PROFILE="$2"
+      shift 2
+      ;;
+    --confirm-account)
+      [[ $# -ge 2 ]] || { echo "--confirm-account requires an account ID." >&2; exit 2; }
+      CONFIRM_ACCOUNT="$2"
+      shift 2
+      ;;
+    --target)
+      [[ $# -ge 2 ]] || { echo "--target requires a value." >&2; exit 2; }
+      TARGET="$2"
+      shift 2
+      ;;
+    --enable-refresh)
+      ENABLE_REFRESH="true"
+      shift
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ "$MODE" == plan ]]; then
+  case "$TARGET" in
+    infrastructure|candidate|promotion) ;;
+    *)
+      echo "Unsupported plan target: $TARGET" >&2
+      exit 2
+      ;;
+  esac
+  if [[ "$ENABLE_REFRESH" == "true" && "$TARGET" != "promotion" ]]; then
+    echo "--enable-refresh is allowed only for a promotion plan." >&2
+    exit 2
+  fi
+elif [[ "$MODE" == rollback ]]; then
+  if [[ "$ROLLBACK_TARGET" != "api" && "$ROLLBACK_TARGET" != "worker" ]]; then
+    echo "Rollback target must be 'api' or 'worker'." >&2
+    exit 2
+  fi
+  if [[ ! "$ROLLBACK_VERSION" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Rollback version must be a published numeric Lambda version." >&2
+    exit 2
+  fi
+fi
+
+export AWS_PROFILE="$PROFILE"
+
+require_account_confirmation() {
+  if [[ "$CONFIRM_ACCOUNT" != "$EXPECTED_AWS_ACCOUNT_ID" ]]; then
+    echo "Mutation requires --confirm-account $EXPECTED_AWS_ACCOUNT_ID." >&2
+    exit 2
+  fi
+}
+
+check_aws_account() {
+  echo "==> Validate AWS credentials and target account"
+  local current_account
+  if ! current_account="$(aws sts get-caller-identity --query Account --output text)"; then
+    echo "Unable to authenticate with AWS profile '$PROFILE'." >&2
+    exit 1
+  fi
+  if [[ "$current_account" != "$EXPECTED_AWS_ACCOUNT_ID" ]]; then
+    echo "Refusing operation in AWS account '$current_account'; expected '$EXPECTED_AWS_ACCOUNT_ID'." >&2
+    exit 1
+  fi
+  echo "==> AWS profile '$PROFILE' authenticated in approved account '$current_account'"
+}
+
+build_artifact() {
+  echo "==> Build Nest project"
+  cd "$ROOT_DIR"
+  npm ci
+  npm run build
+
+  echo "==> Prepare Lambda staging directory"
+  rm -rf "$BUILD_DIR"
+  mkdir -p "$BUILD_DIR"
+  cp "$ROOT_DIR/package.json" "$ROOT_DIR/package-lock.json" "$BUILD_DIR/"
+  cp -R "$ROOT_DIR/dist" "$BUILD_DIR/dist"
+
+  echo "==> Install production dependencies for Lambda"
+  npm ci --omit=dev --prefix "$BUILD_DIR"
+
+  echo "==> Package Lambda artifact"
+  rm -f "$ZIP_PATH"
+  (cd "$BUILD_DIR" && zip -r "$ZIP_PATH" dist node_modules package.json package-lock.json > /dev/null)
+}
+
+create_plan() {
+  local plan_dir plan_timestamp refresh_value
+  plan_dir="$(mktemp -d "${TMPDIR:-/tmp}/aee-digital-api-plan.XXXXXX")"
+  chmod 700 "$plan_dir"
+  plan_timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  PLAN_FILE="$plan_dir/${TARGET}-${plan_timestamp}.tfplan"
+  refresh_value="false"
+  [[ "$ENABLE_REFRESH" == "true" ]] && refresh_value="true"
+
+  cd "$INFRA_DIR"
+  terraform init -input=false
+  terraform plan \
+    -input=false \
+    -var-file="terraform.tfvars" \
+    -var="summary_center_refresh_enabled=$refresh_value" \
+    -out="$PLAN_FILE"
+
+  shasum -a 256 "$PLAN_FILE" | awk '{print $1}' > "$PLAN_FILE.sha256"
+  shasum -a 256 "$ZIP_PATH" | awk '{print $1}' > "$PLAN_FILE.artifact.sha256"
+  printf '%s\n' "$TARGET" > "$PLAN_FILE.target"
+  echo "==> Reviewed-plan artifact: $PLAN_FILE"
+  echo "==> Target: $TARGET; summary refresh enabled: $refresh_value"
+}
+
+validate_plan() {
+  local expected_target="$1"
+  local canonical_plan
+  if [[ ! -f "$PLAN_FILE" || ! -f "$PLAN_FILE.sha256" || ! -f "$PLAN_FILE.artifact.sha256" || ! -f "$PLAN_FILE.target" ]]; then
+    echo "Plan or integrity metadata is missing; create a plan with this script first." >&2
+    exit 1
+  fi
+  canonical_plan="$(cd "$(dirname "$PLAN_FILE")" && pwd -P)/$(basename "$PLAN_FILE")"
+  case "$canonical_plan" in
+    "$ROOT_DIR"/*)
+      echo "Terraform plan files must remain outside the repository." >&2
+      exit 1
+      ;;
+  esac
+  if [[ "$(cat "$PLAN_FILE.target")" != "$expected_target" ]]; then
+    echo "Plan target does not match '$expected_target' mode." >&2
+    exit 1
+  fi
+  if [[ "$(shasum -a 256 "$PLAN_FILE" | awk '{print $1}')" != "$(cat "$PLAN_FILE.sha256")" ]]; then
+    echo "Terraform plan changed after it was created." >&2
+    exit 1
+  fi
+  if [[ ! -f "$ZIP_PATH" || "$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')" != "$(cat "$PLAN_FILE.artifact.sha256")" ]]; then
+    echo "Lambda artifact changed after planning; create and review a new plan." >&2
+    exit 1
+  fi
+}
+
+apply_reviewed_plan() {
+  local expected_target="$1"
+  require_account_confirmation
+  check_aws_account
+  validate_plan "$expected_target"
+  cd "$INFRA_DIR"
+  terraform init -input=false
+  terraform apply -input=false "$PLAN_FILE"
+}
+
+case "$MODE" in
+  plan)
+    check_aws_account
+    build_artifact
+    create_plan
+    ;;
+  apply)
+    apply_reviewed_plan infrastructure
+    ;;
+  candidate)
+    apply_reviewed_plan candidate
+    ;;
+  promote)
+    apply_reviewed_plan promotion
+    ;;
+  rollback)
+    require_account_confirmation
+    check_aws_account
+    if [[ "$ROLLBACK_TARGET" == "api" ]]; then
+      function_name="${DEPLOY_API_FUNCTION_NAME:-aee-digital-api}"
+    else
+      function_name="${DEPLOY_WORKER_FUNCTION_NAME:-aee-digital-summary-center-refresh-worker}"
+    fi
+    aws lambda update-alias \
+      --function-name "$function_name" \
+      --name live \
+      --function-version "$ROLLBACK_VERSION" \
+      --region "$AWS_REGION"
+    ;;
+esac
