@@ -16,6 +16,8 @@ describe('SummaryAppService', () => {
   let centrosRepository: jest.Mocked<CentroRepository>;
   let cadastroInfo: { findActive: jest.Mock };
   let projectionEvents: { publishCenterFinished: jest.Mock };
+  let summaryRefreshPublisher: { publishSummaryRefresh: jest.Mock };
+  const originalRefreshEnabled = process.env.SUMMARY_CENTER_REFRESH_ENABLED;
 
   const summary: Summary = {
     id: 's1',
@@ -64,6 +66,9 @@ describe('SummaryAppService', () => {
     projectionEvents = {
       publishCenterFinished: jest.fn().mockResolvedValue(undefined),
     };
+    summaryRefreshPublisher = {
+      publishSummaryRefresh: jest.fn().mockResolvedValue(undefined),
+    };
     service = new SummaryAppService(
       repository,
       formsRepository,
@@ -72,6 +77,19 @@ describe('SummaryAppService', () => {
       cadastroInfo as unknown as CadastroInfoAppService,
       projectionEvents as unknown as DashboardProjectionEventsService,
     );
+    Object.defineProperty(service, 'summaryRefreshPublisher', {
+      value: summaryRefreshPublisher,
+      configurable: true,
+    });
+    delete process.env.SUMMARY_CENTER_REFRESH_ENABLED;
+  });
+
+  afterEach(() => {
+    if (originalRefreshEnabled === undefined) {
+      delete process.env.SUMMARY_CENTER_REFRESH_ENABLED;
+    } else {
+      process.env.SUMMARY_CENTER_REFRESH_ENABLED = originalRefreshEnabled;
+    }
   });
 
   it('creates a summary', async () => {
@@ -109,6 +127,68 @@ describe('SummaryAppService', () => {
     jest.spyOn((service as any).logger, 'error').mockImplementation();
 
     await expect(service.create(summary)).resolves.toEqual(summary);
+  });
+
+  it('publishes the center refresh event after persistence when enabled', async () => {
+    process.env.SUMMARY_CENTER_REFRESH_ENABLED = 'true';
+    formsRepository.findById.mockResolvedValue({
+      id: 'f1', name: 'Form', version: 1, createdBy: 'u1', pages: [],
+    });
+    answersRepository.findAll.mockResolvedValue([]);
+    repository.create.mockResolvedValue(summary);
+
+    await expect(service.create(summary)).resolves.toEqual(summary);
+
+    expect(repository.create.mock.invocationCallOrder[0]).toBeLessThan(
+      summaryRefreshPublisher.publishSummaryRefresh.mock.invocationCallOrder[0],
+    );
+    expect(summaryRefreshPublisher.publishSummaryRefresh).toHaveBeenCalledWith({
+      schemaVersion: 'center.summary-refresh.v1',
+      eventId: 'center-summary-refresh-s1',
+      summaryId: 's1',
+      centroId: 'c1',
+      sourceVersion: {
+        updatedAt: '2026-08-12T10:00:01.000Z',
+        createdAt: '2026-08-12T10:00:00.000Z',
+        summaryId: 's1',
+      },
+    });
+    expect(projectionEvents.publishCenterFinished).toHaveBeenCalled();
+  });
+
+  it('does not publish the center refresh event by default', async () => {
+    formsRepository.findById.mockResolvedValue({
+      id: 'f1', name: 'Form', version: 1, createdBy: 'u1', pages: [],
+    });
+    answersRepository.findAll.mockResolvedValue([]);
+    repository.create.mockResolvedValue(summary);
+
+    await expect(service.create(summary)).resolves.toEqual(summary);
+
+    expect(summaryRefreshPublisher.publishSummaryRefresh).not.toHaveBeenCalled();
+  });
+
+  it('logs IDs and propagates center refresh publication failures after saving', async () => {
+    process.env.SUMMARY_CENTER_REFRESH_ENABLED = 'true';
+    formsRepository.findById.mockResolvedValue({
+      id: 'f1', name: 'Form', version: 1, createdBy: 'u1', pages: [],
+    });
+    answersRepository.findAll.mockResolvedValue([]);
+    repository.create.mockResolvedValue(summary);
+    summaryRefreshPublisher.publishSummaryRefresh.mockRejectedValue(
+      new Error('SNS unavailable'),
+    );
+    const logError = jest
+      .spyOn((service as any).logger, 'error')
+      .mockImplementation();
+
+    await expect(service.create(summary)).rejects.toThrow('SNS unavailable');
+
+    expect(repository.create).toHaveBeenCalled();
+    expect(projectionEvents.publishCenterFinished).toHaveBeenCalled();
+    const [message] = logError.mock.calls[0]!;
+    expect(message).toContain('s1');
+    expect(message).toContain('c1');
   });
 
   it('finds all summaries', async () => {
