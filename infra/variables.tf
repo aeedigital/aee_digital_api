@@ -32,6 +32,23 @@ variable "lambda_timeout_seconds" {
   default     = 15
 }
 
+variable "summary_center_refresh_worker_timeout_seconds" {
+  description = "Timeout in seconds for the center summary refresh worker"
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.summary_center_refresh_worker_timeout_seconds >= 1 && var.summary_center_refresh_worker_timeout_seconds <= 900
+    error_message = "summary_center_refresh_worker_timeout_seconds must be between 1 and 900."
+  }
+}
+
+variable "summary_center_refresh_enabled" {
+  description = "Enable summary refresh publishing and SQS consumption"
+  type        = bool
+  default     = false
+}
+
 variable "lambda_nonsecret_env" {
   description = "Non-sensitive environment variables for the Lambda function"
   type        = map(string)

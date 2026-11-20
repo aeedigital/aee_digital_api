@@ -115,6 +115,7 @@ resource "aws_lambda_function" "api" {
       DASHBOARD_PROJECTIONS_QUEUE_URL     = var.dashboard_projections_queue_url
       PARAMETER_ENVIRONMENT               = var.parameter_environment
       PARAMETER_PROJECT                   = var.project
+      SUMMARY_CENTER_REFRESH_ENABLED      = tostring(var.summary_center_refresh_enabled)
       SUMMARY_CENTER_REFRESH_TOPIC_ARN    = aws_sns_topic.center_summary_refresh.arn
     })
   }
