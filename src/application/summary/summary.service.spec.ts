@@ -7,6 +7,7 @@ import { AnswerRepository } from '../../domain/repositories/answer.repository';
 import { CentroRepository } from '../../domain/repositories/centro.repository';
 import { CadastroInfoAppService } from '../cadastro-info/cadastro-info.service';
 import { DashboardProjectionEventsService } from '../../dashboard-projections/dashboard-projection-events.service';
+import { SummaryRefreshPublisher } from '../../infra/aws/summary-refresh.publisher';
 
 describe('SummaryAppService', () => {
   let service: SummaryAppService;
@@ -16,7 +17,7 @@ describe('SummaryAppService', () => {
   let centrosRepository: jest.Mocked<CentroRepository>;
   let cadastroInfo: { findActive: jest.Mock };
   let projectionEvents: { publishCenterFinished: jest.Mock };
-  let summaryRefreshPublisher: { publishSummaryRefresh: jest.Mock };
+  let summaryRefreshPublisher: { publish: jest.Mock };
   const originalRefreshEnabled = process.env.SUMMARY_CENTER_REFRESH_ENABLED;
 
   const summary: Summary = {
@@ -67,7 +68,7 @@ describe('SummaryAppService', () => {
       publishCenterFinished: jest.fn().mockResolvedValue(undefined),
     };
     summaryRefreshPublisher = {
-      publishSummaryRefresh: jest.fn().mockResolvedValue(undefined),
+      publish: jest.fn().mockResolvedValue(undefined),
     };
     service = new SummaryAppService(
       repository,
@@ -76,11 +77,8 @@ describe('SummaryAppService', () => {
       centrosRepository,
       cadastroInfo as unknown as CadastroInfoAppService,
       projectionEvents as unknown as DashboardProjectionEventsService,
+      summaryRefreshPublisher as unknown as SummaryRefreshPublisher,
     );
-    Object.defineProperty(service, 'summaryRefreshPublisher', {
-      value: summaryRefreshPublisher,
-      configurable: true,
-    });
     delete process.env.SUMMARY_CENTER_REFRESH_ENABLED;
   });
 
@@ -140,9 +138,9 @@ describe('SummaryAppService', () => {
     await expect(service.create(summary)).resolves.toEqual(summary);
 
     expect(repository.create.mock.invocationCallOrder[0]).toBeLessThan(
-      summaryRefreshPublisher.publishSummaryRefresh.mock.invocationCallOrder[0],
+      summaryRefreshPublisher.publish.mock.invocationCallOrder[0],
     );
-    expect(summaryRefreshPublisher.publishSummaryRefresh).toHaveBeenCalledWith({
+    expect(summaryRefreshPublisher.publish).toHaveBeenCalledWith({
       schemaVersion: 'center.summary-refresh.v1',
       eventId: 'center-summary-refresh-s1',
       summaryId: 's1',
@@ -165,7 +163,7 @@ describe('SummaryAppService', () => {
 
     await expect(service.create(summary)).resolves.toEqual(summary);
 
-    expect(summaryRefreshPublisher.publishSummaryRefresh).not.toHaveBeenCalled();
+    expect(summaryRefreshPublisher.publish).not.toHaveBeenCalled();
   });
 
   it('logs IDs and propagates center refresh publication failures after saving', async () => {
@@ -175,7 +173,7 @@ describe('SummaryAppService', () => {
     });
     answersRepository.findAll.mockResolvedValue([]);
     repository.create.mockResolvedValue(summary);
-    summaryRefreshPublisher.publishSummaryRefresh.mockRejectedValue(
+    summaryRefreshPublisher.publish.mockRejectedValue(
       new Error('SNS unavailable'),
     );
     const logError = jest

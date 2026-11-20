@@ -26,6 +26,8 @@ import {
 } from './summary.snapshot';
 import { CadastroInfoAppService } from '../cadastro-info/cadastro-info.service';
 import { DashboardProjectionEventsService } from '../../dashboard-projections/dashboard-projection-events.service';
+import { SummaryRefreshPublisher } from '../../infra/aws/summary-refresh.publisher';
+import { SummaryRefreshEvent } from '../../summary-updates/summary-refresh.event';
 
 @Injectable()
 export class SummaryAppService {
@@ -42,6 +44,7 @@ export class SummaryAppService {
     private readonly centrosRepository: CentroRepository,
     private readonly cadastroInfo: CadastroInfoAppService,
     private readonly projectionEvents: DashboardProjectionEventsService,
+    private readonly summaryRefreshPublisher: SummaryRefreshPublisher,
   ) {}
 
   async create(data: CreateSummaryInput): Promise<Summary> {
@@ -61,7 +64,36 @@ export class SummaryAppService {
     });
 
     await this.publishCenterFinished(created);
+    await this.publishCenterRefresh(created);
     return created;
+  }
+
+  private async publishCenterRefresh(summary: Summary): Promise<void> {
+    if (process.env.SUMMARY_CENTER_REFRESH_ENABLED !== 'true') return;
+
+    const fallbackTimestamp =
+      summary.updatedAt || summary.createdAt || new Date(0);
+    const event: SummaryRefreshEvent = {
+      schemaVersion: 'center.summary-refresh.v1',
+      eventId: `center-summary-refresh-${summary.id}`,
+      summaryId: summary.id,
+      centroId: summary.centroId,
+      sourceVersion: {
+        updatedAt: (summary.updatedAt || summary.createdAt || fallbackTimestamp).toISOString(),
+        createdAt: (summary.createdAt || summary.updatedAt || fallbackTimestamp).toISOString(),
+        summaryId: summary.id,
+      },
+    };
+
+    try {
+      await this.summaryRefreshPublisher.publish(event);
+    } catch (error) {
+      this.logger.error(
+        `Summary ${summary.id} for center ${summary.centroId} was saved, but its center refresh event could not be published`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw error;
+    }
   }
 
   private async publishCenterFinished(summary: Summary): Promise<void> {
