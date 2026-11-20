@@ -146,41 +146,9 @@ export class CentrosAppService {
       if (!summary?.publicationAuthorized || !summary.attendance) return centro;
       return {
         ...centro,
-        funcionamento: this.toLegacyFuncionamento(summary),
         attendanceSummary: summary,
       };
     });
-  }
-
-  private toLegacyFuncionamento(summary: Summary): Centro['funcionamento'] {
-    const result: Centro['funcionamento'] = {
-      segunda: [],
-      terca: [],
-      quarta: [],
-      quinta: [],
-      sexta: [],
-      sabado: [],
-      domingo: [],
-    };
-    const keyByDay: Record<string, keyof Centro['funcionamento']> = {
-      'SEGUNDA-FEIRA': 'segunda',
-      'TERCA-FEIRA': 'terca',
-      'QUARTA-FEIRA': 'quarta',
-      'QUINTA-FEIRA': 'quinta',
-      'SEXTA-FEIRA': 'sexta',
-      SABADO: 'sabado',
-      DOMINGO: 'domingo',
-    };
-    summary.attendance?.activities.forEach((activity) =>
-      activity.encounters.forEach((encounter) => {
-        const key = keyByDay[encounter.day];
-        if (key && !result[key].includes(encounter.startTime)) {
-          result[key].push(encounter.startTime);
-        }
-      }),
-    );
-    Object.values(result).forEach((times) => times.sort());
-    return result;
   }
 
   private pendingLocation(source: Partial<Centro>): CentroLocation {
