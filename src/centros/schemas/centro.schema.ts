@@ -57,6 +57,22 @@ export class CentroLocation {
 
 const CentroLocationSchema = SchemaFactory.createForClass(CentroLocation);
 
+@Schema({ _id: false })
+export class SummarySourceVersionDocument {
+  @Prop({ type: Date, required: true })
+  UPDATED_AT: Date;
+
+  @Prop({ type: Date, required: true })
+  CREATED_AT: Date;
+
+  @Prop({ type: String, required: true })
+  SUMMARY_ID: string;
+}
+
+const SummarySourceVersionSchema = SchemaFactory.createForClass(
+  SummarySourceVersionDocument,
+);
+
 @Schema()
 export class Centro {
   @Prop({ type: FuncionamentoDto })
@@ -91,6 +107,9 @@ export class Centro {
   STATUS: string;
   @Prop({ type: CentroLocationSchema })
   LOCALIZACAO?: CentroLocation;
+
+  @Prop({ type: SummarySourceVersionSchema })
+  SUMMARY_SOURCE_VERSION?: SummarySourceVersionDocument;
 }
 
 export const CentroSchema = SchemaFactory.createForClass(Centro);

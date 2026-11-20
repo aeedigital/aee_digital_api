@@ -29,6 +29,12 @@ export interface CentroLocation {
   errorCode?: string;
 }
 
+export interface SummarySourceVersion {
+  updatedAt: Date;
+  createdAt: Date;
+  summaryId: string;
+}
+
 export interface Centro {
   id: string;
   funcionamento: Funcionamento;
@@ -46,6 +52,7 @@ export interface Centro {
   telefone?: string;
   site?: string;
   location?: CentroLocation;
+  summarySourceVersion?: SummarySourceVersion;
   createdAt?: Date;
   updatedAt?: Date;
   attendanceSummary?: import('./summary').Summary;

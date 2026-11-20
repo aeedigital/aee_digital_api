@@ -202,6 +202,11 @@ describe('Mongo repositories mappings', () => {
           PONTO: { type: 'Point', coordinates: [-46, -23] },
           STATUS: 'CONFIRMADA',
         },
+        SUMMARY_SOURCE_VERSION: {
+          UPDATED_AT: new Date('2026-01-02T03:04:05.000Z'),
+          CREATED_AT: new Date('2026-01-01T03:04:05.000Z'),
+          SUMMARY_ID: 's1',
+        },
       }),
     ).toEqual(
       expect.objectContaining({
@@ -213,6 +218,11 @@ describe('Mongo repositories mappings', () => {
           longitude: -46,
           status: 'CONFIRMADA',
         }),
+        summarySourceVersion: {
+          updatedAt: new Date('2026-01-02T03:04:05.000Z'),
+          createdAt: new Date('2026-01-01T03:04:05.000Z'),
+          summaryId: 's1',
+        },
       }),
     );
     expect(repo.mapFilter({ nomeCentro: 'C' })).toEqual({ NOME_CENTRO: 'C' });

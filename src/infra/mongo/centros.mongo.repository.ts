@@ -49,10 +49,19 @@ export class CentrosMongoRepository
       TELEFONE: 'telefone',
       SITE: 'site',
       LOCALIZACAO: 'location',
+      SUMMARY_SOURCE_VERSION: 'summarySourceVersion',
       },
     );
     if (core.location) {
       core.location = this.locationToDomain((doc as any).LOCALIZACAO);
+    }
+    if (core.summarySourceVersion) {
+      const version = (doc as any).SUMMARY_SOURCE_VERSION;
+      core.summarySourceVersion = {
+        updatedAt: new Date(version.UPDATED_AT),
+        createdAt: new Date(version.CREATED_AT),
+        summaryId: version.SUMMARY_ID,
+      };
     }
     return {
       id: doc._id?.toString(),

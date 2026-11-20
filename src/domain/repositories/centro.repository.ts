@@ -1,4 +1,4 @@
-import { Centro, CentroLocation } from '../entities/centro';
+import { Centro, CentroLocation, SummarySourceVersion } from '../entities/centro';
 import { CrudRepository } from './crud.repository';
 
 export type CentroFilter = Record<string, any>;
@@ -31,6 +31,18 @@ export type CentroAddress = Pick<
 export interface SaveCentroLocationInput extends Omit<CentroLocation, 'updatedAt'> {
   addressHash: string;
 }
+
+export type CentroSummaryProfile = Partial<
+  Pick<
+    CreateCentroInput,
+    'funcionamento' | 'endereco' | 'cep' | 'bairro' | 'cidade' | 'estado' | 'pais'
+  >
+> & {
+  telefone?: string | null;
+  site?: string | null;
+};
+
+export type { SummarySourceVersion };
 
 export interface CentroRepository
   extends CrudRepository<Centro, CreateCentroInput, UpdateCentroInput, CentroFilter> {
