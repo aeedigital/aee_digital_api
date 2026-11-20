@@ -31,3 +31,19 @@ When `PARAMETER_ENVIRONMENT` is unset, local development reads values from an un
 Use the approved secret manager or secure operator input to provision `SecureString` values. Specify the target environment explicitly. Provisioning tools must not accept secret values as command-line arguments or print them. Verify parameter names, types, and IAM access without retrieving or displaying values.
 
 After rotation, recycle or redeploy the affected Lambda execution environments so the cold-start cache reloads the updated value. Do not provision production parameters or deploy changes without explicit approval.
+
+## Gated Lambda rollout
+
+The existing AWS environment uses separate `candidate` and `live` aliases for the API and summary refresh worker. Terraform plans pin the API `live` alias to the version currently served; the worker's existing `live` version is pinned when present. Its initial alias is created with the first worker version while the SQS event source mapping is disabled.
+
+Use `scripts/deploy.sh plan --target infrastructure` to build the artifact and create a reviewed plan outside the repository. The plan mode checks the fixed target account and reads current aliases but does not apply changes. Apply an inspected plan only with its printed path and explicit account confirmation:
+
+```bash
+./scripts/deploy.sh apply <plan-file> --confirm-account 115186094843
+```
+
+Candidate deployments use `plan --target candidate` followed by `candidate <plan-file> --confirm-account ...`; they do not move `live`. The default Terraform setting keeps `SUMMARY_CENTER_REFRESH_ENABLED=false`, which also leaves the worker event source mapping disabled. Complete the separate SecureString provisioning gate and run the candidate checks before promotion.
+
+Promotion uses a plan based on candidate alias versions. Promote once with refresh disabled to move approved code into `live`; enabling SNS publishing and SQS consumption requires a separate `plan --target promotion --enable-refresh` and explicit approval. The candidate smoke script queries SSM metadata with `DescribeParameters` only and never prints values; Lambda candidates load their own required parameters at startup.
+
+Monitor API and worker Lambda errors, throttles, and duration, queue depth/oldest-message age, and DLQ depth. To roll back, first apply an approved infrastructure plan with refresh disabled, then use `scripts/deploy.sh rollback api <version> --confirm-account 115186094843` and/or the corresponding `worker` command. Preserve messages in SQS/DLQ for investigation and replay. See the [feature rollout quickstart](../specs/001-summary-centro-sync/quickstart.md) for the full command sequence.

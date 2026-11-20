@@ -73,12 +73,61 @@ Expected result: Terraform configuration is formatted and validates the SNS topi
 
 ## Gated deployment in the existing AWS environment
 
-No separate AWS environment is created. Deployment proceeds in explicit stages:
+No separate AWS environment is created. Set the approved AWS profile and region, and confirm the account target is `115186094843`. The deploy script's default mode is read-only planning; it never applies changes implicitly.
 
-1. Provision/update SSM `SecureString` values through the approved bootstrap flow; verify names/types through `DescribeParameters` and IAM policy only, never call `GetParameter` or retrieve values.
-2. Read the current `live` alias versions using AWS read-only commands and pin those exact versions as required Terraform inputs. Review a Terraform plan; apply only additive resources while summary publishing and the SQS event source mapping remain disabled.
-3. Deploy candidate Lambda versions without moving the `live` aliases. Run read-only API health/configuration checks and the worker validation-only smoke check; do not insert a test summary or publish a test message to production.
-4. Require operator approval, then promote aliases and enable publishing/consumption. Observe naturally submitted summaries, Lambda errors, queue depth, and DLQ; do not log contact/address data.
-5. If checks fail, disable publishing and the event source mapping, restore prior aliases, and retain messages for investigation/replay.
+1. Provision the API and worker `SecureString` values using the approved secure input flow. This is the separate T009 gate. Check parameter names/types through `DescribeParameters`; do not retrieve or print values.
+2. Create and review the additive infrastructure plan:
 
-The deployment script must not apply Terraform automatically. `terraform apply` and promotion are explicit operator actions after review; never run them as part of the quickstart or tests.
+   ```bash
+   AWS_PROFILE=<approved-profile> AWS_REGION=us-east-1 ./scripts/deploy.sh plan --target infrastructure
+   ```
+
+   The script builds the Lambda artifact, reads the current API `live` version, and pins it in the plan. On the first worker deployment, no worker `live` alias exists yet; its initial alias is created from the new version while consumption remains disabled. Terraform plan files and integrity metadata are written outside the repository.
+3. Inspect the complete plan. Apply only after approval, using the exact plan path printed by the script:
+
+   ```bash
+   ./scripts/deploy.sh apply <plan-file> --confirm-account 115186094843
+   ```
+
+   This provisions SNS/SQS/DLQ, IAM, worker and candidate versions while keeping `live` pinned and summary publishing/consumption disabled.
+4. Build and apply a candidate plan without moving `live`:
+
+   ```bash
+   ./scripts/deploy.sh plan --target candidate
+   ./scripts/deploy.sh candidate <plan-file> --confirm-account 115186094843
+   ```
+
+   After T009 is complete, run the smoke checks. They use `DescribeParameters` for metadata and invoke only the `candidate` aliases; the worker invocation contains an invalid event and must return it as a batch failure. It does not publish to SNS/SQS or write to Mongo.
+
+   ```bash
+   PARAMETER_PROJECT=<project> PARAMETER_ENVIRONMENT=<environment> \
+     AWS_REGION=us-east-1 node scripts/smoke/summary-center-candidate.mjs
+   ```
+5. Record the current and candidate alias versions. After manual approval, promote code with synchronization still disabled:
+
+   ```bash
+   ./scripts/deploy.sh plan --target promotion
+   ./scripts/deploy.sh promote <plan-file> --confirm-account 115186094843
+   ```
+
+   Enabling synchronization is a separate, explicit promotion plan:
+
+   ```bash
+   ./scripts/deploy.sh plan --target promotion --enable-refresh
+   ./scripts/deploy.sh promote <plan-file> --confirm-account 115186094843
+   ```
+
+   This enables API SNS publishing and the worker's SQS event source mapping together. Do this only after SSM values and candidate checks are confirmed.
+6. Monitor API/worker Lambda `Errors`, `Throttles`, and `Duration`, source queue visible/in-flight messages and oldest-message age, and DLQ visible messages. Do not log contact/address data. Observe naturally submitted summaries only; do not create production test summaries or publish synthetic messages.
+7. For rollback, first create and approve an `infrastructure` plan to disable publishing and SQS consumption. Then restore the recorded previous versions:
+
+   ```bash
+   ./scripts/deploy.sh plan --target infrastructure
+   ./scripts/deploy.sh apply <plan-file> --confirm-account 115186094843
+   ./scripts/deploy.sh rollback api <previous-version> --confirm-account 115186094843
+   ./scripts/deploy.sh rollback worker <previous-version> --confirm-account 115186094843
+   ```
+
+   Keep queued messages for diagnosis/replay; never purge them automatically. The rollback command updates only the selected `live` alias and requires the approved account confirmation.
+
+Do not run raw `terraform apply`. `apply`, candidate deployment, promotion, and rollback require an explicit mode, reviewed plan or published version, and account confirmation.
