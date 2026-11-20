@@ -30,7 +30,10 @@ const createModelStub = (updatedDocument: unknown) => {
     findOneAndUpdate: jest.fn(
       (
         _filter: Record<string, unknown>,
-        _update: Record<string, unknown>,
+        _update: {
+          $set: Record<string, unknown>;
+          $unset?: Record<string, unknown>;
+        },
         _options: Record<string, unknown>,
       ) => updatedQuery,
     ),
@@ -119,6 +122,39 @@ describe('CentrosMongoRepository summary profile versioning', () => {
 
     const [, update] = model.findOneAndUpdate.mock.calls[0]!;
     expect(update.$unset).toEqual({ TELEFONE: '', SITE: '' });
+  });
+
+  it('replaces previous coordinates when a profile changes the address', async () => {
+    const model = createModelStub({
+      _id: 'c1',
+      LOCALIZACAO: {
+        STATUS: 'PENDENTE',
+        ENDERECO_HASH: 'new-address-hash',
+      },
+      SUMMARY_SOURCE_VERSION: {
+        UPDATED_AT: newerVersion.updatedAt,
+        CREATED_AT: newerVersion.createdAt,
+        SUMMARY_ID: newerVersion.summaryId,
+      },
+    });
+    const repository = new CentrosMongoRepository(
+      model as never,
+      createCacheStub(),
+    );
+
+    await repository.applySummaryProfileIfNewer('c1', newerVersion, {
+      endereco: 'Rua nova',
+      location: {
+        status: 'PENDENTE',
+        addressHash: 'new-address-hash',
+      },
+    });
+
+    const [, update] = model.findOneAndUpdate.mock.calls[0]!;
+    expect(update.$set.LOCALIZACAO).toEqual({
+      STATUS: 'PENDENTE',
+      ENDERECO_HASH: 'new-address-hash',
+    });
   });
 
   it.each([

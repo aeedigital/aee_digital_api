@@ -1,12 +1,52 @@
+import { Centro } from '../../domain/entities/centro';
 import { CentroRepository } from '../../domain/repositories/centro.repository';
 import { Summary } from '../../domain/entities/summary';
 import { SummaryRepository } from '../../domain/repositories/summary.repository';
+import { hashAddress, toCentroAddress } from '../../centros/location/location.utils';
+import { GeocodingService } from '../centros/geocoding.service';
 import { SummaryCentroRefreshService } from './summary-centro-refresh.service';
 
 const addressQuestionId = 'address-question';
 const phoneQuestionId = '61df432fdf23b90014a944b0';
 const siteQuestionId = '61df432fdf23b90014a944b3';
 const authorizationQuestionId = '659467a52f490be057cc4341';
+
+const currentAddress = toCentroAddress({
+  ENDERECO: 'Rua Antiga, 10',
+  CEP: '01234-000',
+  BAIRRO: 'Centro',
+  CIDADE: 'São Paulo',
+  ESTADO: 'SP',
+  PAIS: 'Brasil',
+});
+
+const currentCentro: Centro = {
+  id: 'c1',
+  nomeCentro: 'Centro',
+  nomeCurto: 'C',
+  cnpjCentro: '123',
+  dataFundacao: '2020-01-01',
+  regional: 'r1',
+  endereco: currentAddress.ENDERECO,
+  cep: currentAddress.CEP,
+  bairro: currentAddress.BAIRRO,
+  cidade: currentAddress.CIDADE,
+  estado: currentAddress.ESTADO,
+  pais: currentAddress.PAIS,
+  funcionamento: {
+    segunda: [],
+    terca: [],
+    quarta: [],
+    quinta: [],
+    sexta: [],
+    sabado: [],
+    domingo: [],
+  },
+  location: {
+    status: 'CONFIRMADA',
+    addressHash: hashAddress(currentAddress),
+  },
+};
 
 function createSummary(
   answers: Array<{ questionId: string; rawValue: string }>,
@@ -114,7 +154,11 @@ function createSummary(
 
 describe('SummaryCentroRefreshService', () => {
   let summaryRepository: { findLatestByCentroIds: jest.Mock };
-  let centroRepository: { applySummaryProfileIfNewer: jest.Mock };
+  let centroRepository: {
+    findById: jest.Mock;
+    applySummaryProfileIfNewer: jest.Mock;
+  };
+  let geocodingService: { updateLocation: jest.Mock };
   let service: SummaryCentroRefreshService;
 
   beforeEach(() => {
@@ -122,11 +166,16 @@ describe('SummaryCentroRefreshService', () => {
       findLatestByCentroIds: jest.fn(),
     };
     centroRepository = {
+      findById: jest.fn().mockResolvedValue(currentCentro),
       applySummaryProfileIfNewer: jest.fn().mockResolvedValue(true),
+    };
+    geocodingService = {
+      updateLocation: jest.fn().mockResolvedValue(undefined),
     };
     service = new SummaryCentroRefreshService(
       summaryRepository as unknown as SummaryRepository,
       centroRepository as unknown as CentroRepository,
+      geocodingService as unknown as GeocodingService,
     );
   });
 
@@ -149,7 +198,7 @@ describe('SummaryCentroRefreshService', () => {
         createdAt: summary.createdAt,
         summaryId: 's1',
       },
-      {
+      expect.objectContaining({
         endereco: 'Rua Nova, 123',
         telefone: '11 3333-4444',
         site: 'https://centro.example',
@@ -162,8 +211,13 @@ describe('SummaryCentroRefreshService', () => {
           sabado: [],
           domingo: [],
         },
-      },
+        location: expect.objectContaining({
+          status: 'PENDENTE',
+          addressHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        }),
+      }),
     );
+    expect(geocodingService.updateLocation).toHaveBeenCalledWith('c1');
   });
 
   it('clears invalid contacts even when disclosure is authorized', async () => {
@@ -224,5 +278,22 @@ describe('SummaryCentroRefreshService', () => {
       }),
       expect.any(Object),
     );
+  });
+
+  it('retries geocoding when a duplicate summary finds a pending location', async () => {
+    const summary = createSummary([]);
+    summaryRepository.findLatestByCentroIds.mockResolvedValue([summary]);
+    centroRepository.applySummaryProfileIfNewer.mockResolvedValue(false);
+    centroRepository.findById.mockResolvedValue({
+      ...currentCentro,
+      location: {
+        status: 'PENDENTE',
+        addressHash: hashAddress(currentAddress),
+      },
+    });
+
+    await service.refresh('c1');
+
+    expect(geocodingService.updateLocation).toHaveBeenCalledWith('c1');
   });
 });

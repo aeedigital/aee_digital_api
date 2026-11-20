@@ -38,6 +38,7 @@ export type CentroSummaryProfile = Partial<
     'funcionamento' | 'endereco' | 'cep' | 'bairro' | 'cidade' | 'estado' | 'pais'
   >
 > & {
+  location?: CentroLocation;
   telefone?: string | null;
   site?: string | null;
 };

@@ -152,6 +152,9 @@ export class CentrosMongoRepository
       CIDADE: profile.cidade,
       ESTADO: profile.estado,
       PAIS: profile.pais,
+      LOCALIZACAO: profile.location
+        ? this.locationToPersistence(profile.location)
+        : undefined,
       TELEFONE: profile.telefone === null ? undefined : profile.telefone,
       SITE: profile.site === null ? undefined : profile.site,
     });

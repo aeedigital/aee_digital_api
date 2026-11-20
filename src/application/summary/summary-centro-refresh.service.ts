@@ -1,11 +1,22 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Centro } from '../../domain/entities/centro';
 import { CentroSummaryProfile } from '../../domain/repositories/centro.repository';
-import { CENTRO_REPOSITORY, SUMMARY_REPOSITORY } from '../../domain/repositories/repository.tokens';
+import {
+  CENTRO_REPOSITORY,
+  SUMMARY_REPOSITORY,
+} from '../../domain/repositories/repository.tokens';
 import { CentroRepository } from '../../domain/repositories/centro.repository';
 import { Summary } from '../../domain/entities/summary';
 import { SummarySourceVersion } from '../../domain/entities/centro';
 import { SummaryRepository } from '../../domain/repositories/summary.repository';
 import { flattenSnapshot, derivePublicationAuthorization } from './summary.snapshot';
+import { GeocodingService } from '../centros/geocoding.service';
+import {
+  hasSufficientAddress,
+  hashAddress,
+  toCentroAddress,
+} from '../../centros/location/location.utils';
+import { CentroAddress as GeocodingAddress } from '../../centros/location/location.types';
 
 type CentroAddressProfileField = keyof Pick<
   CentroSummaryProfile,
@@ -172,6 +183,17 @@ function sourceVersion(summary: Summary): SummarySourceVersion {
   };
 }
 
+function toGeocodingAddress(centro: Centro): GeocodingAddress {
+  return toCentroAddress({
+    ENDERECO: centro.endereco,
+    CEP: centro.cep,
+    BAIRRO: centro.bairro,
+    CIDADE: centro.cidade,
+    ESTADO: centro.estado,
+    PAIS: centro.pais,
+  });
+}
+
 @Injectable()
 export class SummaryCentroRefreshService {
   constructor(
@@ -179,6 +201,7 @@ export class SummaryCentroRefreshService {
     private readonly summariesRepository: SummaryRepository,
     @Inject(CENTRO_REPOSITORY)
     private readonly centrosRepository: CentroRepository,
+    private readonly geocodingService: GeocodingService,
   ) {}
 
   async refresh(centroId: string): Promise<void> {
@@ -196,10 +219,64 @@ export class SummaryCentroRefreshService {
       throw new Error('Latest summary belongs to a different center');
     }
 
-    await this.centrosRepository.applySummaryProfileIfNewer(
+    const centro = await this.centrosRepository.findById(centroId);
+    if (!centro) {
+      throw new NotFoundException(`Center ${centroId} not found`);
+    }
+
+    const profile = deriveProfile(summary);
+    const previousAddress = toGeocodingAddress(centro);
+    const nextAddress = toCentroAddress({
+      ENDERECO: profile.endereco ?? centro.endereco,
+      CEP: profile.cep ?? centro.cep,
+      BAIRRO: profile.bairro ?? centro.bairro,
+      CIDADE: profile.cidade ?? centro.cidade,
+      ESTADO: profile.estado ?? centro.estado,
+      PAIS: profile.pais ?? centro.pais,
+    });
+    const addressChanged =
+      hashAddress(previousAddress) !== hashAddress(nextAddress);
+    if (addressChanged) {
+      profile.location = {
+        status: 'PENDENTE',
+        addressHash: hashAddress(nextAddress),
+        ...(!hasSufficientAddress(nextAddress)
+          ? { errorCode: 'ENDERECO_INSUFICIENTE' }
+          : {}),
+      };
+    }
+
+    const applied = await this.centrosRepository.applySummaryProfileIfNewer(
       centroId,
       sourceVersion(summary),
-      deriveProfile(summary),
+      profile,
     );
+    const currentCentro = applied
+      ? ({ ...centro, ...profile } as Centro)
+      : await this.centrosRepository.findById(centroId);
+    if (!currentCentro) {
+      throw new NotFoundException(`Center ${centroId} not found`);
+    }
+
+    const currentAddress = toGeocodingAddress(currentCentro);
+    const hasAddressProfile = [
+      profile.endereco,
+      profile.cep,
+      profile.bairro,
+      profile.cidade,
+      profile.estado,
+      profile.pais,
+    ].some((value) => value !== undefined);
+    const locationNeedsUpdate =
+      currentCentro.location?.status === 'PENDENTE' ||
+      currentCentro.location?.status === 'ERRO' ||
+      (Boolean(currentCentro.location) &&
+        currentCentro.location?.addressHash !== hashAddress(currentAddress));
+    if (
+      (applied && (addressChanged || (hasAddressProfile && !currentCentro.location))) ||
+      locationNeedsUpdate
+    ) {
+      await this.geocodingService.updateLocation(centroId);
+    }
   }
 }
