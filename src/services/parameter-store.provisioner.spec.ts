@@ -7,7 +7,9 @@ describe('ParameterStoreProvisioner', () => {
 
   it('writes SecureString parameters under the explicit environment prefix', async () => {
     const client = createClient();
-    const provisioner = new ParameterStoreProvisioner(client);
+    const provisioner = new ParameterStoreProvisioner(client, {
+      PARAMETER_PROJECT: 'aee',
+    });
 
     await provisioner.putSecureStrings('test', {
       MONGODB_URI: 'mongodb://test.invalid',
@@ -35,7 +37,9 @@ describe('ParameterStoreProvisioner', () => {
 
   it('rejects an empty environment before writing any parameter', async () => {
     const client = createClient();
-    const provisioner = new ParameterStoreProvisioner(client);
+    const provisioner = new ParameterStoreProvisioner(client, {
+      PARAMETER_PROJECT: 'aee',
+    });
 
     await expect(
       provisioner.putSecureStrings('', {
@@ -47,7 +51,9 @@ describe('ParameterStoreProvisioner', () => {
 
   it('rejects empty secret values without logging them or calling SSM', async () => {
     const client = createClient();
-    const provisioner = new ParameterStoreProvisioner(client);
+    const provisioner = new ParameterStoreProvisioner(client, {
+      PARAMETER_PROJECT: 'aee',
+    });
     const log = jest.spyOn(console, 'log').mockImplementation(() => undefined);
     const secret = 'test-secret-value';
 

@@ -23,6 +23,7 @@
     "docker:logs": "docker-compose logs -f app",
     "docker:clean": "docker-compose down -v",
     "pre-deploy": "npm run lint && npm run test:cov && npm run build && npm run test:e2e",
+    "ssm:bootstrap": "node -r ts-node/register scripts/ssm/bootstrap-runtime-parameters.ts",
     "geocode:centros": "node scripts/geocode-centros.mjs",
     "dashboard-projections:backfill": "node scripts/backfill-dashboard-projections.mjs",
     "summary-v2:backfill": "node -r ts-node/register scripts/summary-v2-backfill.ts",
