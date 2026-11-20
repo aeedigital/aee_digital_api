@@ -8,7 +8,7 @@ Lambda runtime secrets use AWS Systems Manager Parameter Store `SecureString` pa
 /${project}/${environment}/${NAME}
 ```
 
-Use the AWS-managed `alias/aws/ssm` KMS key unless a separately approved key is required. `PARAMETER_ENVIRONMENT` is a non-secret Lambda setting that selects the environment segment of the path. Do not pass secret values through Terraform variables, Terraform state, Lambda environment variables, command-line arguments, logs, or deployment artifacts.
+Use the AWS-managed `alias/aws/ssm` KMS key unless a separately approved key is required. `PARAMETER_PROJECT` and `PARAMETER_ENVIRONMENT` are non-secret Lambda settings that select the project and environment segments of the path. Terraform derives the project segment from `var.project` and defaults the existing environment segment to `prod`. Do not pass secret values through Terraform variables, Terraform state, Lambda environment variables, command-line arguments, logs, or deployment artifacts.
 
 ## Runtime inventory
 

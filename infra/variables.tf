@@ -38,6 +38,17 @@ variable "lambda_env" {
   default     = {}
 }
 
+variable "parameter_environment" {
+  description = "Environment path segment for runtime parameters in Systems Manager"
+  type        = string
+  default     = "prod"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_-]+$", var.parameter_environment))
+    error_message = "parameter_environment must be a single path segment."
+  }
+}
+
 variable "answers_write_disabled" {
   description = "Temporarily block Answer mutations during a maintenance window"
   type        = bool

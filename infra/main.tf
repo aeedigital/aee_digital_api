@@ -113,6 +113,8 @@ resource "aws_lambda_function" "api" {
       ANSWERS_WRITE_DISABLED              = tostring(var.answers_write_disabled)
       DASHBOARD_PROJECTIONS_FUNCTION_NAME = var.dashboard_projections_function_name
       DASHBOARD_PROJECTIONS_QUEUE_URL     = var.dashboard_projections_queue_url
+      PARAMETER_ENVIRONMENT               = var.parameter_environment
+      PARAMETER_PROJECT                   = var.project
     })
   }
 
