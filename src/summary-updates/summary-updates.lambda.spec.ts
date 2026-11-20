@@ -1,5 +1,5 @@
 import { SQSEvent } from 'aws-lambda';
-import { processSummaryRefreshBatch } from './summary-updates.lambda';
+import { processSummaryRefreshBatch } from '../summary-updates.lambda';
 
 const validEvent = {
   schemaVersion: 'center.summary-refresh.v1',
