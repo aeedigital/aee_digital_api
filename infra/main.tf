@@ -48,6 +48,20 @@ resource "aws_iam_role_policy" "dashboard_projections_invoke" {
   })
 }
 
+resource "aws_iam_role_policy" "dashboard_projections_queue" {
+  name = "${var.project}-dashboard-projections-queue"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sqs:SendMessage"
+      Resource = var.dashboard_projections_queue_arn
+    }]
+  })
+}
+
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${var.project}-lambda-artifacts-115186094843-${var.region}"
 }
@@ -95,9 +109,14 @@ resource "aws_lambda_function" "api" {
   publish     = true
 
   environment {
-    variables = merge(var.lambda_env, {
+    variables = merge(var.lambda_nonsecret_env, {
       ANSWERS_WRITE_DISABLED              = tostring(var.answers_write_disabled)
       DASHBOARD_PROJECTIONS_FUNCTION_NAME = var.dashboard_projections_function_name
+      DASHBOARD_PROJECTIONS_QUEUE_URL     = var.dashboard_projections_queue_url
+      PARAMETER_ENVIRONMENT               = var.parameter_environment
+      PARAMETER_PROJECT                   = var.project
+      SUMMARY_CENTER_REFRESH_ENABLED      = tostring(var.summary_center_refresh_enabled)
+      SUMMARY_CENTER_REFRESH_TOPIC_ARN    = aws_sns_topic.center_summary_refresh.arn
     })
   }
 
@@ -108,6 +127,13 @@ resource "aws_lambda_function" "api" {
 resource "aws_lambda_alias" "live" {
   name             = "live"
   description      = "Versao imutavel atualmente exposta em producao"
+  function_name    = aws_lambda_function.api.function_name
+  function_version = var.api_live_version
+}
+
+resource "aws_lambda_alias" "candidate" {
+  name             = "candidate"
+  description      = "Versao candidata da API ainda nao promovida"
   function_name    = aws_lambda_function.api.function_name
   function_version = aws_lambda_function.api.version
 }
@@ -143,6 +169,9 @@ locals {
     { method = "DELETE", path = "/centros/{id}" },
     { method = "PUT", path = "/centros/{id}/localizacao" },
     { method = "GET", path = "/centros/{id}/summaries" },
+    { method = "GET", path = "/centros/{id}/answers" },
+    { method = "GET", path = "/dashboard-projections/global" },
+    { method = "GET", path = "/dashboard-projections/regions/{id}" },
     { method = "GET", path = "/pessoas" },
     { method = "POST", path = "/pessoas" },
     { method = "GET", path = "/pessoas/{id}" },

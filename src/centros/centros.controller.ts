@@ -26,6 +26,7 @@ import { ApiOperation } from '@nestjs/swagger';
 import { mapProps } from '../base/mappers/object.mapper';
 import { toSummaryResponse } from '../summary/summary.presenter';
 import { toCentroResponse } from './centro.presenter';
+import { toAnswerResponse } from '../answers/answer.presenter';
 import { LocationUpdateTokenGuard } from './location/location-update-token.guard';
 import { parseDateInput } from '../base/date-parse.helper';
 
@@ -172,6 +173,12 @@ export class CentrosController {
       this.toSummaryFilter(filterDto),
     );
     return items.map(toSummaryResponse);
+  }
+
+  @Get(':id/answers')
+  async findAnswers(@Param('id') id: string): Promise<any[]> {
+    const items = await this.service.findAnswers(id);
+    return items.map(toAnswerResponse);
   }
 
   @Patch(':id')

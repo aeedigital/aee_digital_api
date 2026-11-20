@@ -18,6 +18,8 @@ import { CENTRO_REPOSITORY } from '../../domain/repositories/repository.tokens';
 import { SummaryAppService } from '../summary/summary.service';
 import { SummaryFilter } from '../../domain/repositories/summary.repository';
 import { Summary } from '../../domain/entities/summary';
+import { AnswersAppService } from '../answers/answers.service';
+import { Answer } from '../../domain/entities/answer';
 import {
   hasSufficientAddress,
   hashAddress,
@@ -44,6 +46,7 @@ export class CentrosAppService {
     @Inject(CENTRO_REPOSITORY)
     private readonly repository: CentroRepository,
     private readonly summariesService: SummaryAppService,
+    private readonly answersService: AnswersAppService,
   ) {}
 
   create(data: CreateCentroInput): Promise<Centro> {
@@ -122,6 +125,11 @@ export class CentrosAppService {
     return this.summariesService.findAll(query);
   }
 
+  async findAnswers(id: string): Promise<Answer[]> {
+    await this.findOne(id);
+    return this.answersService.findAll({ centroId: id });
+  }
+
   private async withLatestAttendance(centros: Centro[]): Promise<Centro[]> {
     const ids = centros.map((centro) => centro.id).filter(Boolean);
     if (!ids.length) return centros;
@@ -138,41 +146,9 @@ export class CentrosAppService {
       if (!summary?.publicationAuthorized || !summary.attendance) return centro;
       return {
         ...centro,
-        funcionamento: this.toLegacyFuncionamento(summary),
         attendanceSummary: summary,
       };
     });
-  }
-
-  private toLegacyFuncionamento(summary: Summary): Centro['funcionamento'] {
-    const result: Centro['funcionamento'] = {
-      segunda: [],
-      terca: [],
-      quarta: [],
-      quinta: [],
-      sexta: [],
-      sabado: [],
-      domingo: [],
-    };
-    const keyByDay: Record<string, keyof Centro['funcionamento']> = {
-      'SEGUNDA-FEIRA': 'segunda',
-      'TERCA-FEIRA': 'terca',
-      'QUARTA-FEIRA': 'quarta',
-      'QUINTA-FEIRA': 'quinta',
-      'SEXTA-FEIRA': 'sexta',
-      SABADO: 'sabado',
-      DOMINGO: 'domingo',
-    };
-    summary.attendance?.activities.forEach((activity) =>
-      activity.encounters.forEach((encounter) => {
-        const key = keyByDay[encounter.day];
-        if (key && !result[key].includes(encounter.startTime)) {
-          result[key].push(encounter.startTime);
-        }
-      }),
-    );
-    Object.values(result).forEach((times) => times.sort());
-    return result;
   }
 
   private pendingLocation(source: Partial<Centro>): CentroLocation {

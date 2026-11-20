@@ -5,9 +5,31 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/HttpExceptionFilter';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { parse as parseUrlEncoded } from 'fast-querystring';
+import { SSMClient } from '@aws-sdk/client-ssm';
+import { ParameterStoreService } from './services/parameter-store.service';
+import { isMemoryDriver } from './infra/persistence/persistence.config';
+
+async function loadRuntimeParameters(): Promise<void> {
+  if (!process.env.PARAMETER_ENVIRONMENT?.trim() || isMemoryDriver()) return;
+
+  const client = new SSMClient({
+    region: process.env.AWS_REGION,
+  });
+
+  try {
+    const parameters = await new ParameterStoreService(client).load([
+      'MONGODB_URI',
+      'LOCATION_UPDATE_TOKEN',
+    ]);
+    Object.assign(process.env, parameters);
+  } finally {
+    client.destroy();
+  }
+}
 
 // Shared bootstrap used both for HTTP server and Lambda handler
 export async function createApp(): Promise<NestFastifyApplication> {
+  await loadRuntimeParameters();
   const adapter = new FastifyAdapter();
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {

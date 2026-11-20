@@ -15,6 +15,7 @@ describe('CentrosController', () => {
     updateOrCreate: jest.fn(),
     delete: jest.fn(),
     findSummaries: jest.fn(),
+    findAnswers: jest.fn(),
     saveLocation: jest.fn(),
   };
   const strictPipe = new ValidationPipe({
@@ -70,6 +71,13 @@ describe('CentrosController', () => {
     service.findAll.mockResolvedValue([]);
     await controller.findAll({ include: 'atendimento' });
     expect(service.findAll).toHaveBeenCalledWith({}, { includeAttendance: true });
+  });
+
+  it('returns answers for a single centro', async () => {
+    service.findAnswers.mockResolvedValue([{ id: 'a1', centroId: 'c1' }]);
+    await expect(controller.findAnswers('c1')).resolves.toEqual([
+      expect.objectContaining({ _id: 'a1', CENTRO_ID: 'c1' }),
+    ]);
   });
 
   it('rejects client-controlled location fields', async () => {

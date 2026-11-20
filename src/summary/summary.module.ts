@@ -8,9 +8,17 @@ import { CacheService } from '../services/cache.service';
 import { SUMMARY_REPOSITORY } from '../domain/repositories/repository.tokens';
 import { SummaryAppService } from '../application/summary/summary.service';
 import { PersistenceModule } from '../infra/persistence/persistence.module';
+import { CadastroInfoModule } from '../cadastro-info/cadastro-info.module';
+import { DashboardProjectionsModule } from '../dashboard-projections/dashboard-projections.module';
+import { SummaryRefreshModule } from '../infra/aws/summary-refresh.module';
 
 @Module({
-  imports: [PersistenceModule.forRoot()],
+  imports: [
+    PersistenceModule.forRoot(),
+    CadastroInfoModule,
+    DashboardProjectionsModule,
+    SummaryRefreshModule,
+  ],
   controllers: [SummariesController],
   providers: [
     SummaryAppService,

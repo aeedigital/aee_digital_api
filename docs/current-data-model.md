@@ -12,6 +12,10 @@ erDiagram
         ObjectId _id
         string NOME_REGIONAL
         string PAIS
+        string TELEFONE
+        string SITE
+        string STATUS
+        json LOCALIZACAO
         string COORDENADOR_ID
     }
 
@@ -36,6 +40,7 @@ erDiagram
         string START_DATE
         string END_DATE
         ObjectId FORM_ID
+        string CYCLE_ID
         boolean IS_ACTIVE
         date createdAt
         date updatedAt
@@ -76,6 +81,12 @@ erDiagram
         ObjectId FORM_ID
         json CENTRO_ID
         json QUESTIONS
+        number schemaVersion
+        json formSnapshot
+        json coordinationSnapshot
+        json attendance
+        boolean publicationAuthorized
+        json reconstruction
         date validatedByCoordAt
         date createdAt
         date updatedAt
@@ -129,6 +140,34 @@ Model registrado como `Regional`, definido em `src/regionais/schemas/regionais.s
 | `_id` | `ObjectId` | Gerado automaticamente |
 | `NOME_REGIONAL` | `String` | Opcional no schema |
 | `PAIS` | `String` | Opcional no schema |
+| `TELEFONE` | `String` | Opcional no schema |
+| `SITE` | `String` | Opcional no schema |
+| `STATUS` | `String` | Opcional no schema |
+| `LOCALIZACAO` | `Mixed` | Subdocumento detalhado abaixo |
+
+`LOCALIZACAO` é persistida em um subdocumento com índice geoespacial parcial em
+`LOCALIZACAO.PONTO`. A estrutura efetiva é:
+
+```text
+LOCALIZACAO {
+  PONTO {
+    type: "Point"
+    coordinates: [longitude, latitude]
+  }
+  STATUS: "CONFIRMADA" | "APROXIMADA" | "PENDENTE" | "NAO_ENCONTRADA" | "ERRO"
+  PRECISAO: string
+  CONFIANCA: number
+  ORIGEM: string
+  PLACE_ID: string
+  ENDERECO_FORMATADO: string
+  ATUALIZADA_EM: Date
+  ENDERECO_HASH: string (select false)
+  ERRO_CODIGO: string (select false)
+}
+```
+
+`ENDERECO_HASH` e `ERRO_CODIGO` não são carregados por consultas comuns. O CRUD
+HTTP não deve usá-los como campos públicos.
 | `COORDENADOR_ID` | `String` | Sem `ref` Mongoose |
 
 ### `centros`
@@ -178,6 +217,7 @@ explicitamente no decorator `@Schema`.
 | `START_DATE` | `String` | Obrigatório |
 | `END_DATE` | `String` | Obrigatório |
 | `FORM_ID` | `ObjectId` | Obrigatório; `ref: Forms` |
+| `CYCLE_ID` | `String` | Opcional; usado para identificar o ciclo ativo |
 | `IS_ACTIVE` | `Boolean` | Obrigatório; padrão `true` |
 | `createdAt` | `Date` | Gerado por `timestamps: true` |
 | `updatedAt` | `Date` | Gerado por `timestamps: true` |
@@ -257,6 +297,12 @@ Model registrado como `Summaries`, definido em `src/summary/schemas/summaries.sc
 | `FORM_ID` | `ObjectId` | `ref: Forms`; opcional no schema |
 | `CENTRO_ID` | `Mixed` | Sem `ref`; usa `CreateCentroDto` no decorator |
 | `QUESTIONS` | `SummaryQuestion[]` | Subdocumentos detalhados abaixo |
+| `schemaVersion` | `Number` | Versão do formato do snapshot |
+| `formSnapshot` | `Mixed` | Snapshot atual do formulário |
+| `coordinationSnapshot` | `Mixed` | Snapshot usado pela visão do coordenador |
+| `attendance` | `Mixed` | Atividades e públicos derivados |
+| `publicationAuthorized` | `Boolean` | Autoriza publicação de dados derivados |
+| `reconstruction` | `Mixed` | Metadados de reconstrução aproximada |
 | `validatedByCoordAt` | `Date` | Opcional |
 | `createdAt` | `Date` | Gerado por `timestamps: true` |
 | `updatedAt` | `Date` | Gerado por `timestamps: true` |
