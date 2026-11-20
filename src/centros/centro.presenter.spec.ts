@@ -37,4 +37,62 @@ describe('toCentroResponse', () => {
       STATUS: 'PENDENTE',
     });
   });
+
+  it('exposes persisted functioning and attendance without leaking the source version', () => {
+    const persistedFuncionamento = {
+      segunda: ['08:00'],
+      terca: [],
+      quarta: [],
+      quinta: [],
+      sexta: [],
+      sabado: [],
+      domingo: [],
+    };
+    const response = toCentroResponse({
+      ...centro,
+      funcionamento: persistedFuncionamento,
+      summarySourceVersion: {
+        updatedAt: new Date('2026-03-02T10:00:00.000Z'),
+        createdAt: new Date('2026-03-01T10:00:00.000Z'),
+        summaryId: 's1',
+      },
+      attendanceSummary: {
+        id: 's1',
+        formId: 'f1',
+        centroId: 'c1',
+        questions: [],
+        attendance: {
+          activities: [
+            {
+              code: 'ASSISTENCIA_ESPIRITUAL',
+              name: 'Assistência Espiritual',
+              encounters: [
+                {
+                  day: 'SEGUNDA-FEIRA',
+                  startTime: '19:30',
+                  groupInstanceId: 'g1',
+                },
+              ],
+            },
+          ],
+          audiences: [],
+        },
+      },
+    });
+
+    expect(response.FUNCIONAMENTO).toEqual(persistedFuncionamento);
+    expect(response.ATENDIMENTOS).toEqual(
+      expect.objectContaining({
+        SUMMARY_ID: 's1',
+        ATIVIDADES: [
+          expect.objectContaining({
+            ENCONTROS: [
+              expect.objectContaining({ HORARIO_INICIO: '19:30' }),
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(response).not.toHaveProperty('summarySourceVersion');
+  });
 });

@@ -44,6 +44,7 @@ describe('CentrosAppService', () => {
       updateOrCreate: jest.fn(),
       delete: jest.fn(),
       saveLocation: jest.fn(),
+      applySummaryProfileIfNewer: jest.fn(),
     };
     summaryService = {
       create: jest.fn(),
@@ -99,6 +100,87 @@ describe('CentrosAppService', () => {
   it('finds one centro', async () => {
     repository.findById.mockResolvedValue(centro);
     await expect(service.findOne('c1')).resolves.toEqual(centro);
+  });
+
+  it('keeps persisted functioning while retaining the latest attendance summary', async () => {
+    const persistedFuncionamento = {
+      ...centro.funcionamento,
+      segunda: ['08:00'],
+    };
+    const attendanceSummary = {
+      id: 's1',
+      formId: 'f1',
+      centroId: 'c1',
+      questions: [],
+      publicationAuthorized: true,
+      attendance: {
+        activities: [
+          {
+            code: 'ASSISTENCIA_ESPIRITUAL',
+            name: 'Assistência Espiritual',
+            encounters: [
+              {
+                day: 'SEGUNDA-FEIRA',
+                startTime: '19:30',
+                groupInstanceId: 'g1',
+              },
+            ],
+          },
+        ],
+        audiences: [],
+      },
+    };
+    repository.findById.mockResolvedValue({
+      ...centro,
+      funcionamento: persistedFuncionamento,
+    });
+    summaryService.findLatestByCentroIds.mockResolvedValue([
+      attendanceSummary as any,
+    ]);
+
+    await expect(service.findOne('c1')).resolves.toEqual(
+      expect.objectContaining({
+        funcionamento: persistedFuncionamento,
+        attendanceSummary,
+      }),
+    );
+  });
+
+  it('does not fill missing persisted functioning from an older attendance summary', async () => {
+    const centerWithoutSchedule = {
+      ...centro,
+      funcionamento: undefined,
+    } as unknown as Centro;
+    repository.findById.mockResolvedValue(centerWithoutSchedule);
+    summaryService.findLatestByCentroIds.mockResolvedValue([
+      {
+        id: 's1',
+        formId: 'f1',
+        centroId: 'c1',
+        questions: [],
+        publicationAuthorized: true,
+        attendance: {
+          activities: [
+            {
+              code: 'ASSISTENCIA_ESPIRITUAL',
+              name: 'Assistência Espiritual',
+              encounters: [
+                {
+                  day: 'SEGUNDA-FEIRA',
+                  startTime: '19:30',
+                  groupInstanceId: 'g1',
+                },
+              ],
+            },
+          ],
+          audiences: [],
+        },
+      } as any,
+    ]);
+
+    await expect(service.findOne('c1')).resolves.toEqual(
+      expect.objectContaining({ funcionamento: undefined }),
+    );
   });
 
   it('loads answers for one existing centro', async () => {
