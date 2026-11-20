@@ -1,17 +1,7 @@
 import { ConflictException } from '@nestjs/common';
-import {
-  CentroSummaryProfile,
-} from '../../domain/repositories/centro.repository';
+import { CentroSummaryProfile } from '../../domain/repositories/centro.repository';
 import { SummarySourceVersion } from '../../domain/entities/centro';
 import { CentrosMemoryRepository } from './centros.memory.repository';
-
-type SummaryProfileApplier = {
-  applySummaryProfileIfNewer(
-    id: string,
-    version: SummarySourceVersion,
-    profile: CentroSummaryProfile,
-  ): Promise<boolean>;
-};
 
 describe('CentrosMemoryRepository location', () => {
   const input = {
@@ -62,9 +52,6 @@ describe('CentrosMemoryRepository location', () => {
   it('applies only summary versions newer than the stored version', async () => {
     const repository = new CentrosMemoryRepository();
     const centro = await repository.create(input);
-    const applyProfile = (
-      repository as unknown as SummaryProfileApplier
-    ).applySummaryProfileIfNewer.bind(repository);
     const newest: SummarySourceVersion = {
       updatedAt: new Date('2026-03-02T10:00:00.000Z'),
       createdAt: new Date('2026-03-01T10:00:00.000Z'),
@@ -75,12 +62,16 @@ describe('CentrosMemoryRepository location', () => {
       telefone: '111',
     };
 
-    await expect(applyProfile(centro.id, newest, profile)).resolves.toBe(true);
-    await expect(applyProfile(centro.id, newest, { telefone: '222' })).resolves.toBe(
-      false,
-    );
     await expect(
-      applyProfile(
+      repository.applySummaryProfileIfNewer(centro.id, newest, profile),
+    ).resolves.toBe(true);
+    await expect(
+      repository.applySummaryProfileIfNewer(centro.id, newest, {
+        telefone: '222',
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      repository.applySummaryProfileIfNewer(
         centro.id,
         {
           ...newest,
@@ -95,6 +86,63 @@ describe('CentrosMemoryRepository location', () => {
         telefone: '111',
         summarySourceVersion: newest,
       }),
+    );
+  });
+
+  it('uses creation time and summary ID as deterministic version tie-breakers', async () => {
+    const repository = new CentrosMemoryRepository();
+    const centro = await repository.create(input);
+    const first: SummarySourceVersion = {
+      updatedAt: new Date('2026-03-02T10:00:00.000Z'),
+      createdAt: new Date('2026-03-01T10:00:00.000Z'),
+      summaryId: 's1',
+    };
+
+    await expect(
+      repository.applySummaryProfileIfNewer(centro.id, first, {
+        telefone: '111',
+      }),
+    ).resolves.toBe(true);
+    await expect(
+      repository.applySummaryProfileIfNewer(
+        centro.id,
+        { ...first, createdAt: new Date('2026-03-02T10:00:00.000Z') },
+        { telefone: '222' },
+      ),
+    ).resolves.toBe(true);
+    await expect(
+      repository.applySummaryProfileIfNewer(
+        centro.id,
+        {
+          ...first,
+          createdAt: new Date('2026-03-02T10:00:00.000Z'),
+          summaryId: 's2',
+        },
+        { telefone: '333' },
+      ),
+    ).resolves.toBe(true);
+    await expect(
+      repository.findById(centro.id),
+    ).resolves.toEqual(expect.objectContaining({ telefone: '333' }));
+  });
+
+  it('removes a contact explicitly cleared by an authorized profile update', async () => {
+    const repository = new CentrosMemoryRepository();
+    const centro = await repository.create({ ...input, telefone: '111' });
+
+    await expect(
+      repository.applySummaryProfileIfNewer(
+        centro.id,
+        {
+          updatedAt: new Date('2026-03-02T10:00:00.000Z'),
+          createdAt: new Date('2026-03-01T10:00:00.000Z'),
+          summaryId: 's2',
+        },
+        { telefone: null },
+      ),
+    ).resolves.toBe(true);
+    await expect(repository.findById(centro.id)).resolves.toEqual(
+      expect.not.objectContaining({ telefone: expect.anything() }),
     );
   });
 });

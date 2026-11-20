@@ -9,10 +9,11 @@ import {
   CentroAddress,
   CentroFilter,
   CentroRepository,
+  CentroSummaryProfile,
   CreateCentroInput,
   UpdateCentroInput,
 } from '../../domain/repositories/centro.repository';
-import { Centro, CentroLocation } from '../../domain/entities/centro';
+import { Centro, CentroLocation, SummarySourceVersion } from '../../domain/entities/centro';
 import { CentroDocument } from '../../centros/schemas/centro.schema';
 import { CacheService } from '../../services/cache.service';
 import { BaseMongoRepository } from './base.mongo.repository';
@@ -135,6 +136,76 @@ export class CentrosMongoRepository
     }
     await this.cacheService.invalidateModelCache(this.model.modelName);
     return this.toDomain(updated);
+  }
+
+  async applySummaryProfileIfNewer(
+    id: string,
+    sourceVersion: SummarySourceVersion,
+    profile: CentroSummaryProfile,
+  ): Promise<boolean> {
+    const { updatedAt, createdAt, summaryId } = sourceVersion;
+    const profilePersistence = omitUndefined({
+      FUNCIONAMENTO: profile.funcionamento,
+      ENDERECO: profile.endereco,
+      CEP: profile.cep,
+      BAIRRO: profile.bairro,
+      CIDADE: profile.cidade,
+      ESTADO: profile.estado,
+      PAIS: profile.pais,
+      TELEFONE: profile.telefone === null ? undefined : profile.telefone,
+      SITE: profile.site === null ? undefined : profile.site,
+    });
+    const unset = omitUndefined({
+      ...(profile.telefone === null ? { TELEFONE: '' } : {}),
+      ...(profile.site === null ? { SITE: '' } : {}),
+    });
+    const update: Record<string, unknown> = {
+      $set: {
+        ...profilePersistence,
+        SUMMARY_SOURCE_VERSION: {
+          UPDATED_AT: updatedAt,
+          CREATED_AT: createdAt,
+          SUMMARY_ID: summaryId,
+        },
+      },
+    };
+    if (Object.keys(unset).length > 0) {
+      update.$unset = unset;
+    }
+
+    const updated = await this.model
+      .findOneAndUpdate(
+        {
+          _id: id,
+          $or: [
+            { SUMMARY_SOURCE_VERSION: { $exists: false } },
+            { 'SUMMARY_SOURCE_VERSION.UPDATED_AT': { $lt: updatedAt } },
+            {
+              'SUMMARY_SOURCE_VERSION.UPDATED_AT': updatedAt,
+              'SUMMARY_SOURCE_VERSION.CREATED_AT': { $lt: createdAt },
+            },
+            {
+              'SUMMARY_SOURCE_VERSION.UPDATED_AT': updatedAt,
+              'SUMMARY_SOURCE_VERSION.CREATED_AT': createdAt,
+              'SUMMARY_SOURCE_VERSION.SUMMARY_ID': { $lt: summaryId },
+            },
+          ],
+        },
+        update,
+        { new: true, lean: true },
+      )
+      .exec();
+
+    if (!updated) {
+      const existing = await this.model.findById(id).select('_id').lean();
+      if (!existing) {
+        throw new NotFoundException('Centro not found');
+      }
+      return false;
+    }
+
+    await this.cacheService.invalidateModelCache(this.model.modelName);
+    return true;
   }
 
   async saveLocation(

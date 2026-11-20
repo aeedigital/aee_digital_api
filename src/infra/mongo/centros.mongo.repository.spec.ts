@@ -1,15 +1,6 @@
-import { CentroSummaryProfile } from '../../domain/repositories/centro.repository';
 import { SummarySourceVersion } from '../../domain/entities/centro';
 import { CacheService } from '../../services/cache.service';
 import { CentrosMongoRepository } from './centros.mongo.repository';
-
-type SummaryProfileApplier = {
-  applySummaryProfileIfNewer(
-    id: string,
-    version: SummarySourceVersion,
-    profile: CentroSummaryProfile,
-  ): Promise<boolean>;
-};
 
 const existingCentro = {
   _id: 'c1',
@@ -69,23 +60,29 @@ describe('CentrosMongoRepository summary profile versioning', () => {
       model as never,
       createCacheStub(),
     );
-    const applyProfile = (
-      repository as unknown as SummaryProfileApplier
-    ).applySummaryProfileIfNewer.bind(repository);
 
     await expect(
-      applyProfile('c1', newerVersion, {
+      repository.applySummaryProfileIfNewer('c1', newerVersion, {
         endereco: 'Rua nova',
         telefone: '111',
       }),
     ).resolves.toBe(true);
-    const [filter, update] = model.findOneAndUpdate.mock.calls[0];
+    const [filter, update] = model.findOneAndUpdate.mock.calls[0]!;
     expect(filter).toEqual(
       expect.objectContaining({
         _id: 'c1',
         $or: expect.arrayContaining([
           { SUMMARY_SOURCE_VERSION: { $exists: false } },
           { 'SUMMARY_SOURCE_VERSION.UPDATED_AT': { $lt: newerVersion.updatedAt } },
+          {
+            'SUMMARY_SOURCE_VERSION.UPDATED_AT': newerVersion.updatedAt,
+            'SUMMARY_SOURCE_VERSION.CREATED_AT': { $lt: newerVersion.createdAt },
+          },
+          {
+            'SUMMARY_SOURCE_VERSION.UPDATED_AT': newerVersion.updatedAt,
+            'SUMMARY_SOURCE_VERSION.CREATED_AT': newerVersion.createdAt,
+            'SUMMARY_SOURCE_VERSION.SUMMARY_ID': { $lt: newerVersion.summaryId },
+          },
         ]),
       }),
     );
@@ -99,6 +96,29 @@ describe('CentrosMongoRepository summary profile versioning', () => {
         },
       }),
     );
+  });
+
+  it('unsets contacts explicitly cleared in the profile', async () => {
+    const model = createModelStub({
+      _id: 'c1',
+      SUMMARY_SOURCE_VERSION: {
+        UPDATED_AT: newerVersion.updatedAt,
+        CREATED_AT: newerVersion.createdAt,
+        SUMMARY_ID: newerVersion.summaryId,
+      },
+    });
+    const repository = new CentrosMongoRepository(
+      model as never,
+      createCacheStub(),
+    );
+
+    await repository.applySummaryProfileIfNewer('c1', newerVersion, {
+      telefone: null,
+      site: null,
+    });
+
+    const [, update] = model.findOneAndUpdate.mock.calls[0]!;
+    expect(update.$unset).toEqual({ TELEFONE: '', SITE: '' });
   });
 
   it.each([
@@ -117,14 +137,15 @@ describe('CentrosMongoRepository summary profile versioning', () => {
       model as never,
       createCacheStub(),
     );
-    const applyProfile = (
-      repository as unknown as SummaryProfileApplier
-    ).applySummaryProfileIfNewer.bind(repository);
 
     await expect(
-      applyProfile('c1', version as SummarySourceVersion, {
+      repository.applySummaryProfileIfNewer(
+        'c1',
+        version as SummarySourceVersion,
+        {
         endereco: 'Rua antiga',
-      }),
+        },
+      ),
     ).resolves.toBe(false);
     expect(model.findOneAndUpdate).toHaveBeenCalled();
   });

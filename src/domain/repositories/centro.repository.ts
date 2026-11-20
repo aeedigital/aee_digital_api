@@ -46,9 +46,32 @@ export type { SummarySourceVersion };
 
 export interface CentroRepository
   extends CrudRepository<Centro, CreateCentroInput, UpdateCentroInput, CentroFilter> {
+  applySummaryProfileIfNewer(
+    id: string,
+    sourceVersion: SummarySourceVersion,
+    profile: CentroSummaryProfile,
+  ): Promise<boolean>;
+
   saveLocation(
     id: string,
     expectedAddress: CentroAddress,
     location: CentroLocation,
   ): Promise<Centro>;
+}
+
+export function isSummarySourceVersionNewer(
+  candidate: SummarySourceVersion,
+  current?: SummarySourceVersion,
+): boolean {
+  if (!current) return true;
+
+  const updatedAtDifference =
+    candidate.updatedAt.getTime() - current.updatedAt.getTime();
+  if (updatedAtDifference !== 0) return updatedAtDifference > 0;
+
+  const createdAtDifference =
+    candidate.createdAt.getTime() - current.createdAt.getTime();
+  if (createdAtDifference !== 0) return createdAtDifference > 0;
+
+  return candidate.summaryId > current.summaryId;
 }
