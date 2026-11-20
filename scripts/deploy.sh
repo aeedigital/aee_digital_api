@@ -227,11 +227,12 @@ create_plan() {
   cd "$INFRA_DIR"
   terraform init -input=false
   terraform plan \
+    -no-color \
     -input=false \
     -var-file="terraform.tfvars" \
     "${version_args[@]}" \
     -var="summary_center_refresh_enabled=$refresh_value" \
-    -out="$PLAN_FILE" |
+    -out="$PLAN_FILE" 2>&1 |
     redact_sensitive_values
 
   chmod 600 "$PLAN_FILE"
@@ -278,7 +279,7 @@ apply_reviewed_plan() {
   validate_plan "$expected_target"
   cd "$INFRA_DIR"
   terraform init -input=false
-  terraform apply -input=false "$PLAN_FILE" | redact_sensitive_values
+  terraform apply -no-color -input=false "$PLAN_FILE" 2>&1 | redact_sensitive_values
 }
 
 case "$MODE" in

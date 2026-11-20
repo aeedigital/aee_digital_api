@@ -66,7 +66,7 @@ esac`,
     'terraform',
     `printf 'terraform %s\\n' "$*" >> "$DEPLOY_TEST_LOG"
 if [[ "$1" == "plan" || "$1" == "apply" ]]; then
-  printf '  - "LOCATION_UPDATE_TOKEN"               = "redaction-canary-value"\\n'
+  printf '  - "LOCATION_UPDATE_TOKEN"               = "redaction-canary-value"\\n' >&2
 fi
 if [[ "$1" == "plan" ]]; then
   for arg in "$@"; do
@@ -268,7 +268,10 @@ test('confirmed apply applies only the reviewed plan for the approved account', 
   assert.equal(
     harness
       .log()
-      .some((command) => command === `terraform apply -input=false ${planPath}`),
+      .some(
+        (command) =>
+          command === `terraform apply -no-color -input=false ${planPath}`,
+      ),
     true,
   );
 });
