@@ -1,5 +1,17 @@
 import { ConflictException } from '@nestjs/common';
+import {
+  CentroSummaryProfile,
+} from '../../domain/repositories/centro.repository';
+import { SummarySourceVersion } from '../../domain/entities/centro';
 import { CentrosMemoryRepository } from './centros.memory.repository';
+
+type SummaryProfileApplier = {
+  applySummaryProfileIfNewer(
+    id: string,
+    version: SummarySourceVersion,
+    profile: CentroSummaryProfile,
+  ): Promise<boolean>;
+};
 
 describe('CentrosMemoryRepository location', () => {
   const input = {
@@ -45,5 +57,44 @@ describe('CentrosMemoryRepository location', () => {
         { status: 'ERRO', addressHash: 'hash' },
       ),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('applies only summary versions newer than the stored version', async () => {
+    const repository = new CentrosMemoryRepository();
+    const centro = await repository.create(input);
+    const applyProfile = (
+      repository as unknown as SummaryProfileApplier
+    ).applySummaryProfileIfNewer.bind(repository);
+    const newest: SummarySourceVersion = {
+      updatedAt: new Date('2026-03-02T10:00:00.000Z'),
+      createdAt: new Date('2026-03-01T10:00:00.000Z'),
+      summaryId: 's2',
+    };
+    const profile: CentroSummaryProfile = {
+      endereco: 'Rua nova',
+      telefone: '111',
+    };
+
+    await expect(applyProfile(centro.id, newest, profile)).resolves.toBe(true);
+    await expect(applyProfile(centro.id, newest, { telefone: '222' })).resolves.toBe(
+      false,
+    );
+    await expect(
+      applyProfile(
+        centro.id,
+        {
+          ...newest,
+          updatedAt: new Date('2026-03-01T10:00:00.000Z'),
+        },
+        { endereco: 'Rua antiga' },
+      ),
+    ).resolves.toBe(false);
+    await expect(repository.findById(centro.id)).resolves.toEqual(
+      expect.objectContaining({
+        endereco: 'Rua nova',
+        telefone: '111',
+        summarySourceVersion: newest,
+      }),
+    );
   });
 });
