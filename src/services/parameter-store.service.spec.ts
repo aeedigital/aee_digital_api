@@ -7,7 +7,10 @@ describe('ParameterStoreService', () => {
 
   it('loads required SecureString values from SSM once per execution environment', async () => {
     const client = createClient();
-    const env = { PARAMETER_ENVIRONMENT: 'test' };
+    const env = {
+      PARAMETER_PROJECT: 'aee',
+      PARAMETER_ENVIRONMENT: 'test',
+    };
     client.send.mockResolvedValue({
       Parameters: [
         { Name: '/aee/test/MONGODB_URI', Value: 'mongodb://test.invalid' },
@@ -38,6 +41,7 @@ describe('ParameterStoreService', () => {
     const client = createClient();
     const env = {
       PARAMETER_ENVIRONMENT: 'test',
+      PARAMETER_PROJECT: 'aee',
       MONGODB_URI: 'mongodb://local.invalid',
     };
     client.send.mockResolvedValue({
@@ -60,6 +64,7 @@ describe('ParameterStoreService', () => {
     client.send.mockRejectedValue(new Error('AccessDeniedException'));
     const service = new ParameterStoreService(client, {
       PARAMETER_ENVIRONMENT: 'test',
+      PARAMETER_PROJECT: 'aee',
       MONGODB_URI: secret,
     });
 
